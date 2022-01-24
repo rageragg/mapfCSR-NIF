@@ -1535,19 +1535,19 @@ mx('1-lv_txt_met_val', 'SIN ERROR');
    --
    PROCEDURE p_trata_datos_cobertura IS
       --
---      lv_contrato_ant a1004809.num_poliza%TYPE;
+      --      lv_contrato_ant a1004809.num_poliza%TYPE;
       lv_num_orden    number := 1;
       lv_clave        varchar2(2000);
       lv_clave_b      varchar2(500);
       --
    BEGIN
-    --
-       mx('I','p_trata_datos_cobertura');
-    --
-    --cargamos los datos de las tablas de definicion en memoria
-    p_carga_definicion_carteras;
-    p_carga_asignacion_carteras;
-    --
+      --
+      mx('I','p_trata_datos_cobertura');
+      --
+      --cargamos los datos de las tablas de definicion en memoria
+      p_carga_definicion_carteras;
+      p_carga_asignacion_carteras;
+      --
     FOR regb IN (SELECT * 
                    FROM a1004809
                   WHERE idn_int_proc = g_idn_int_proc 
