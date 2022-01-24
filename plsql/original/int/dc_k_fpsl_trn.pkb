@@ -944,7 +944,7 @@ mx('p_cod_sociedad',p_cod_sociedad);
          --
          vl_clave         := lv_cod_sociedad||' '||lv_cod_cartera;
 
-DBMS_OUTPUT.PUT_LINE('vl_clave: ' || vl_clave );         
+         DBMS_OUTPUT.PUT_LINE('vl_clave: ' || vl_clave );         
          --
          g_tb_a1004805(vl_clave).cod_sociedad   := lv_cod_sociedad;
          g_tb_a1004805(vl_clave).cod_cartera    := lv_cod_cartera;

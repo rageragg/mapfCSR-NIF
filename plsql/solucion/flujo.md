@@ -14,10 +14,13 @@
     > Llena la tabla a1004809, datos de las coberturas de cada poliza que estan en a1004808
 
     > - p_trata_datos_cobertura
-        * p_carga_definicion_carteras
-        * p_carga_asignacion_carteras
-        * p_obtiene_definicion_cartera
-        * dc_k_fpsl_inst.f_txt_num_externo
+    >   - p_carga_definicion_carteras, selecciona las carteras de **a1004805** y los coloca en vectores 
+    >   - p_carga_asignacion_carteras, selecciona las carteras asociadas a la coberturas en **a1004806** y los coloca en vectores
+    >   - p_obtiene_definicion_cartera, obtiene del vector con datos de la tabla a1004808, los devuelve en **greg_cobe**
+    
+    >   Se procesan la validacion
+    
+    >   - p_trata_paa, Metodo de valoracion PAA
 
     > - p_trata_datos_contrato
     > - p_trata_bt
