@@ -3,11 +3,14 @@
 ## Pantalla **AP100360**
 
 - Se ejecuta el proceso interno del paquete **dc_k_fpsl_trn.p_inicio_proceso**
-    > p_recupera_globales
+    >
+    > - p_recupera_globales, 
     > Recuperacion de las variables globales
     
-    p_extrae_contratos
-    p_extrae_coberturas
+    > - p_extrae_contratos, 
+    > Llena la tabla a1004808, datos de los contratos de las polizas
+    
+    > - p_extrae_coberturas, Llena la tabla a1004809, datos de las coberturas de cada poliza que estan en a1004808
     p_trata_datos_cobertura
     p_trata_datos_contrato
     p_trata_bt
