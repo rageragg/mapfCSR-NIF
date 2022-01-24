@@ -2725,9 +2725,9 @@ dbms_output.put_line('P_TRATA_DATOS_CONTRATO 23'  || CASE g_hay_error WHEN TRUE 
                --
          END;
          --
-dbms_output.put_line('p_inicio_proceso 12' );                           
+         dbms_output.put_line('p_inicio_proceso 12' );                           
          IF g_hay_error THEN
-dbms_output.put_line('p_inicio_proceso 13' );                             
+            dbms_output.put_line('p_inicio_proceso 13' );                             
             -- Si existen errores, marcaremos el proceso como carga ko y finalizaremos sin extraer los datos
             pp_actualiza_estado(p_idn_int_proc     => p_idn_int_proc   ,
                                 p_num_opcion_menu  => p_num_opcion_menu);
@@ -2736,9 +2736,9 @@ dbms_output.put_line('p_inicio_proceso 13' );
             --
             --
          ELSE
-dbms_output.put_line('p_inicio_proceso 14' );                             
-           -- Si no existen errores, marcamos el proceso como carga ok y continuamos
-           pp_actualiza_estado(p_idn_int_proc     => p_idn_int_proc   ,
+            dbms_output.put_line('p_inicio_proceso 14' );                             
+            -- Si no existen errores, marcamos el proceso como carga ok y continuamos
+            pp_actualiza_estado(p_idn_int_proc     => p_idn_int_proc   ,
                                p_num_opcion_menu  => p_num_opcion_menu);        
             --
             p_mca_errores := 'A';
@@ -2747,7 +2747,7 @@ dbms_output.put_line('p_inicio_proceso 14' );
          --
       END IF;
       --
-dbms_output.put_line('p_inicio_proceso 15' );                        
+      dbms_output.put_line('p_inicio_proceso 15' );                        
       --Realizamos un commit para fijar los datos
       commit;
       --
