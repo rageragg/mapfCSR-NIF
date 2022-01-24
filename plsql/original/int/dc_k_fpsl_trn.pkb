@@ -2505,32 +2505,32 @@ dbms_output.put_line('TRATA DATOS 14  g_cod_sociedad: ' || g_cod_sociedad );
        p_dat_cancela;
        --
        -- V6.00
-dbms_output.put_line('P_TRATA_DATOS_CONTRATO 19'  || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END);                                     
-dbms_output.put_line('TRATA DATOS 15  g_cod_sociedad: ' || g_cod_sociedad );                        
+      dbms_output.put_line('P_TRATA_DATOS_CONTRATO 19'  || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END);                                     
+      dbms_output.put_line('TRATA DATOS 15  g_cod_sociedad: ' || g_cod_sociedad );                        
        p_v_num_asegurados;
        --
        -- V7.00
-dbms_output.put_line('TRATA DATOS 16  g_cod_sociedad: ' || g_cod_sociedad );                        
-dbms_output.put_line('P_TRATA_DATOS_CONTRATO 20'  || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END);                              
+      dbms_output.put_line('TRATA DATOS 16  g_cod_sociedad: ' || g_cod_sociedad );                        
+      dbms_output.put_line('P_TRATA_DATOS_CONTRATO 20'  || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END);                              
        p_v_num_certificados; 
        --
-dbms_output.put_line('TRATA DATOS 17  g_cod_sociedad: ' || g_cod_sociedad );                        
+      dbms_output.put_line('TRATA DATOS 17  g_cod_sociedad: ' || g_cod_sociedad );                             
        dc_k_fpsl_a1004808.p_actualiza(greg_cont);
        --
-dbms_output.put_line('TRATA DATOS 17.5  g_cod_sociedad: ' || g_cod_sociedad );                               
+      dbms_output.put_line('TRATA DATOS 17.5  g_cod_sociedad: ' || g_cod_sociedad );                               
        COMMIT;
        --
     END LOOP;
     --
-dbms_output.put_line('P_TRATA_DATOS_CONTRATO 21'  || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END);                                  
-dbms_output.put_line('TRATA DATOS 18  g_cod_sociedad: ' || g_cod_sociedad );                     
+      dbms_output.put_line('P_TRATA_DATOS_CONTRATO 21'  || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END);                                  
+      dbms_output.put_line('TRATA DATOS 18  g_cod_sociedad: ' || g_cod_sociedad );                     
        mx('F','p_trata_datos_contrato');
     --
    EXCEPTION
     WHEN OTHERS THEN
        --
-dbms_output.put_line('TRATA DATOS 19 EXCEPTION  g_cod_sociedad: ' || g_cod_sociedad );                        
-dbms_output.put_line('P_TRATA_DATOS_CONTRATO 22'  || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END);                              
+      dbms_output.put_line('TRATA DATOS 19 EXCEPTION  g_cod_sociedad: ' || g_cod_sociedad );                        
+      dbms_output.put_line('P_TRATA_DATOS_CONTRATO 22'  || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END);                              
           mx('F','p_trata_datos_contrato');
        --
        greg_cont := null;
@@ -2551,7 +2551,7 @@ dbms_output.put_line('P_TRATA_DATOS_CONTRATO 22'  || CASE g_hay_error WHEN TRUE 
                     p_txt_error      => SUBSTR(SQLERRM,1,4000),
                     p_idn_int_proc   => g_idn_int_proc);
       --
-dbms_output.put_line('P_TRATA_DATOS_CONTRATO 23'  || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END);                                    
+      dbms_output.put_line('P_TRATA_DATOS_CONTRATO 23'  || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END);                                    
    END p_trata_datos_contrato;   
    --
    /* -----------------------------------------------------
