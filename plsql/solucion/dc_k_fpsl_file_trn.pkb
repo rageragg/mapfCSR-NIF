@@ -528,9 +528,9 @@ AS
               TO_CHAR(a.fec_efec_contrato,'YYYYMMDD')||g_k_separador|| 
               TO_CHAR(a.fec_fin,'YYYYMMDD')          ||g_k_separador||
               a.cod_sociedad                         ||g_k_separador||
--- v1.06              a.cod_inter_cia                        ||g_k_separador||
+               -- v1.06              a.cod_inter_cia                        ||g_k_separador||
               a.cod_reasegurador                     ||g_k_separador||
--- v7.0               a.num_asegurados                       ||g_k_separador|| --v1.06
+              -- v7.0               a.num_asegurados                       ||g_k_separador|| --v1.06
               a.num_certificados                     ||g_k_separador|| --v7.00
               a.txt_cto_coste                        ||g_k_separador||
               a.cod_canal3                           ||g_k_separador||
@@ -554,9 +554,9 @@ AS
               a.fec_efec_contrato,
               a.fec_fin,
               a.cod_sociedad,
---v1.06              a.cod_inter_cia,
+              --v1.06              a.cod_inter_cia,
               a.cod_reasegurador,
---v7.00              a.num_asegurados, --v1.06
+              --v7.00              a.num_asegurados, --v1.06
               a.num_certificados, --v7.00
               a.txt_cto_coste,
               a.cod_canal3,
@@ -603,9 +603,9 @@ AS
               a.fec_efec_contrato, 
               a.fec_fin          ,
               a.cod_sociedad                         ,
---v1.06              a.cod_inter_cia                        ,
+              --v1.06              a.cod_inter_cia                        ,
               a.cod_reasegurador                     ,
---v7.00              a.num_asegurados                       , -- v1.06
+              --v7.00              a.num_asegurados                       , -- v1.06
               a.num_certificados                     , -- v7.00
               a.txt_cto_coste                        ,
               a.cod_canal3                           ,
@@ -629,9 +629,9 @@ AS
               a.fec_efec_contrato,
               a.fec_fin,
               a.cod_sociedad,
---v1.06              a.cod_inter_cia,
+              --v1.06              a.cod_inter_cia,
               a.cod_reasegurador,
---v7.00              a.num_asegurados, --v1.06
+              --v7.00              a.num_asegurados, --v1.06
               a.num_certificados, --v7.00
               a.txt_cto_coste,
               a.cod_canal3,
@@ -652,9 +652,10 @@ AS
          -- Recupera numero de registros limitado
          FETCH lc_datos BULK COLLECT INTO l_tc_datos LIMIT g_limite;
          --
-         IF x = 0 
-         THEN
-            --Es la primera iteracion, creamos el fichero inicial e inicializamos lv_cod_soc_ant
+         IF x = 0 THEN
+            -- Es la primera iteracion, creamos el fichero inicial e inicializamos lv_cod_soc_ant
+            -- ! Error, este proceso no selecciona la sociedad, la linea siguiente es un ejemplo del dato que evalua
+            -- ! 1;20211201;BPDI   ;20211201;20221201;0496;1;1;1011;1011;2332100000106;2020;G19;;UOA_0496L09_20201_ZPPDI00               ;;
             lv_cod_soc_ant := substr(l_tc_datos(1),4,4);
             -- Crea fichero
             l_fic_nombre:= dc_k_fpsl_inst.f_nom_fich_mcont (p_idn_int_proc   => g_idn_int_proc  ,
