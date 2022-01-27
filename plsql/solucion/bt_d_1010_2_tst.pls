@@ -32,8 +32,7 @@ IS
         and a.num_spto = c.num_spto
         and a.num_apli = c.num_apli
         and a.num_spto_apli = c.num_spto_apli
-        and c.tip_spto = 'XX'
-        ;
+        and c.tip_spto = 'XX';
    --
    reg_c1       a1004810%ROWTYPE;
    reg_a1004810 a1004810%ROWTYPE;
@@ -56,10 +55,7 @@ BEGIN
    -- Dado esto generamos el identificador sin _, sin secuencia y sin extension
    lv_nom_fich:= 'EEEE'||TO_CHAR(lv_fec_hasta_proc,'YYYYMMDD')||'TBTRA';
    --
-   FOR reg_c1 IN c1
-   LOOP
---dbms_output.put_line('BT_D_1010_2_TST_1   reg_c1.idn_bt'  || reg_c1.idn_bt);                                    
-
+   FOR reg_c1 IN c1 LOOP
       --
       -- Cargamos el registro de la tabla para insertar
       --
@@ -78,8 +74,7 @@ BEGIN
       --
       -- Tratamos los datos que no se pueden obtener directamente de la consulta.
       -- Es un ejemplo de tratamiento
-      IF reg_a1004810.imp_transaccion > 0
-      THEN
+      IF reg_a1004810.imp_transaccion > 0 THEN
          -- 
          reg_a1004810.tip_imp         := 'D';
          --
@@ -95,20 +90,15 @@ BEGIN
       reg_a1004810.tip_bt          := lv_cod_operacion      ;
       reg_a1004810.imp_impuesto    := reg_c1.imp_impuesto   ;
       --
-      -- Llamamos al procedimiento que inserta en la tabla
---dbms_output.put_line('BT_D_1010_2_TST_2   reg_c1.idn_bt'  || reg_c1.idn_bt);                                    
-
+      -- Llamamos al procedimiento que inserta en la tabla                                  
       BEGIN
-      dc_k_fpsl_a1004810.p_inserta(reg_a1004810);
+         dc_k_fpsl_a1004810.p_inserta(reg_a1004810);
       EXCEPTION
-        WHEN OTHERS THEN
-          dbms_output.put_line('BT_D_1010_2_TST  EXCEPTION FALLO INSERT EN LA A1004810 SQLERRM:' ||  SQLERRM );                                    
+         WHEN OTHERS THEN
+            dbms_output.put_line('Error "reg_a1004810.idn_bt"-> ' || reg_a1004810.idn_bt );
+            dbms_output.put_line('BT_D_1010_2_TST  EXCEPTION FALLO INSERT EN LA A1004810 SQLERRM:' ||  SQLERRM );                                    
       END;
-      
       --
---dbms_output.put_line('BT_D_1010_2_TST_3   reg_c1.idn_bt'  || reg_c1.idn_bt);                                          
    END LOOP;
-   
-dbms_output.put_line('BT_D_1010_2_TST_4  FIN DE PROCEDIMIENTO   reg_c1.idn_bt'  || reg_c1.idn_bt);                                       
    --
 END bt_d_1010_2_tst;

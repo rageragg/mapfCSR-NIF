@@ -257,15 +257,15 @@ mx('p_cod_sociedad',p_cod_sociedad);
       lv_column all_tab_columns.column_name%TYPE;
       --
    BEGIN
-      --
-      mx('I','p_extrae_contratos');
-      --
-      g_idn_int_proc := p_idn_int_proc;
-      g_fec_desde_proc := p_fec_desde;
-      g_fec_hasta_proc := p_fec_hasta;
-      --
-      -- Comprobamos si existe la columna cod_canal3 en la bbdd
-      --
+    --
+       mx('I','p_extrae_contratos');
+    --
+    g_idn_int_proc := p_idn_int_proc;
+    g_fec_desde_proc := p_fec_desde;
+    g_fec_hasta_proc := p_fec_hasta;
+    --
+    -- Comprobamos si existe la columna cod_canal3 en la bbdd
+    --
     OPEN lc_canal;
     FETCH lc_canal into lv_column;
     g_existe := lc_canal%FOUND;
@@ -944,7 +944,7 @@ mx('p_cod_sociedad',p_cod_sociedad);
          --
          vl_clave         := lv_cod_sociedad||' '||lv_cod_cartera;
 
-         DBMS_OUTPUT.PUT_LINE('vl_clave: ' || vl_clave );         
+DBMS_OUTPUT.PUT_LINE('vl_clave: ' || vl_clave );         
          --
          g_tb_a1004805(vl_clave).cod_sociedad   := lv_cod_sociedad;
          g_tb_a1004805(vl_clave).cod_cartera    := lv_cod_cartera;
@@ -1535,19 +1535,19 @@ mx('1-lv_txt_met_val', 'SIN ERROR');
    --
    PROCEDURE p_trata_datos_cobertura IS
       --
-      --      lv_contrato_ant a1004809.num_poliza%TYPE;
+--      lv_contrato_ant a1004809.num_poliza%TYPE;
       lv_num_orden    number := 1;
       lv_clave        varchar2(2000);
       lv_clave_b      varchar2(500);
       --
    BEGIN
-      --
-      mx('I','p_trata_datos_cobertura');
-      --
-      --cargamos los datos de las tablas de definicion en memoria
-      p_carga_definicion_carteras;
-      p_carga_asignacion_carteras;
-      --
+    --
+       mx('I','p_trata_datos_cobertura');
+    --
+    --cargamos los datos de las tablas de definicion en memoria
+    p_carga_definicion_carteras;
+    p_carga_asignacion_carteras;
+    --
     FOR regb IN (SELECT * 
                    FROM a1004809
                   WHERE idn_int_proc = g_idn_int_proc 
@@ -2505,32 +2505,32 @@ dbms_output.put_line('TRATA DATOS 14  g_cod_sociedad: ' || g_cod_sociedad );
        p_dat_cancela;
        --
        -- V6.00
-      dbms_output.put_line('P_TRATA_DATOS_CONTRATO 19'  || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END);                                     
-      dbms_output.put_line('TRATA DATOS 15  g_cod_sociedad: ' || g_cod_sociedad );                        
+dbms_output.put_line('P_TRATA_DATOS_CONTRATO 19'  || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END);                                     
+dbms_output.put_line('TRATA DATOS 15  g_cod_sociedad: ' || g_cod_sociedad );                        
        p_v_num_asegurados;
        --
        -- V7.00
-      dbms_output.put_line('TRATA DATOS 16  g_cod_sociedad: ' || g_cod_sociedad );                        
-      dbms_output.put_line('P_TRATA_DATOS_CONTRATO 20'  || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END);                              
+dbms_output.put_line('TRATA DATOS 16  g_cod_sociedad: ' || g_cod_sociedad );                        
+dbms_output.put_line('P_TRATA_DATOS_CONTRATO 20'  || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END);                              
        p_v_num_certificados; 
        --
-      dbms_output.put_line('TRATA DATOS 17  g_cod_sociedad: ' || g_cod_sociedad );                             
+dbms_output.put_line('TRATA DATOS 17  g_cod_sociedad: ' || g_cod_sociedad );                        
        dc_k_fpsl_a1004808.p_actualiza(greg_cont);
        --
-      dbms_output.put_line('TRATA DATOS 17.5  g_cod_sociedad: ' || g_cod_sociedad );                               
+dbms_output.put_line('TRATA DATOS 17.5  g_cod_sociedad: ' || g_cod_sociedad );                               
        COMMIT;
        --
     END LOOP;
     --
-      dbms_output.put_line('P_TRATA_DATOS_CONTRATO 21'  || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END);                                  
-      dbms_output.put_line('TRATA DATOS 18  g_cod_sociedad: ' || g_cod_sociedad );                     
+dbms_output.put_line('P_TRATA_DATOS_CONTRATO 21'  || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END);                                  
+dbms_output.put_line('TRATA DATOS 18  g_cod_sociedad: ' || g_cod_sociedad );                     
        mx('F','p_trata_datos_contrato');
     --
    EXCEPTION
     WHEN OTHERS THEN
        --
-      dbms_output.put_line('TRATA DATOS 19 EXCEPTION  g_cod_sociedad: ' || g_cod_sociedad );                        
-      dbms_output.put_line('P_TRATA_DATOS_CONTRATO 22'  || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END);                              
+dbms_output.put_line('TRATA DATOS 19 EXCEPTION  g_cod_sociedad: ' || g_cod_sociedad );                        
+dbms_output.put_line('P_TRATA_DATOS_CONTRATO 22'  || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END);                              
           mx('F','p_trata_datos_contrato');
        --
        greg_cont := null;
@@ -2551,7 +2551,7 @@ dbms_output.put_line('TRATA DATOS 14  g_cod_sociedad: ' || g_cod_sociedad );
                     p_txt_error      => SUBSTR(SQLERRM,1,4000),
                     p_idn_int_proc   => g_idn_int_proc);
       --
-      dbms_output.put_line('P_TRATA_DATOS_CONTRATO 23'  || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END);                                    
+dbms_output.put_line('P_TRATA_DATOS_CONTRATO 23'  || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END);                                    
    END p_trata_datos_contrato;   
    --
    /* -----------------------------------------------------
@@ -2659,17 +2659,17 @@ dbms_output.put_line('TRATA DATOS 14  g_cod_sociedad: ' || g_cod_sociedad );
       --
       p_recupera_globales;
       --
-      dbms_output.put_line('p_inicio_proceso 1 '  || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END );      
+dbms_output.put_line('p_inicio_proceso 1 '  || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END );      
       --borramos los datos que haya guardados
       p_inicializa_tablas (p_idn_int_proc => p_idn_int_proc);
       --
-      dbms_output.put_line('p_inicio_proceso 2 ' || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END );            
+dbms_output.put_line('p_inicio_proceso 2 ' || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END );            
       g_num_opcion_menu := p_num_opcion_menu;
       --
-      dbms_output.put_line('p_inicio_proceso 3 ' || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END );            
+dbms_output.put_line('p_inicio_proceso 3 ' || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END );            
       -- Obtenemos los datos de las fechas de proceso
       OPEN lc_a1004800(pc_idn_int_proc => p_idn_int_proc);
-      dbms_output.put_line('p_inicio_proceso 4 ' || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END );            
+dbms_output.put_line('p_inicio_proceso 4 ' || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END );            
       FETCH lc_a1004800 INTO l_reg_a1004800;
       --CLOSE lc_a1004800;
       IF lc_a1004800%FOUND
@@ -2680,54 +2680,54 @@ dbms_output.put_line('TRATA DATOS 14  g_cod_sociedad: ' || g_cod_sociedad );
             CLOSE lc_a1004800;
             -- Obtenemos los datos de las polizas a estudiar en el proceso y lo recorremos
             -- 
-            dbms_output.put_line('p_inicio_proceso 5 ' || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END );                  
-            mx('fec_desde_proc',l_reg_a1004800.fec_desde_proc);
-            mx('fec_hasta_proc',l_reg_a1004800.fec_hasta_proc);
-            dbms_output.put_line('p_inicio_proceso 6 ' || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END );                  
+dbms_output.put_line('p_inicio_proceso 5 ' || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END );                  
+         mx('fec_desde_proc',l_reg_a1004800.fec_desde_proc);
+         mx('fec_hasta_proc',l_reg_a1004800.fec_hasta_proc);
+dbms_output.put_line('p_inicio_proceso 6 ' || CASE g_hay_error WHEN TRUE THEN '  10-HAY ERROR' ELSE '  10-SIN ERROR' END );                  
             p_extrae_contratos (p_idn_int_proc => p_idn_int_proc               ,
                                 p_fec_desde    => l_reg_a1004800.fec_desde_proc ,
                                 p_fec_hasta    => l_reg_a1004800.fec_hasta_proc);
             --
-            mx('p_extrae_coberturas','1');            
+         mx('p_extrae_coberturas','1');            
             p_extrae_coberturas;
             --
-            dbms_output.put_line('p_inicio_proceso 7 ' || CASE g_hay_error WHEN TRUE THEN '  1-HAY ERROR' ELSE '  1-SIN ERROR' END  );                              
-            mx('p_extrae_coberturas','2');                        
+dbms_output.put_line('p_inicio_proceso 7 ' || CASE g_hay_error WHEN TRUE THEN '  1-HAY ERROR' ELSE '  1-SIN ERROR' END  );                              
+         mx('p_extrae_coberturas','2');                        
             p_trata_datos_cobertura;
             --
-            dbms_output.put_line('p_inicio_proceso 8'  || CASE g_hay_error WHEN TRUE THEN '  2-HAY ERROR' ELSE '  2-SIN ERROR' END);                              
-            mx('p_extrae_coberturas','3');                        
+dbms_output.put_line('p_inicio_proceso 8'  || CASE g_hay_error WHEN TRUE THEN '  2-HAY ERROR' ELSE '  2-SIN ERROR' END);                              
+         mx('p_extrae_coberturas','3');                        
             p_trata_datos_contrato;
             --
-            dbms_output.put_line('p_inicio_proceso 9'  || CASE g_hay_error WHEN TRUE THEN '  3-HAY ERROR' ELSE '  3-SIN ERROR' END );                              
-            mx('p_extrae_coberturas','4');                        
+dbms_output.put_line('p_inicio_proceso 9'  || CASE g_hay_error WHEN TRUE THEN '  3-HAY ERROR' ELSE '  3-SIN ERROR' END );                              
+         mx('p_extrae_coberturas','4');                        
             p_trata_bt;
             --
-            dbms_output.put_line('p_inicio_proceso 10'  || CASE g_hay_error WHEN TRUE THEN '  4-HAY ERROR' ELSE '  4-SIN ERROR' END);                              
-            mx('p_extrae_coberturas','5');                        
+dbms_output.put_line('p_inicio_proceso 10'  || CASE g_hay_error WHEN TRUE THEN '  4-HAY ERROR' ELSE '  4-SIN ERROR' END);                              
+         mx('p_extrae_coberturas','5');                        
          EXCEPTION
            WHEN OTHERS THEN
               --
-               dbms_output.put_line('p_inicio_proceso 11'  || CASE g_hay_error WHEN TRUE THEN '  5-HAY ERROR' ELSE '5-SIN ERROR' END);                                
-               p_graba_error(p_cod_sis_origen => g_cod_sis_origen,
-                              p_cod_sociedad   => NULL,
-                              p_cod_cia        => NULL,
-                              p_num_poliza     => NULL,
-                              p_num_spto       => NULL,
-                              p_num_apli       => NULL,
-                              p_num_spto_apli  => NULL,
-                              p_num_riesgo     => NULL,
-                              p_cod_cob        => NULL,
-                              p_txt_campo      => 'p_inicio_proceso',
-                              p_cod_error      => SQLCODE,
-                              p_txt_error      => SUBSTR(SQLERRM,1,4000),
-                              p_idn_int_proc   => P_idn_int_proc);
+dbms_output.put_line('p_inicio_proceso 11'  || CASE g_hay_error WHEN TRUE THEN '  5-HAY ERROR' ELSE '5-SIN ERROR' END);                                
+              p_graba_error(p_cod_sis_origen => g_cod_sis_origen,
+                            p_cod_sociedad   => NULL,
+                            p_cod_cia        => NULL,
+                            p_num_poliza     => NULL,
+                            p_num_spto       => NULL,
+                            p_num_apli       => NULL,
+                            p_num_spto_apli  => NULL,
+                            p_num_riesgo     => NULL,
+                            p_cod_cob        => NULL,
+                            p_txt_campo      => 'p_inicio_proceso',
+                            p_cod_error      => SQLCODE,
+                            p_txt_error      => SUBSTR(SQLERRM,1,4000),
+                            p_idn_int_proc   => P_idn_int_proc);
                --
          END;
          --
-         dbms_output.put_line('p_inicio_proceso 12' );                           
+dbms_output.put_line('p_inicio_proceso 12' );                           
          IF g_hay_error THEN
-            dbms_output.put_line('p_inicio_proceso 13' );                             
+dbms_output.put_line('p_inicio_proceso 13' );                             
             -- Si existen errores, marcaremos el proceso como carga ko y finalizaremos sin extraer los datos
             pp_actualiza_estado(p_idn_int_proc     => p_idn_int_proc   ,
                                 p_num_opcion_menu  => p_num_opcion_menu);
@@ -2736,9 +2736,9 @@ dbms_output.put_line('TRATA DATOS 14  g_cod_sociedad: ' || g_cod_sociedad );
             --
             --
          ELSE
-            dbms_output.put_line('p_inicio_proceso 14' );                             
-            -- Si no existen errores, marcamos el proceso como carga ok y continuamos
-            pp_actualiza_estado(p_idn_int_proc     => p_idn_int_proc   ,
+dbms_output.put_line('p_inicio_proceso 14' );                             
+           -- Si no existen errores, marcamos el proceso como carga ok y continuamos
+           pp_actualiza_estado(p_idn_int_proc     => p_idn_int_proc   ,
                                p_num_opcion_menu  => p_num_opcion_menu);        
             --
             p_mca_errores := 'A';
@@ -2747,7 +2747,7 @@ dbms_output.put_line('TRATA DATOS 14  g_cod_sociedad: ' || g_cod_sociedad );
          --
       END IF;
       --
-      dbms_output.put_line('p_inicio_proceso 15' );                        
+dbms_output.put_line('p_inicio_proceso 15' );                        
       --Realizamos un commit para fijar los datos
       commit;
       --

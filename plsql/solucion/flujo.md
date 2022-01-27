@@ -10,7 +10,7 @@
         - p_carga_definicion_carteras, selecciona las carteras de **a1004805** y los coloca en vectores 
         - p_carga_asignacion_carteras, selecciona las carteras asociadas a la coberturas en **a1004806** y los coloca en vectores
         - p_obtiene_definicion_cartera, obtiene del vector con datos de la tabla a1004808, los devuelve en **greg_cobe**
-        - Se procesan la validacion
+        - Se procesan la validacion, aqui se determina el metodo de valoracion
         - p_trata_paa, Metodo de valoracion PAA
     - p_trata_datos_contrato
     - p_trata_bt

@@ -39,8 +39,7 @@ AS
    || Funcion que devuelve manejador del fichero
    */ --------------------------------------------------------------------
    --
-   FUNCTION fp_crea_fichero (p_nombre_fichero IN VARCHAR2)
-   RETURN UTL_FILE.file_type
+   FUNCTION fp_crea_fichero (p_nombre_fichero IN VARCHAR2) RETURN UTL_FILE.file_type
    IS
       --
       l_fic UTL_FILE.file_type;
@@ -113,9 +112,9 @@ AS
       --
    BEGIN
       --
-/*      l_cabecera:= 'HDREXTNO;0DATE;HDRSEQNO;HDRVALFR;HDRVALTO;OBJCR;'||
+      /*      l_cabecera:= 'HDREXTNO;0DATE;HDRSEQNO;HDRVALFR;HDRVALTO;OBJCR;'||
                    'COVID;BOUNDDT;Pendiente';
-*/
+      */
       -- v5.00
       l_cabecera:= 'HDREXTNO;0DATE;HDRSEQNO;HDRVALFR;HDRVALTO;'||
                    'COVID;LOBCODE';
@@ -152,26 +151,26 @@ AS
       --
    BEGIN
       --
-/*      l_cabecera:= 'HDREXTNO;0DATE;OBJST;C11PRDCTR;CTRST;'||
-                   'CTREN;C55LGENT;CP0PARTLE;COSTC;ZDISTCHNL;Pendiente;'||
-                   'Pendiente;Pendiente;Pendiente;Pendiente;Pendiente';
-*/
-/*
-        l_cabecera:= 'HDREXTNO;0DATE;C11PRDCTR;CTRST;'||
-                   'CTREN;C55LGENT;CP0PARTLE;Pendiente;COSTC;ZDISTCHNL;ZORIGCONT;'||
-                   'Pendiente;ZPORTFOL;C55ONSTIR;ZUNITACCT;ZCANCEL;ZCANCELDT';
-*/
-/*
--- v1.06
-        l_cabecera:= 'HDREXTNO;0DATE;C11PRDCTR;CTRST;'||
-                   'CTREN;C55LGENT;ZREINSID;ZNPERSA;COSTC;ZDISTCHNL;ZORIGCONT;'||
-                   'ZCOHORT;ZPORTFOL;C55ONSTIR;ZUNITACCT;ZCANCEL;ZCANCELDT';
-*/
---v7.00
+      /*      l_cabecera:= 'HDREXTNO;0DATE;OBJST;C11PRDCTR;CTRST;'||
+                        'CTREN;C55LGENT;CP0PARTLE;COSTC;ZDISTCHNL;Pendiente;'||
+                        'Pendiente;Pendiente;Pendiente;Pendiente;Pendiente';
+      */
+      /*
+            l_cabecera:= 'HDREXTNO;0DATE;C11PRDCTR;CTRST;'||
+                        'CTREN;C55LGENT;CP0PARTLE;Pendiente;COSTC;ZDISTCHNL;ZORIGCONT;'||
+                        'Pendiente;ZPORTFOL;C55ONSTIR;ZUNITACCT;ZCANCEL;ZCANCELDT';
+      */
+      /*
+      -- v1.06
+            l_cabecera:= 'HDREXTNO;0DATE;C11PRDCTR;CTRST;'||
+                        'CTREN;C55LGENT;ZREINSID;ZNPERSA;COSTC;ZDISTCHNL;ZORIGCONT;'||
+                        'ZCOHORT;ZPORTFOL;C55ONSTIR;ZUNITACCT;ZCANCEL;ZCANCELDT';
+      */
+      --v7.00
       l_cabecera:= 'HDREXTNO;0DATE;C11PRDCTR;CTRST;'||
                    'CTREN;C55LGENT;ZREINSID;ZNPERSA;ZCOSTCNTR;ZDISTCHNL;ZORIGCONT;'||
                    'ZCOHORT;ZPORTFOL;C55ONSTIR;ZUNITACC;ZCANCEL;ZCANCELDT'; 
---v7.00
+      --v7.00
       --
       UTL_FILE.put_line (file      => p_fic     ,
                          buffer    => l_cabecera);
@@ -206,16 +205,16 @@ AS
       --
    BEGIN
       --
-/*      l_cabecera:= 'BTTRNSID;0DATE;C35REVIND;C35RVRFBT;BTPOSTDT;BTVALDT;CR2DLVPKG;'||
-                   'HDREXTNO;BTTRAMT;BTTRAMTC;BTPSTDR;CIDPSEID;C35BTIDRF;'||
-                   'BTTRTYP;Pendiente';
-*/
-/* v5.00
-      l_cabecera:= 'BTTRNSID;C35REVIND;C35RVRFBT;BTPOSTDT;CR2DLVPKG;'||
-                   'HDREXTNO;BTTRAMT;BTTRAMTC;BTPSTDR;CIDPSEID;C35BTIDRF;'||
-                   'BTTRTYP;ZTAXAMT';
-*/
--- v1.06
+      /*      l_cabecera:= 'BTTRNSID;0DATE;C35REVIND;C35RVRFBT;BTPOSTDT;BTVALDT;CR2DLVPKG;'||
+                        'HDREXTNO;BTTRAMT;BTTRAMTC;BTPSTDR;CIDPSEID;C35BTIDRF;'||
+                        'BTTRTYP;Pendiente';
+      */
+      /* v5.00
+            l_cabecera:= 'BTTRNSID;C35REVIND;C35RVRFBT;BTPOSTDT;CR2DLVPKG;'||
+                        'HDREXTNO;BTTRAMT;BTTRAMTC;BTPSTDR;CIDPSEID;C35BTIDRF;'||
+                        'BTTRTYP;ZTAXAMT';
+      */
+      -- v1.06
       l_cabecera:= 'BTTRNSID;C35REVIND;C35RVRFBT;BTPOSTDT;CR2DLVPKG;'||
                    'HDREXTNO;BTTRAMT;BTTRAMTC;BTPSTDR;CIDPSEID;C35BTIDRF;'||
                    'BTTRTYP;ZTAXAMTS';
@@ -253,21 +252,21 @@ AS
       --
    BEGIN
       --
-/*      l_cabecera:= 'Pendiente;HDREXTNO;CTRST;CTREN;COVID;Pendiente;Pendiente;'||
-                   'C11PRDCTR';
-*/
-/*
---v5.00
-      l_cabecera:= 'HDREXTNO;CIDPSEID;CRCPAYCAT;ZRECDATE;HDRVALFR;HDRVALTO;KRCCFAMD;'||
-                   'KRCCFAMDC;ZPAYFREQ;ZPREPAID;ZCOMBRAT;CR2DLVPKG;Pendiente;C11PRDCTR';
-*/
-/*
---v1.06
-      l_cabecera:= 'HDREXTNO;COVID;CRCPAYCAT;ZRECDATE;CTRST;CTREN;KRCCFAMD;'||
-                   'KRCCFAMDC;CIDSAFRE;ZPREPAID;ZCOMBRAT;CR2DLVPKG;Pendiente;C11PRDCTR;'||
-                   'ZORIGCONT;ZGRANID;ZGRANLE;ZTIPOPAT;ZSUBYCONT;ZAPLICTIPO';
-*/
---v7.00
+      /*      l_cabecera:= 'Pendiente;HDREXTNO;CTRST;CTREN;COVID;Pendiente;Pendiente;'||
+                        'C11PRDCTR';
+      */
+      /*
+      --v5.00
+            l_cabecera:= 'HDREXTNO;CIDPSEID;CRCPAYCAT;ZRECDATE;HDRVALFR;HDRVALTO;KRCCFAMD;'||
+                        'KRCCFAMDC;ZPAYFREQ;ZPREPAID;ZCOMBRAT;CR2DLVPKG;Pendiente;C11PRDCTR';
+      */
+      /*
+      --v1.06
+            l_cabecera:= 'HDREXTNO;COVID;CRCPAYCAT;ZRECDATE;CTRST;CTREN;KRCCFAMD;'||
+                        'KRCCFAMDC;CIDSAFRE;ZPREPAID;ZCOMBRAT;CR2DLVPKG;Pendiente;C11PRDCTR;'||
+                        'ZORIGCONT;ZGRANID;ZGRANLE;ZTIPOPAT;ZSUBYCONT;ZAPLICTIPO';
+      */
+      --v7.00
       l_cabecera:= 'HDREXTNO;COVID;CRCPAYCAT;CR0KEYDAT;ZRECDATE;CTRST;CTREN;KRCCFAMD;'||
                    'KRCCFAMDC;CIDSAFRE;ZPREPAID;CR2DLVPKG;C11PRDCTR;'||
                    'ZGRANID;ZGRANLE;ZTIPOPAT;ZSUBYCONT;ZPROBDEF';

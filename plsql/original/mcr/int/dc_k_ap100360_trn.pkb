@@ -1407,11 +1407,11 @@ PTRAZA('NIIF17.TXT','a', 'p_look_up_tip_situ_proc ANTES DE L EXEPTION');
    */
    PROCEDURE p_inicio IS
    BEGIN
-      --
-      g_cod_cia    := trn_k_global.cod_cia;
-      g_cod_usr    := trn_k_global.cod_usr;
-      g_cod_idioma_cp := trn_k_global.cod_idioma;
-      --
+    --
+    g_cod_cia    := trn_k_global.cod_cia;
+    g_cod_usr    := trn_k_global.cod_usr;
+    g_cod_idioma_cp := trn_k_global.cod_idioma;
+    --
    END p_inicio;
    --
    -- ------------------------------------------------------------
@@ -1434,9 +1434,9 @@ PTRAZA('NIIF17.TXT','a', 'p_look_up_tip_situ_proc ANTES DE L EXEPTION');
    PROCEDURE pp_actualiza_estado (p_idn_int_proc         IN            a1004800.idn_int_proc     %TYPE,
                                   p_num_opcion_menu      IN            g1010131.num_opcion       %TYPE)
    IS
-    --
-    l_tip_situ_proceso     a1004800.tip_situ_proc    %TYPE;
-    --
+   --
+   l_tip_situ_proceso     a1004800.tip_situ_proc    %TYPE;
+   --
    BEGIN
       --
       --@mx('I','pp_actualiza_estado');
@@ -1483,11 +1483,11 @@ PTRAZA('NIIF17.TXT','a', 'p_look_up_tip_situ_proc ANTES DE L EXEPTION');
                                     p_num_opcion_menu      IN            G1010131.num_opcion    %TYPE,
                                     p_mca_errores          IN OUT        VARCHAR2)
    IS
-      --
-      l_tip_situ_proceso      a1004800.tip_situ_proc    %TYPE;
-      l_fec_hasta_proc        a1004800.fec_hasta_proc   %TYPE;
-      l_cod_proc              a1004800.cod_proc         %TYPE;
-      --
+   --
+   l_tip_situ_proceso      a1004800.tip_situ_proc    %TYPE;
+   l_fec_hasta_proc        a1004800.fec_hasta_proc   %TYPE;
+   l_cod_proc              a1004800.cod_proc         %TYPE;
+   --
    BEGIN
       --
       --@mx('I','p_inicio_procesamiento');
@@ -1498,8 +1498,8 @@ PTRAZA('NIIF17.TXT','a', 'p_look_up_tip_situ_proc ANTES DE L EXEPTION');
         WHERE idn_int_proc = p_idn_int_proc;
       --
       IF (p_num_opcion_menu = 1) AND (l_tip_situ_proceso IN (1,3,4,6,7,10)) THEN
-        -- GENERACION DE DATOS
-        --
+      -- GENERACION DE DATOS
+      --
          BEGIN
             --
             UPDATE a1004800
@@ -1646,7 +1646,7 @@ PTRAZA('NIIF17.TXT','a', 'p_look_up_tip_situ_proc ANTES DE L EXEPTION');
                dc_k_fpsl_file.p_genera_fpsl_error(p_idn_int_proc   => p_idn_int_proc,
                                                   p_fec_hasta_proc => l_fec_hasta_proc );
                --
-            END IF;
+            end if;
             --
             p_mca_errores := 'C';
             --
