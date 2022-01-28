@@ -126,28 +126,26 @@ AS
    PROCEDURE pp_devuelve_error
    IS
    BEGIN
-    --
-    --
-    IF g_cod_mensaje_cp BETWEEN 20000
-                            AND 20999
-    THEN
-       --
-       RAISE_APPLICATION_ERROR(-g_cod_mensaje_cp,
+      --
+      --
+      IF g_cod_mensaje_cp BETWEEN 20000 AND 20999  THEN
+         --
+         RAISE_APPLICATION_ERROR(-g_cod_mensaje_cp,
                              ss_k_mensaje.f_texto_idioma(g_cod_mensaje_cp,
                                                          g_cod_idioma_cp ) ||
                              g_anx_mensaje
                             );
-       --
-   ELSE
-       --
-     RAISE_APPLICATION_ERROR(-20000,
-                             ss_k_mensaje.f_texto_idioma(g_cod_mensaje_cp,
-                                                         g_cod_idioma_cp ) ||
-                             g_anx_mensaje
-                            );
-       --
-    END IF;
-    --
+         --
+      ELSE
+         --
+         RAISE_APPLICATION_ERROR(-20000,
+                              ss_k_mensaje.f_texto_idioma(g_cod_mensaje_cp,
+                                                            g_cod_idioma_cp ) ||
+                              g_anx_mensaje
+                              );
+         --
+      END IF;
+      --
    END pp_devuelve_error;
    --
    -- ------------------------------------------------------------
@@ -157,16 +155,16 @@ AS
    */
    PROCEDURE permiso_usr(p_cod_pgm programas.cod_pgm%TYPE) IS
    BEGIN
-   --
-   IF NOT g_tiene_permiso
-   THEN
       --
-      ss_p_permiso_usr(p_cod_pgm);
+      IF NOT g_tiene_permiso
+      THEN
+         --
+         ss_p_permiso_usr(p_cod_pgm);
+         --
+         g_tiene_permiso := TRUE;
+         --
+      END IF;
       --
-      g_tiene_permiso := TRUE;
-      --
-   END IF;
-   --
    END permiso_usr;
    --
    -- ------------------------------------------------------------
@@ -175,42 +173,42 @@ AS
    || bloquea :
    */
    PROCEDURE bloquea IS
-    --
-    l_idn_int_proc   a1004800.idn_int_proc  %TYPE;
-    --
-    l_bloqueado EXCEPTION;
-    PRAGMA      EXCEPTION_INIT(l_bloqueado,-54);
-    --
+      --
+      l_idn_int_proc   a1004800.idn_int_proc  %TYPE;
+      --
+      l_bloqueado EXCEPTION;
+      PRAGMA      EXCEPTION_INIT(l_bloqueado,-54);
+      --
    BEGIN
-    --
-    IF g_tb_a1004800(g_fila).clave IS NOT NULL
-     THEN
       --
-      SELECT idn_int_proc
-        INTO l_idn_int_proc
-        FROM a1004800
-       WHERE ROWID = g_tb_a1004800(g_fila).clave
-         FOR UPDATE OF idn_int_proc   NOWAIT;
-      --
-     ELSE
-      --
-      SELECT idn_int_proc
-        INTO l_idn_int_proc
-        FROM a1004800
-       WHERE idn_int_proc   = g_tb_a1004800(g_fila).idn_int_proc
-         FOR UPDATE OF idn_int_proc   NOWAIT;
-     --
-    END IF;
-    --
-   EXCEPTION
-      WHEN l_bloqueado
+      IF g_tb_a1004800(g_fila).clave IS NOT NULL
       THEN
          --
-         g_cod_mensaje_cp := 20017;
-         g_anx_mensaje := NULL;
+         SELECT idn_int_proc
+         INTO l_idn_int_proc
+         FROM a1004800
+         WHERE ROWID = g_tb_a1004800(g_fila).clave
+            FOR UPDATE OF idn_int_proc   NOWAIT;
          --
-         pp_devuelve_error;
+      ELSE
          --
+         SELECT idn_int_proc
+         INTO l_idn_int_proc
+         FROM a1004800
+         WHERE idn_int_proc   = g_tb_a1004800(g_fila).idn_int_proc
+            FOR UPDATE OF idn_int_proc   NOWAIT;
+      --
+      END IF;
+      --
+      EXCEPTION
+         WHEN l_bloqueado
+         THEN
+            --
+            g_cod_mensaje_cp := 20017;
+            g_anx_mensaje := NULL;
+            --
+            pp_devuelve_error;
+            --
    END bloquea;
    --
    -- ------------------------------------------------------------
@@ -221,18 +219,18 @@ AS
    PROCEDURE rellena_registro(p_fila BINARY_INTEGER) IS
    BEGIN
       --
-    greg_a1004800.idn_int_proc   := g_tb_a1004800(p_fila).idn_int_proc  ;
-    greg_a1004800.cod_proc       := g_tb_a1004800(p_fila).cod_proc      ;
-    greg_a1004800.nom_proc       := g_tb_a1004800(p_fila).nom_proc      ;
-    greg_a1004800.txt_alias_proc := g_tb_a1004800(p_fila).txt_alias_proc;
-    greg_a1004800.fec_desde_proc := g_tb_a1004800(p_fila).fec_desde_proc;
-    greg_a1004800.fec_hasta_proc := g_tb_a1004800(p_fila).fec_hasta_proc;
-    greg_a1004800.tip_situ_proc  := g_tb_a1004800(p_fila).tip_situ_proc ;
-    greg_a1004800.mca_enviado    := g_tb_a1004800(p_fila).mca_enviado   ;
-    greg_a1004800.nom_tip_situ_p := g_tb_a1004800(p_fila).nom_tip_situ_p;
-    greg_a1004800.cod_usr        := g_tb_a1004800(p_fila).cod_usr       ;
-    greg_a1004800.fec_actu       := g_tb_a1004800(p_fila).fec_actu      ;
-    --
+      greg_a1004800.idn_int_proc   := g_tb_a1004800(p_fila).idn_int_proc  ;
+      greg_a1004800.cod_proc       := g_tb_a1004800(p_fila).cod_proc      ;
+      greg_a1004800.nom_proc       := g_tb_a1004800(p_fila).nom_proc      ;
+      greg_a1004800.txt_alias_proc := g_tb_a1004800(p_fila).txt_alias_proc;
+      greg_a1004800.fec_desde_proc := g_tb_a1004800(p_fila).fec_desde_proc;
+      greg_a1004800.fec_hasta_proc := g_tb_a1004800(p_fila).fec_hasta_proc;
+      greg_a1004800.tip_situ_proc  := g_tb_a1004800(p_fila).tip_situ_proc ;
+      greg_a1004800.mca_enviado    := g_tb_a1004800(p_fila).mca_enviado   ;
+      greg_a1004800.nom_tip_situ_p := g_tb_a1004800(p_fila).nom_tip_situ_p;
+      greg_a1004800.cod_usr        := g_tb_a1004800(p_fila).cod_usr       ;
+      greg_a1004800.fec_actu       := g_tb_a1004800(p_fila).fec_actu      ;
+      --
    END rellena_registro;
     --
     -- ------------------------------------------------------------
@@ -244,41 +242,41 @@ AS
    */
    PROCEDURE post_query(p_fila BINARY_INTEGER) IS
    BEGIN
-    --
-    /* --------------------------------------------------
-    || ! ATENCION !
-    || --------------------------------------------------
-    || Aqui es donde se debe realizar las llamadas a los
-    || objetos  que hagan el  "POST-QUERY", y actualizar
-    || las posiciones de la tabla PL/SQL. Ademas, se de-
-    || be realizar en el "THEN"
-    || --------------------------------------------------
-    || Ejemplo :
-    || g_tb_<nombre_tabla>(p_fila).<nombre_campo> := xxx;
-    */ --------------------------------------------------
-    --
-    IF NOT g_tb_a1004800(p_fila).post_query
-    THEN
       --
-      rellena_registro(p_fila);
+      /* --------------------------------------------------
+      || ! ATENCION !
+      || --------------------------------------------------
+      || Aqui es donde se debe realizar las llamadas a los
+      || objetos  que hagan el  "POST-QUERY", y actualizar
+      || las posiciones de la tabla PL/SQL. Ademas, se de-
+      || be realizar en el "THEN"
+      || --------------------------------------------------
+      || Ejemplo :
+      || g_tb_<nombre_tabla>(p_fila).<nombre_campo> := xxx;
+      */ --------------------------------------------------
       --
-      BEGIN
-      --
-         p_v_tip_situ_proc (g_tb_a1004800(p_fila).tip_situ_proc
-                           ,g_tb_a1004800(p_fila).nom_tip_situ_p);
+      IF NOT g_tb_a1004800(p_fila).post_query
+      THEN
          --
-         p_v_cod_proc (g_tb_a1004800(p_fila).cod_proc
-                      ,g_tb_a1004800(p_fila).nom_proc);
+         rellena_registro(p_fila);
+         --
+         BEGIN
+         --
+            p_v_tip_situ_proc (g_tb_a1004800(p_fila).tip_situ_proc
+                              ,g_tb_a1004800(p_fila).nom_tip_situ_p);
+            --
+            p_v_cod_proc (g_tb_a1004800(p_fila).cod_proc
+                        ,g_tb_a1004800(p_fila).nom_proc);
+         --
+         EXCEPTION
+            WHEN OTHERS THEN NULL;
+         --
+         END;
+         --
+         g_tb_a1004800(p_fila).post_query := TRUE;
+         --
+      END IF;
       --
-      EXCEPTION
-         WHEN OTHERS THEN NULL;
-      --
-      END;
-      --
-      g_tb_a1004800(p_fila).post_query := TRUE;
-      --
-    END IF;
-    --
    END post_query;
    --
    -- ------------------------------------------------------------
@@ -434,20 +432,20 @@ AS
    PROCEDURE pp_lee_tip_situ_proc
           (p_tip_situ_proc  IN     a1004800.tip_situ_proc %TYPE,
            p_nom_tip_situ_p IN OUT g1010031.nom_valor     %TYPE) IS
-   --
-      l_k_cod_ramo_gen CONSTANT a1001800.cod_ramo       %TYPE := em.COD_RAMO_GEN;
-   --
+      --
+         l_k_cod_ramo_gen CONSTANT a1001800.cod_ramo       %TYPE := em.COD_RAMO_GEN;
+      --
    BEGIN
-    --
-PTRAZA('NIIF17.TXT','a', 'pp_lee_tip_situ_proc l_k_cod_ramo_gen : ' || l_k_cod_ramo_gen
-|| 'p_tip_situ_proc: ' || p_tip_situ_proc || ' g_cod_idioma_cp: ' || g_cod_idioma_cp
-);    
-    p_nom_tip_situ_p := ss_f_nom_valor(p_cod_campo  => 'TIP_SITU_PROC3' ,
-                                        p_cod_ramo   => l_k_cod_ramo_gen,
-                                        p_cod_valor  => p_tip_situ_proc ,
-                                        p_cod_idioma => g_cod_idioma_cp );
-    --
-   --
+      --
+      PTRAZA('NIIF17.TXT','a', 'pp_lee_tip_situ_proc l_k_cod_ramo_gen : ' || l_k_cod_ramo_gen
+      || 'p_tip_situ_proc: ' || p_tip_situ_proc || ' g_cod_idioma_cp: ' || g_cod_idioma_cp
+      );    
+      p_nom_tip_situ_p := ss_f_nom_valor(p_cod_campo  => 'TIP_SITU_PROC3' ,
+                                          p_cod_ramo   => l_k_cod_ramo_gen,
+                                          p_cod_valor  => p_tip_situ_proc ,
+                                          p_cod_idioma => g_cod_idioma_cp );
+      --
+      --
    END pp_lee_tip_situ_proc;
    --
    /**
@@ -456,17 +454,17 @@ PTRAZA('NIIF17.TXT','a', 'pp_lee_tip_situ_proc l_k_cod_ramo_gen : ' || l_k_cod_r
    PROCEDURE pp_lee_cod_proc
           (p_cod_proc  IN     a1004800.cod_proc  %TYPE,
            p_nom_proc  IN OUT g1010031.nom_valor %TYPE) IS
-   --
+      --
       l_k_cod_ramo_gen CONSTANT a1001800.cod_ramo       %TYPE := em.COD_RAMO_GEN;
-   --
+      --
    BEGIN
-    --
-    p_nom_proc := ss_f_nom_valor(p_cod_campo  => 'NIIF-17' ,
-                                        p_cod_ramo   => l_k_cod_ramo_gen,
-                                        p_cod_valor  => p_cod_proc ,
-                                        p_cod_idioma => g_cod_idioma_cp );
-    --
-   --
+      --
+      p_nom_proc := ss_f_nom_valor(p_cod_campo  => 'NIIF-17' ,
+                                          p_cod_ramo   => l_k_cod_ramo_gen,
+                                          p_cod_valor  => p_cod_proc ,
+                                          p_cod_idioma => g_cod_idioma_cp );
+      --
+      --
    END pp_lee_cod_proc;
    --
    --{{ TG_PPRV
@@ -503,7 +501,7 @@ PTRAZA('NIIF17.TXT','a', 'pp_lee_tip_situ_proc l_k_cod_ramo_gen : ' || l_k_cod_r
            cod_usr       ,
            fec_actu
          )
-    VALUES (
+      VALUES (
            p_reg.cod_proc      ,
            p_reg.idn_int_proc  ,
            p_reg.txt_alias_proc,
@@ -514,7 +512,7 @@ PTRAZA('NIIF17.TXT','a', 'pp_lee_tip_situ_proc l_k_cod_ramo_gen : ' || l_k_cod_r
            p_reg.cod_usr       ,
            p_reg.fec_actu
          );
-    --
+      --
    END p_inserta;
    --
    -- ------------------------------------------------------------
@@ -527,112 +525,112 @@ PTRAZA('NIIF17.TXT','a', 'pp_lee_tip_situ_proc l_k_cod_ramo_gen : ' || l_k_cod_r
                    p_cod_proc       a1004800.cod_proc      %TYPE,
                    p_fec_proc       a1004800.fec_hasta_proc%TYPE,
                    p_txt_alias_proc a1004800.txt_alias_proc%TYPE) IS
-    --
-    TYPE reg_a1004800_v IS RECORD
-       (clave          ROWID      ,
-        idn_int_proc   a1004800.idn_int_proc  %TYPE,
-        cod_proc       a1004800.cod_proc      %TYPE,
-        txt_alias_proc a1004800.txt_alias_proc%TYPE,
-        fec_desde_proc a1004800.fec_desde_proc%TYPE,
-        fec_hasta_proc a1004800.fec_hasta_proc%TYPE,
-        tip_situ_proc  a1004800.tip_situ_proc %TYPE,
-        mca_enviado    a1004800.mca_enviado   %TYPE,
-        cod_usr        a1004800.cod_usr       %TYPE,
-        fec_actu       a1004800.fec_actu      %TYPE);
-    --
-    l_reg REG_A1004800_V;
-    --
-    TYPE cursor_variable IS REF CURSOR RETURN l_reg%TYPE;
-    --
-    l_cursor CURSOR_VARIABLE;
-    --
+      --
+      TYPE reg_a1004800_v IS RECORD
+         (clave          ROWID      ,
+         idn_int_proc   a1004800.idn_int_proc  %TYPE,
+         cod_proc       a1004800.cod_proc      %TYPE,
+         txt_alias_proc a1004800.txt_alias_proc%TYPE,
+         fec_desde_proc a1004800.fec_desde_proc%TYPE,
+         fec_hasta_proc a1004800.fec_hasta_proc%TYPE,
+         tip_situ_proc  a1004800.tip_situ_proc %TYPE,
+         mca_enviado    a1004800.mca_enviado   %TYPE,
+         cod_usr        a1004800.cod_usr       %TYPE,
+         fec_actu       a1004800.fec_actu      %TYPE);
+      --
+      l_reg REG_A1004800_V;
+      --
+      TYPE cursor_variable IS REF CURSOR RETURN l_reg%TYPE;
+      --
+      l_cursor CURSOR_VARIABLE;
+      --
    BEGIN
-    --
-    /* ------------------------------------------
-    || ! ATENCION !
-    || ------------------------------------------
-    || Aqui se deben asignar las variables "g_.."
-    || que se definieron a nivel del BODY que a
-    || su vez deben coincidir con la declaracion
-    || de los parametros de este procedimiento.
-    || Tambien hay que modificar el where del
-    || cursor variable o crear otro cursor.
-    */ ------------------------------------------
-    --
-    g_cod_proc       := p_cod_proc    ;
-    --g_idn_int_proc   := p_idn_int_proc;
-    g_fec_proc       := p_fec_proc    ;
-    g_alias_proc     := p_txt_alias_proc  ;
-    --
-    g_tb_a1004800.DELETE;
-    --
-    g_tiene_permiso := FALSE;
-    g_hay_cambios   := 'N';
-    g_cod_usr       := trn_k_global.cod_usr;
-    g_cod_idioma_cp    := trn_k_global.cod_idioma;
-    g_fila          := 0;
-    g_cnt_pk        := 1;
-    --
-    OPEN l_cursor FOR
-       SELECT ROWID ,
-              idn_int_proc   ,
-              cod_proc       ,
-              txt_alias_proc ,
-              fec_desde_proc ,
-              fec_hasta_proc ,
-              tip_situ_proc  ,
-              mca_enviado    ,
-              cod_usr        ,
-              fec_actu
-         FROM a1004800
-          WHERE  idn_int_proc   like  g_idn_int_proc || '%'
-            AND  fec_hasta_proc <= nvl(p_fec_proc,
-                            fec_hasta_proc)
-            AND cod_proc like p_cod_proc || '%'
-            AND txt_alias_proc     LIKE g_alias_proc ||'%'
-        ORDER BY idn_int_proc  ;
-    --
-    FETCH l_cursor INTO l_reg;
-    --
-PTRAZA('NIIF17.TXT','W', 'ANTES DEL WHILE  g_idn_int_proc: ' || g_idn_int_proc || 
-                         ' p_fec_proc: ' || p_fec_proc  || ';' || 
-                         --' fec_hasta_proc: ' || fec_hasta_proc  || ';' || 
-                         ' g_alias_proc: ' || g_alias_proc  || ';' 
-                         );
+      --
+      /* ------------------------------------------
+      || ! ATENCION !
+      || ------------------------------------------
+      || Aqui se deben asignar las variables "g_.."
+      || que se definieron a nivel del BODY que a
+      || su vez deben coincidir con la declaracion
+      || de los parametros de este procedimiento.
+      || Tambien hay que modificar el where del
+      || cursor variable o crear otro cursor.
+      */ ------------------------------------------
+      --
+      g_cod_proc       := p_cod_proc    ;
+      --g_idn_int_proc   := p_idn_int_proc;
+      g_fec_proc       := p_fec_proc    ;
+      g_alias_proc     := p_txt_alias_proc  ;
+      --
+      g_tb_a1004800.DELETE;
+      --
+      g_tiene_permiso := FALSE;
+      g_hay_cambios   := 'N';
+      g_cod_usr       := trn_k_global.cod_usr;
+      g_cod_idioma_cp    := trn_k_global.cod_idioma;
+      g_fila          := 0;
+      g_cnt_pk        := 1;
+      --
+      OPEN l_cursor FOR
+         SELECT ROWID ,
+               idn_int_proc   ,
+               cod_proc       ,
+               txt_alias_proc ,
+               fec_desde_proc ,
+               fec_hasta_proc ,
+               tip_situ_proc  ,
+               mca_enviado    ,
+               cod_usr        ,
+               fec_actu
+            FROM a1004800
+            WHERE  idn_int_proc   like  g_idn_int_proc || '%'
+               AND  fec_hasta_proc <= nvl(p_fec_proc,
+                              fec_hasta_proc)
+               AND cod_proc like p_cod_proc || '%'
+               AND txt_alias_proc     LIKE g_alias_proc ||'%'
+         ORDER BY idn_int_proc  ;
+      --
+      FETCH l_cursor INTO l_reg;
+      --
+      PTRAZA('NIIF17.TXT','W', 'ANTES DEL WHILE  g_idn_int_proc: ' || g_idn_int_proc || 
+                              ' p_fec_proc: ' || p_fec_proc  || ';' || 
+                              --' fec_hasta_proc: ' || fec_hasta_proc  || ';' || 
+                              ' g_alias_proc: ' || g_alias_proc  || ';' 
+                              );
 
-    WHILE l_cursor%FOUND
-    LOOP
-       --
-PTRAZA('NIIF17.TXT','a', 'ENTRANDO EN EL WHILE  l_reg.cod_proc : ' || l_reg.cod_proc  
+      WHILE l_cursor%FOUND
+      LOOP
+         --
+         PTRAZA('NIIF17.TXT','a', 'ENTRANDO EN EL WHILE  l_reg.cod_proc : ' || l_reg.cod_proc  
                          );
-       g_fila := g_fila + 1;
-       --
-       g_tb_a1004800(g_fila).clave       := l_reg.clave;
-       g_tb_a1004800(g_fila).num_secu_k  := g_fila;
-       g_tb_a1004800(g_fila).post_query  := FALSE;
-       --
-       g_tb_a1004800(g_fila).idn_int_proc   := l_reg.idn_int_proc  ;
-       g_tb_a1004800(g_fila).cod_proc       := l_reg.cod_proc      ;
-       g_tb_a1004800(g_fila).txt_alias_proc := l_reg.txt_alias_proc;
-       g_tb_a1004800(g_fila).fec_desde_proc := l_reg.fec_desde_proc;
-       g_tb_a1004800(g_fila).fec_hasta_proc := l_reg.fec_hasta_proc;
-       g_tb_a1004800(g_fila).tip_situ_proc  := l_reg.tip_situ_proc ;
-       g_tb_a1004800(g_fila).mca_enviado    := l_reg.mca_enviado   ;
-       g_tb_a1004800(g_fila).cod_usr        := l_reg.cod_usr       ;
-       g_tb_a1004800(g_fila).fec_actu       := l_reg.fec_actu      ;
-       --
-       FETCH l_cursor INTO l_reg;
-       --
-    END LOOP;
-    --
-PTRAZA('NIIF17.TXT','A', 'SALIENDO EN EL WHILE');    
-    CLOSE l_cursor;
-    --
-    g_max_secu_query := g_fila;
-    g_max_secu_ins   := g_fila;
-    g_fila           := NULL;
-    g_fila_devuelve  := NULL;
-    --
+         g_fila := g_fila + 1;
+         --
+         g_tb_a1004800(g_fila).clave       := l_reg.clave;
+         g_tb_a1004800(g_fila).num_secu_k  := g_fila;
+         g_tb_a1004800(g_fila).post_query  := FALSE;
+         --
+         g_tb_a1004800(g_fila).idn_int_proc   := l_reg.idn_int_proc  ;
+         g_tb_a1004800(g_fila).cod_proc       := l_reg.cod_proc      ;
+         g_tb_a1004800(g_fila).txt_alias_proc := l_reg.txt_alias_proc;
+         g_tb_a1004800(g_fila).fec_desde_proc := l_reg.fec_desde_proc;
+         g_tb_a1004800(g_fila).fec_hasta_proc := l_reg.fec_hasta_proc;
+         g_tb_a1004800(g_fila).tip_situ_proc  := l_reg.tip_situ_proc ;
+         g_tb_a1004800(g_fila).mca_enviado    := l_reg.mca_enviado   ;
+         g_tb_a1004800(g_fila).cod_usr        := l_reg.cod_usr       ;
+         g_tb_a1004800(g_fila).fec_actu       := l_reg.fec_actu      ;
+         --
+         FETCH l_cursor INTO l_reg;
+         --
+      END LOOP;
+      --
+      PTRAZA('NIIF17.TXT','A', 'SALIENDO EN EL WHILE');    
+      CLOSE l_cursor;
+      --
+      g_max_secu_query := g_fila;
+      g_max_secu_ins   := g_fila;
+      g_fila           := NULL;
+      g_fila_devuelve  := NULL;
+      --
    END p_query;
    --
    -- ------------------------------------------------------------
@@ -654,128 +652,128 @@ PTRAZA('NIIF17.TXT','A', 'SALIENDO EN EL WHILE');
            p_cod_usr        IN OUT a1004800.cod_usr       %TYPE,
            p_fec_actu       IN OUT a1004800.fec_actu      %TYPE) IS
    BEGIN
-    --
-PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE p_tip_situ_proc: ' || p_tip_situ_proc);        
-    IF g_fila_devuelve IS NULL
-    THEN
-      PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE 1 ');        
-       --
-       IF g_tb_a1004800.EXISTS(g_tb_a1004800.FIRST)
-       THEN
-          --
-          PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE 2 ');        
-          g_fila_devuelve := g_tb_a1004800.FIRST;
-          --
-          p_num_secu_k := g_fila_devuelve;
-          --
-          post_query(g_fila_devuelve);
-          --
-          p_idn_int_proc   := g_tb_a1004800(g_fila_devuelve).idn_int_proc  ;
-          p_cod_proc       := g_tb_a1004800(g_fila_devuelve).cod_proc      ;
-          p_nom_proc       := g_tb_a1004800(g_fila_devuelve).nom_proc      ;
-          p_txt_alias_proc := g_tb_a1004800(g_fila_devuelve).txt_alias_proc;
-          p_fec_desde_proc := g_tb_a1004800(g_fila_devuelve).fec_desde_proc;
-          p_fec_hasta_proc := g_tb_a1004800(g_fila_devuelve).fec_hasta_proc;
-          p_tip_situ_proc  := g_tb_a1004800(g_fila_devuelve).tip_situ_proc ;
-          p_nom_tip_situ_p := g_tb_a1004800(g_fila_devuelve).nom_tip_situ_p;
-          p_mca_enviado    := g_tb_a1004800(g_fila_devuelve).mca_enviado   ;
-          p_cod_usr        := g_tb_a1004800(g_fila_devuelve).cod_usr       ;
-          p_fec_actu       := g_tb_a1004800(g_fila_devuelve).fec_actu      ;
-           --
-           PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE 3 ');        
-       ELSE
-           --
-           PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE 4 ');        
-           p_num_secu_k := NULL;
-           --
-          p_idn_int_proc   := NULL;
-          p_cod_proc       := NULL;
-          p_nom_proc       := NULL;
-          p_txt_alias_proc := NULL;
-          p_fec_desde_proc := NULL;
-          p_fec_hasta_proc := NULL;
-          p_tip_situ_proc  := NULL;
-          p_nom_tip_situ_p := NULL;
-          p_mca_enviado    := NULL;
-          p_cod_usr        := NULL;
-          p_fec_actu       := NULL;
-           --
-           g_fila_devuelve := g_max_secu_query;
-           --
-       END IF;
-       PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE 5 ');        
-       --
-    ELSIF g_fila_devuelve != g_max_secu_query
-    THEN
-        --
-        PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE 6 ');        
-          g_fila_devuelve := g_tb_a1004800.NEXT(g_fila_devuelve);
-          --
-          post_query(g_fila_devuelve);
-          --
-          p_num_secu_k := g_fila_devuelve;
-          --
-        p_idn_int_proc   := g_tb_a1004800(g_fila_devuelve).idn_int_proc  ;
-        p_cod_proc       := g_tb_a1004800(g_fila_devuelve).cod_proc      ;
-        p_nom_proc       := g_tb_a1004800(g_fila_devuelve).nom_proc      ;
-        p_txt_alias_proc := g_tb_a1004800(g_fila_devuelve).txt_alias_proc;
-        p_fec_desde_proc := g_tb_a1004800(g_fila_devuelve).fec_desde_proc;
-        p_fec_hasta_proc := g_tb_a1004800(g_fila_devuelve).fec_hasta_proc;
-        p_tip_situ_proc  := g_tb_a1004800(g_fila_devuelve).tip_situ_proc ;
-        p_nom_tip_situ_p := g_tb_a1004800(g_fila_devuelve).nom_tip_situ_p;
-        p_mca_enviado    := g_tb_a1004800(g_fila_devuelve).mca_enviado   ;
-        p_cod_usr        := g_tb_a1004800(g_fila_devuelve).cod_usr       ;
-        p_fec_actu       := g_tb_a1004800(g_fila_devuelve).fec_actu      ;
-          --
-          PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE 7 ');        
-       ELSE
-          --
-          PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE 8 ');        
-          p_num_secu_k := NULL;
-          --
-        p_idn_int_proc   := NULL;
-        p_cod_proc       := NULL;
-        p_nom_proc       := NULL;
-        p_txt_alias_proc := NULL;
-        p_fec_desde_proc := NULL;
-        p_fec_hasta_proc := NULL;
-        p_tip_situ_proc  := NULL;
-        p_nom_tip_situ_p := NULL;
-        p_mca_enviado    := NULL;
-        p_cod_usr        := NULL;
-        p_fec_actu       := NULL;
-          --
-    END IF;
-    --
-    PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE 9 ');        
+      --
+      PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE p_tip_situ_proc: ' || p_tip_situ_proc);        
+      IF g_fila_devuelve IS NULL
+      THEN
+         PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE 1 ');        
+         --
+         IF g_tb_a1004800.EXISTS(g_tb_a1004800.FIRST)
+         THEN
+            --
+            PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE 2 ');        
+            g_fila_devuelve := g_tb_a1004800.FIRST;
+            --
+            p_num_secu_k := g_fila_devuelve;
+            --
+            post_query(g_fila_devuelve);
+            --
+            p_idn_int_proc   := g_tb_a1004800(g_fila_devuelve).idn_int_proc  ;
+            p_cod_proc       := g_tb_a1004800(g_fila_devuelve).cod_proc      ;
+            p_nom_proc       := g_tb_a1004800(g_fila_devuelve).nom_proc      ;
+            p_txt_alias_proc := g_tb_a1004800(g_fila_devuelve).txt_alias_proc;
+            p_fec_desde_proc := g_tb_a1004800(g_fila_devuelve).fec_desde_proc;
+            p_fec_hasta_proc := g_tb_a1004800(g_fila_devuelve).fec_hasta_proc;
+            p_tip_situ_proc  := g_tb_a1004800(g_fila_devuelve).tip_situ_proc ;
+            p_nom_tip_situ_p := g_tb_a1004800(g_fila_devuelve).nom_tip_situ_p;
+            p_mca_enviado    := g_tb_a1004800(g_fila_devuelve).mca_enviado   ;
+            p_cod_usr        := g_tb_a1004800(g_fila_devuelve).cod_usr       ;
+            p_fec_actu       := g_tb_a1004800(g_fila_devuelve).fec_actu      ;
+            --
+            PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE 3 ');        
+         ELSE
+            --
+            PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE 4 ');        
+            p_num_secu_k := NULL;
+            --
+            p_idn_int_proc   := NULL;
+            p_cod_proc       := NULL;
+            p_nom_proc       := NULL;
+            p_txt_alias_proc := NULL;
+            p_fec_desde_proc := NULL;
+            p_fec_hasta_proc := NULL;
+            p_tip_situ_proc  := NULL;
+            p_nom_tip_situ_p := NULL;
+            p_mca_enviado    := NULL;
+            p_cod_usr        := NULL;
+            p_fec_actu       := NULL;
+            --
+            g_fila_devuelve := g_max_secu_query;
+            --
+         END IF;
+         PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE 5 ');        
+         --
+      ELSIF g_fila_devuelve != g_max_secu_query
+      THEN
+         --
+         PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE 6 ');        
+            g_fila_devuelve := g_tb_a1004800.NEXT(g_fila_devuelve);
+            --
+            post_query(g_fila_devuelve);
+            --
+            p_num_secu_k := g_fila_devuelve;
+            --
+         p_idn_int_proc   := g_tb_a1004800(g_fila_devuelve).idn_int_proc  ;
+         p_cod_proc       := g_tb_a1004800(g_fila_devuelve).cod_proc      ;
+         p_nom_proc       := g_tb_a1004800(g_fila_devuelve).nom_proc      ;
+         p_txt_alias_proc := g_tb_a1004800(g_fila_devuelve).txt_alias_proc;
+         p_fec_desde_proc := g_tb_a1004800(g_fila_devuelve).fec_desde_proc;
+         p_fec_hasta_proc := g_tb_a1004800(g_fila_devuelve).fec_hasta_proc;
+         p_tip_situ_proc  := g_tb_a1004800(g_fila_devuelve).tip_situ_proc ;
+         p_nom_tip_situ_p := g_tb_a1004800(g_fila_devuelve).nom_tip_situ_p;
+         p_mca_enviado    := g_tb_a1004800(g_fila_devuelve).mca_enviado   ;
+         p_cod_usr        := g_tb_a1004800(g_fila_devuelve).cod_usr       ;
+         p_fec_actu       := g_tb_a1004800(g_fila_devuelve).fec_actu      ;
+            --
+            PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE 7 ');        
+         ELSE
+            --
+            PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE 8 ');        
+            p_num_secu_k := NULL;
+            --
+         p_idn_int_proc   := NULL;
+         p_cod_proc       := NULL;
+         p_nom_proc       := NULL;
+         p_txt_alias_proc := NULL;
+         p_fec_desde_proc := NULL;
+         p_fec_hasta_proc := NULL;
+         p_tip_situ_proc  := NULL;
+         p_nom_tip_situ_p := NULL;
+         p_mca_enviado    := NULL;
+         p_cod_usr        := NULL;
+         p_fec_actu       := NULL;
+            --
+      END IF;
+      --
+      PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE 9 ');        
    END p_devuelve;
    --
    /**
    || Devuelve la PK del registro
    */
    FUNCTION f_devuelve_pk RETURN VARCHAR2 IS
-    --
-    l_retorno g1010031.cod_campo%TYPE;
-    --
+      --
+      l_retorno g1010031.cod_campo%TYPE;
+      --
    BEGIN
-    --
-    IF g_cnt_pk = 1
-    THEN
-       --
-    g_cnt_pk  := 2;
-       l_retorno := 'idn_int_proc';
-       --
-   ELSIF g_cnt_pk = 2
-       THEN
-        --
-        g_cnt_pk  := 1;
-        l_retorno := NULL;
-        --
-  END IF;
-  --
-  RETURN l_retorno;
-  --
- END f_devuelve_pk;
+      --
+      IF g_cnt_pk = 1
+      THEN
+         --
+         g_cnt_pk  := 2;
+         l_retorno := 'idn_int_proc';
+         --
+      ELSIF g_cnt_pk = 2
+         THEN
+         --
+         g_cnt_pk  := 1;
+         l_retorno := NULL;
+         --
+      END IF;
+      --
+      RETURN l_retorno;
+      --
+   END f_devuelve_pk;
    --
    -- ------------------------------------------------------------
    --
@@ -784,13 +782,13 @@ PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE p_tip_situ_proc: ' || p_tip_situ_proc);
    */
    PROCEDURE p_alta(p_cod_pgm VARCHAR2) IS
    BEGIN
-    --
-    g_fila := NULL;
-    --
-    greg_a1004800 := greg_a1004800_nulo;
-    --
-    permiso_usr(p_cod_pgm);
-    --
+      --
+      g_fila := NULL;
+      --
+      greg_a1004800 := greg_a1004800_nulo;
+      --
+      permiso_usr(p_cod_pgm);
+      --
    END p_alta;
    --
    -- ------------------------------------------------------------
@@ -801,26 +799,26 @@ PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE p_tip_situ_proc: ' || p_tip_situ_proc);
    PROCEDURE p_modifica(p_num_secu_k NUMBER  ,
                       p_cod_pgm    VARCHAR2) IS
    BEGIN
-    --
-    IF p_num_secu_k IS NULL
-    THEN
-       --
-       g_cod_mensaje_cp := 20013;
-       g_anx_mensaje := NULL;
-       --
-       pp_devuelve_error;
-       --
-    END IF;
-    --
-    permiso_usr(p_cod_pgm);
-    --
-    g_fila := p_num_secu_k;
-    --
-    bloquea;
-    --
-    rellena_registro(g_fila);
-    --
- END p_modifica;
+      --
+      IF p_num_secu_k IS NULL
+      THEN
+         --
+         g_cod_mensaje_cp := 20013;
+         g_anx_mensaje := NULL;
+         --
+         pp_devuelve_error;
+         --
+      END IF;
+      --
+      permiso_usr(p_cod_pgm);
+      --
+      g_fila := p_num_secu_k;
+      --
+      bloquea;
+      --
+      rellena_registro(g_fila);
+      --
+   END p_modifica;
    --
    -- ------------------------------------------------------------
    --
@@ -830,41 +828,41 @@ PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE p_tip_situ_proc: ' || p_tip_situ_proc);
    PROCEDURE p_borra(p_num_secu_k NUMBER  ,
                    p_cod_pgm    VARCHAR2) IS
    BEGIN
-    --
-    IF p_num_secu_k IS NULL
-    THEN
-       --
-       g_cod_mensaje_cp := 20013;
-       g_anx_mensaje := NULL;
-       --
-       pp_devuelve_error;
-       --
-    END IF;
-    --
-    g_fila := p_num_secu_k;
-    --
-    permiso_usr(p_cod_pgm);
-    --
-    bloquea;
-    --
-    IF g_tb_a1004800(g_fila).clave IS NOT NULL
-    THEN
-       --
-       DELETE FROM a1004800
-       WHERE ROWID = g_tb_a1004800(g_fila).clave;
-       --
-    ELSE
-       --
-       DELETE FROM a1004800
-       WHERE idn_int_proc   = g_tb_a1004800(g_fila).idn_int_proc
-           ;
-       --
-    END IF;
-    --
-    g_tb_a1004800.DELETE(g_fila);
-    --
-    g_hay_cambios := 'S';
-    --
+      --
+      IF p_num_secu_k IS NULL
+      THEN
+         --
+         g_cod_mensaje_cp := 20013;
+         g_anx_mensaje := NULL;
+         --
+         pp_devuelve_error;
+         --
+      END IF;
+      --
+      g_fila := p_num_secu_k;
+      --
+      permiso_usr(p_cod_pgm);
+      --
+      bloquea;
+      --
+      IF g_tb_a1004800(g_fila).clave IS NOT NULL
+      THEN
+         --
+         DELETE FROM a1004800
+         WHERE ROWID = g_tb_a1004800(g_fila).clave;
+         --
+      ELSE
+         --
+         DELETE FROM a1004800
+         WHERE idn_int_proc   = g_tb_a1004800(g_fila).idn_int_proc
+            ;
+         --
+      END IF;
+      --
+      g_tb_a1004800.DELETE(g_fila);
+      --
+      g_hay_cambios := 'S';
+      --
    END p_borra;
    --
    -- ------------------------------------------------------------
@@ -873,63 +871,63 @@ PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE p_tip_situ_proc: ' || p_tip_situ_proc);
    || p_graba :
    */
    PROCEDURE p_graba IS
-    --
-    l_max_secu BINARY_INTEGER;
-    l_fila     BINARY_INTEGER;
-    --
+      --
+      l_max_secu BINARY_INTEGER;
+      l_fila     BINARY_INTEGER;
+      --
    BEGIN
-    --
-    l_max_secu := g_max_secu_ins;
-    l_fila     := g_tb_a1004800.NEXT(g_max_secu_ins);
-  --
-    WHILE l_fila <= NVL(g_tb_a1004800.LAST,-1)
-   LOOP
       --
-      greg.idn_int_proc   := g_tb_a1004800(l_fila).idn_int_proc  ;
-      greg.cod_proc       := g_tb_a1004800(l_fila).cod_proc      ;
-      greg.txt_alias_proc := g_tb_a1004800(l_fila).txt_alias_proc;
-      greg.fec_desde_proc := nvl(g_tb_a1004800(l_fila).fec_desde_proc,g_tb_a1004800(l_fila).fec_hasta_proc);
-      greg.fec_hasta_proc := g_tb_a1004800(l_fila).fec_hasta_proc;
-      greg.tip_situ_proc  := g_tb_a1004800(l_fila).tip_situ_proc ;
-      greg.mca_enviado    := g_tb_a1004800(l_fila).mca_enviado   ;
-      greg.cod_usr        := g_tb_a1004800(l_fila).cod_usr       ;
-      greg.fec_actu       := g_tb_a1004800(l_fila).fec_actu      ;
+      l_max_secu := g_max_secu_ins;
+      l_fila     := g_tb_a1004800.NEXT(g_max_secu_ins);
       --
-      --p_inserta(greg);
-      dc_k_prophet_a1004800.p_inserta(greg);
+      WHILE l_fila <= NVL(g_tb_a1004800.LAST,-1)
+      LOOP
+         --
+         greg.idn_int_proc   := g_tb_a1004800(l_fila).idn_int_proc  ;
+         greg.cod_proc       := g_tb_a1004800(l_fila).cod_proc      ;
+         greg.txt_alias_proc := g_tb_a1004800(l_fila).txt_alias_proc;
+         greg.fec_desde_proc := nvl(g_tb_a1004800(l_fila).fec_desde_proc,g_tb_a1004800(l_fila).fec_hasta_proc);
+         greg.fec_hasta_proc := g_tb_a1004800(l_fila).fec_hasta_proc;
+         greg.tip_situ_proc  := g_tb_a1004800(l_fila).tip_situ_proc ;
+         greg.mca_enviado    := g_tb_a1004800(l_fila).mca_enviado   ;
+         greg.cod_usr        := g_tb_a1004800(l_fila).cod_usr       ;
+         greg.fec_actu       := g_tb_a1004800(l_fila).fec_actu      ;
+         --
+         --p_inserta(greg);
+         dc_k_prophet_a1004800.p_inserta(greg);
+         --
+         g_max_secu_ins := g_max_secu_ins + 1;
+         l_fila         := g_tb_a1004800.NEXT(l_fila);
+         --
+      END LOOP;
       --
-      g_max_secu_ins := g_max_secu_ins + 1;
-    l_fila         := g_tb_a1004800.NEXT(l_fila);
-    --
-    END LOOP;
-    --
    EXCEPTION
       WHEN DUP_VAL_ON_INDEX
       THEN
-         --
-         g_max_secu_ins := l_max_secu;
-          --
-          g_cod_mensaje_cp := 20099;
-          g_anx_mensaje := g_k_ini_corchete ||
-                     TO_CHAR(g_tb_a1004800(l_fila).idn_int_proc  )||
-                     g_k_fin_corchete;
-         --
-         g_tb_a1004800.DELETE(l_fila);
-         --
-         pp_devuelve_error;
-      --
-    WHEN OTHERS
-    THEN
-       --
-       g_max_secu_ins := l_max_secu;
-       --
-       g_tb_a1004800.DELETE(l_fila);
-       --
-       g_cod_mensaje_cp := SQLCODE;
-       g_anx_mensaje := SQLERRM(SQLCODE);
-        --
-       pp_devuelve_error;
-       --
+            --
+            g_max_secu_ins := l_max_secu;
+            --
+            g_cod_mensaje_cp := 20099;
+            g_anx_mensaje := g_k_ini_corchete ||
+                        TO_CHAR(g_tb_a1004800(l_fila).idn_int_proc  )||
+                        g_k_fin_corchete;
+            --
+            g_tb_a1004800.DELETE(l_fila);
+            --
+            pp_devuelve_error;
+            --
+      WHEN OTHERS
+      THEN
+            --
+            g_max_secu_ins := l_max_secu;
+            --
+            g_tb_a1004800.DELETE(l_fila);
+            --
+            g_cod_mensaje_cp := SQLCODE;
+            g_anx_mensaje := SQLERRM(SQLCODE);
+            --
+            pp_devuelve_error;
+            --
    END p_graba;
    --
    -- ------------------------------------------------------------
@@ -951,118 +949,118 @@ PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE p_tip_situ_proc: ' || p_tip_situ_proc);
            p_cod_usr        IN OUT a1004800.cod_usr       %TYPE,
            p_fec_actu       IN OUT a1004800.fec_actu      %TYPE) IS
    BEGIN
-    --
-    p_v_cod_proc      (p_cod_proc, p_nom_proc);
-    --
-    p_v_txt_alias_proc(p_txt_alias_proc);
-    --
-    p_v_fec_desde_proc(p_fec_desde_proc);
-    --
-    p_v_fec_hasta_proc(p_fec_hasta_proc,
-                       p_fec_desde_proc);
-    --
-    p_v_tip_situ_proc (p_tip_situ_proc
-                     ,p_nom_tip_situ_p);
-    --
-    p_v_mca_enviado   (p_mca_enviado   );
-    --
-    p_v_cod_usr       (p_cod_usr       );
-    --
-    p_v_fec_actu      (p_fec_actu      );
-    --
-    IF p_num_secu_k IS NOT NULL
-    THEN
-       --
-       --
-       IF g_tb_a1004800(g_fila).clave IS NOT NULL
-       THEN
-          --
-          UPDATE a1004800
-             SET
-             cod_proc       = greg_a1004800.cod_proc      ,
-             idn_int_proc   = greg_a1004800.idn_int_proc  ,
-             txt_alias_proc = greg_a1004800.txt_alias_proc,
-             fec_desde_proc = greg_a1004800.fec_desde_proc,
-             fec_hasta_proc = greg_a1004800.fec_hasta_proc,
-             tip_situ_proc  = greg_a1004800.tip_situ_proc ,
-             mca_enviado    = greg_a1004800.mca_enviado   ,
-             cod_usr        = greg_a1004800.cod_usr       ,
-             fec_actu       = greg_a1004800.fec_actu
-       WHERE ROWID = g_tb_a1004800(g_fila).clave;
       --
-     ELSE
+      p_v_cod_proc      (p_cod_proc, p_nom_proc);
       --
-      IF g_fila <= g_max_secu_ins
-       THEN
-        --
-        UPDATE a1004800
-           SET
-               cod_proc       = greg_a1004800.cod_proc      ,
-               idn_int_proc   = greg_a1004800.idn_int_proc  ,
-               txt_alias_proc = greg_a1004800.txt_alias_proc,
-               fec_desde_proc = greg_a1004800.fec_desde_proc,
-               fec_hasta_proc = greg_a1004800.fec_hasta_proc,
-               tip_situ_proc  = greg_a1004800.tip_situ_proc ,
-               mca_enviado    = greg_a1004800.mca_enviado   ,
-               cod_usr        = greg_a1004800.cod_usr       ,
-               fec_actu       = greg_a1004800.fec_actu
-         WHERE idn_int_proc   = g_tb_a1004800(g_fila).idn_int_proc
-               ;
-        --
+      p_v_txt_alias_proc(p_txt_alias_proc);
+      --
+      p_v_fec_desde_proc(p_fec_desde_proc);
+      --
+      p_v_fec_hasta_proc(p_fec_hasta_proc,
+                        p_fec_desde_proc);
+      --
+      p_v_tip_situ_proc (p_tip_situ_proc
+                        ,p_nom_tip_situ_p);
+      --
+      p_v_mca_enviado   (p_mca_enviado   );
+      --
+      p_v_cod_usr       (p_cod_usr       );
+      --
+      p_v_fec_actu      (p_fec_actu      );
+      --
+      IF p_num_secu_k IS NOT NULL
+      THEN
+         --
+         --
+         IF g_tb_a1004800(g_fila).clave IS NOT NULL
+         THEN
+               --
+               UPDATE a1004800
+                  SET
+                  cod_proc       = greg_a1004800.cod_proc      ,
+                  idn_int_proc   = greg_a1004800.idn_int_proc  ,
+                  txt_alias_proc = greg_a1004800.txt_alias_proc,
+                  fec_desde_proc = greg_a1004800.fec_desde_proc,
+                  fec_hasta_proc = greg_a1004800.fec_hasta_proc,
+                  tip_situ_proc  = greg_a1004800.tip_situ_proc ,
+                  mca_enviado    = greg_a1004800.mca_enviado   ,
+                  cod_usr        = greg_a1004800.cod_usr       ,
+                  fec_actu       = greg_a1004800.fec_actu
+            WHERE ROWID = g_tb_a1004800(g_fila).clave;
+            --
+         ELSE
+            --
+            IF g_fila <= g_max_secu_ins
+            THEN
+               --
+               UPDATE a1004800
+                  SET
+                        cod_proc       = greg_a1004800.cod_proc      ,
+                        idn_int_proc   = greg_a1004800.idn_int_proc  ,
+                        txt_alias_proc = greg_a1004800.txt_alias_proc,
+                        fec_desde_proc = greg_a1004800.fec_desde_proc,
+                        fec_hasta_proc = greg_a1004800.fec_hasta_proc,
+                        tip_situ_proc  = greg_a1004800.tip_situ_proc ,
+                        mca_enviado    = greg_a1004800.mca_enviado   ,
+                        cod_usr        = greg_a1004800.cod_usr       ,
+                        fec_actu       = greg_a1004800.fec_actu
+                  WHERE idn_int_proc   = g_tb_a1004800(g_fila).idn_int_proc
+                        ;
+               --
+            END IF;
+         --
+         END IF;
+         --
+         g_tb_a1004800(g_fila).idn_int_proc   := greg_a1004800.idn_int_proc  ;
+         g_tb_a1004800(g_fila).cod_proc       := greg_a1004800.cod_proc      ;
+         g_tb_a1004800(g_fila).nom_proc       := greg_a1004800.nom_proc      ;
+         g_tb_a1004800(g_fila).txt_alias_proc := greg_a1004800.txt_alias_proc;
+         g_tb_a1004800(g_fila).fec_desde_proc := greg_a1004800.fec_desde_proc;
+         g_tb_a1004800(g_fila).fec_hasta_proc := greg_a1004800.fec_hasta_proc;
+         g_tb_a1004800(g_fila).tip_situ_proc  := greg_a1004800.tip_situ_proc ;
+         g_tb_a1004800(g_fila).nom_tip_situ_p := greg_a1004800.nom_tip_situ_p;
+         g_tb_a1004800(g_fila).mca_enviado    := greg_a1004800.mca_enviado   ;
+         g_tb_a1004800(g_fila).cod_usr        := greg_a1004800.cod_usr       ;
+         g_tb_a1004800(g_fila).fec_actu       := greg_a1004800.fec_actu      ;
+         --
+      ELSE
+         --
+         g_fila       := NVL(g_tb_a1004800.LAST,0) + 1;
+         p_num_secu_k := g_fila;
+         --
+         IF g_fila <= g_max_secu_ins
+         THEN
+            --
+            g_max_secu_ins := g_fila - 1;
+            --
+         END IF;
+         --
+         g_tb_a1004800(g_fila).num_secu_k := g_fila;
+         --
+         SELECT NVL( MAX(idn_int_proc), 0 ) + 1 INTO p_idn_int_proc FROM a1004800;
+         --
+         greg_a1004800.idn_int_proc  := p_idn_int_proc;
+         --
+         g_tb_a1004800(g_fila).idn_int_proc   := p_idn_int_proc;
+         g_tb_a1004800(g_fila).cod_proc       := greg_a1004800.cod_proc      ;
+         g_tb_a1004800(g_fila).nom_proc       := greg_a1004800.nom_proc      ;
+         g_tb_a1004800(g_fila).txt_alias_proc := greg_a1004800.txt_alias_proc;
+         g_tb_a1004800(g_fila).fec_desde_proc := greg_a1004800.fec_desde_proc;
+         g_tb_a1004800(g_fila).fec_hasta_proc := greg_a1004800.fec_hasta_proc;
+         g_tb_a1004800(g_fila).tip_situ_proc  := greg_a1004800.tip_situ_proc ;
+         g_tb_a1004800(g_fila).nom_tip_situ_p := greg_a1004800.nom_tip_situ_p;
+         g_tb_a1004800(g_fila).mca_enviado    := greg_a1004800.mca_enviado   ;
+         g_tb_a1004800(g_fila).cod_usr        := greg_a1004800.cod_usr       ;
+         g_tb_a1004800(g_fila).fec_actu       := greg_a1004800.fec_actu      ;
+         --
+         p_graba;
+         --
       END IF;
       --
-    END IF;
-    --
-    g_tb_a1004800(g_fila).idn_int_proc   := greg_a1004800.idn_int_proc  ;
-    g_tb_a1004800(g_fila).cod_proc       := greg_a1004800.cod_proc      ;
-    g_tb_a1004800(g_fila).nom_proc       := greg_a1004800.nom_proc      ;
-    g_tb_a1004800(g_fila).txt_alias_proc := greg_a1004800.txt_alias_proc;
-    g_tb_a1004800(g_fila).fec_desde_proc := greg_a1004800.fec_desde_proc;
-    g_tb_a1004800(g_fila).fec_hasta_proc := greg_a1004800.fec_hasta_proc;
-    g_tb_a1004800(g_fila).tip_situ_proc  := greg_a1004800.tip_situ_proc ;
-    g_tb_a1004800(g_fila).nom_tip_situ_p := greg_a1004800.nom_tip_situ_p;
-    g_tb_a1004800(g_fila).mca_enviado    := greg_a1004800.mca_enviado   ;
-    g_tb_a1004800(g_fila).cod_usr        := greg_a1004800.cod_usr       ;
-    g_tb_a1004800(g_fila).fec_actu       := greg_a1004800.fec_actu      ;
-    --
-   ELSE
-    --
-    g_fila       := NVL(g_tb_a1004800.LAST,0) + 1;
-    p_num_secu_k := g_fila;
-    --
-    IF g_fila <= g_max_secu_ins
-     THEN
+      g_hay_cambios := 'S';
       --
-      g_max_secu_ins := g_fila - 1;
+      greg_a1004800 := greg_a1004800_nulo;
       --
-    END IF;
-    --
-    g_tb_a1004800(g_fila).num_secu_k := g_fila;
-    --
-    SELECT NVL( MAX(idn_int_proc), 0 ) + 1 INTO p_idn_int_proc FROM a1004800;
-    --
-    greg_a1004800.idn_int_proc  := p_idn_int_proc;
-    --
-    g_tb_a1004800(g_fila).idn_int_proc   := p_idn_int_proc;
-    g_tb_a1004800(g_fila).cod_proc       := greg_a1004800.cod_proc      ;
-    g_tb_a1004800(g_fila).nom_proc       := greg_a1004800.nom_proc      ;
-    g_tb_a1004800(g_fila).txt_alias_proc := greg_a1004800.txt_alias_proc;
-    g_tb_a1004800(g_fila).fec_desde_proc := greg_a1004800.fec_desde_proc;
-    g_tb_a1004800(g_fila).fec_hasta_proc := greg_a1004800.fec_hasta_proc;
-    g_tb_a1004800(g_fila).tip_situ_proc  := greg_a1004800.tip_situ_proc ;
-    g_tb_a1004800(g_fila).nom_tip_situ_p := greg_a1004800.nom_tip_situ_p;
-    g_tb_a1004800(g_fila).mca_enviado    := greg_a1004800.mca_enviado   ;
-    g_tb_a1004800(g_fila).cod_usr        := greg_a1004800.cod_usr       ;
-    g_tb_a1004800(g_fila).fec_actu       := greg_a1004800.fec_actu      ;
-       --
-       p_graba;
-       --
-   END IF;
-  --
-  g_hay_cambios := 'S';
-   --
-  greg_a1004800 := greg_a1004800_nulo;
-   --
    END p_actualiza;
    --
    -- ------------------------------------------------------------
@@ -1088,22 +1086,22 @@ PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE p_tip_situ_proc: ' || p_tip_situ_proc);
             (p_cod_proc     IN     a1004800.cod_proc  %TYPE,
             p_nom_proc      IN OUT g1010031.nom_valor %TYPE) IS
    BEGIN
-    --
-    IF p_cod_proc IS NULL
-     THEN
       --
-      g_cod_mensaje_cp := 20003;
-      g_anx_mensaje := g_k_ini_corchete||'cod_proc'||g_k_fin_corchete;
+      IF p_cod_proc IS NULL
+      THEN
+         --
+         g_cod_mensaje_cp := 20003;
+         g_anx_mensaje := g_k_ini_corchete||'cod_proc'||g_k_fin_corchete;
+         --
+         pp_devuelve_error;
+         --
+      END IF;
       --
-      pp_devuelve_error;
+      pp_lee_cod_proc (p_cod_proc,p_nom_proc);
       --
-    END IF;
-    --
-    pp_lee_cod_proc (p_cod_proc,p_nom_proc);
-    --
-    greg_a1004800.nom_proc  := p_nom_proc;
-    greg_a1004800.cod_proc  := p_cod_proc;
-    --
+      greg_a1004800.nom_proc  := p_nom_proc;
+      greg_a1004800.cod_proc  := p_cod_proc;
+      --
    END p_v_cod_proc;
    --
    -- ------------------------------------------------------------
@@ -1116,19 +1114,19 @@ PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE p_tip_situ_proc: ' || p_tip_situ_proc);
    PROCEDURE p_v_txt_alias_proc
             (p_txt_alias_proc     IN     a1004800.txt_alias_proc    %TYPE) IS
    BEGIN
-    --
-    IF p_txt_alias_proc IS NULL
-     THEN
       --
-      g_cod_mensaje_cp := 20003;
-      g_anx_mensaje := g_k_ini_corchete||'txt_alias_proc'||g_k_fin_corchete;
+      IF p_txt_alias_proc IS NULL
+      THEN
+         --
+         g_cod_mensaje_cp := 20003;
+         g_anx_mensaje := g_k_ini_corchete||'txt_alias_proc'||g_k_fin_corchete;
+         --
+         pp_devuelve_error;
+         --
+      END IF;
       --
-      pp_devuelve_error;
+      greg_a1004800.txt_alias_proc     := p_txt_alias_proc;
       --
-    END IF;
-    --
-    greg_a1004800.txt_alias_proc     := p_txt_alias_proc;
-    --
    END p_v_txt_alias_proc;
    --
    -- ------------------------------------------------------------
@@ -1141,19 +1139,19 @@ PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE p_tip_situ_proc: ' || p_tip_situ_proc);
    PROCEDURE p_v_fec_desde_proc
             (p_fec_desde_proc IN     a1004800.fec_desde_proc%TYPE) IS
    BEGIN
-    --
-    IF p_fec_desde_proc IS NULL
-     THEN
       --
-      g_cod_mensaje_cp := 20003;
-      g_anx_mensaje := g_k_ini_corchete||'fec_desde_proc'||g_k_fin_corchete;
+      IF p_fec_desde_proc IS NULL
+      THEN
+         --
+         g_cod_mensaje_cp := 20003;
+         g_anx_mensaje := g_k_ini_corchete||'fec_desde_proc'||g_k_fin_corchete;
+         --
+         pp_devuelve_error;
+         --
+      END IF;
       --
-      pp_devuelve_error;
+      greg_a1004800.fec_desde_proc := p_fec_desde_proc;
       --
-    END IF;
-    --
-    greg_a1004800.fec_desde_proc := p_fec_desde_proc;
-    --
    END p_v_fec_desde_proc;
    --
    -- ------------------------------------------------------------
@@ -1167,17 +1165,17 @@ PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE p_tip_situ_proc: ' || p_tip_situ_proc);
             (p_fec_hasta_proc IN     a1004800.fec_hasta_proc%TYPE,
              p_fec_desde_proc IN     a1004800.fec_desde_proc%TYPE) IS
    BEGIN
-    --
-    IF p_fec_hasta_proc IS NULL
-     THEN
       --
-      g_cod_mensaje_cp := 20003;
-      g_anx_mensaje := g_k_ini_corchete||'fec_hasta_proc'||g_k_fin_corchete;
+      IF p_fec_hasta_proc IS NULL
+      THEN
+         --
+         g_cod_mensaje_cp := 20003;
+         g_anx_mensaje := g_k_ini_corchete||'fec_hasta_proc'||g_k_fin_corchete;
+         --
+         pp_devuelve_error;
+         --
+      END IF;
       --
-      pp_devuelve_error;
-      --
-    END IF;
-    --
       IF p_fec_desde_proc IS NOT NULL
       THEN
          --
@@ -1193,8 +1191,8 @@ PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE p_tip_situ_proc: ' || p_tip_situ_proc);
          --
       END IF;
       --
-    greg_a1004800.fec_hasta_proc := p_fec_hasta_proc;
-    --
+      greg_a1004800.fec_hasta_proc := p_fec_hasta_proc;
+      --
    END p_v_fec_hasta_proc;
    --
    -- ------------------------------------------------------------
@@ -1208,28 +1206,28 @@ PTRAZA('NIIF17.TXT','A', 'I - P_DEVUELVE p_tip_situ_proc: ' || p_tip_situ_proc);
             (p_tip_situ_proc  IN     a1004800.tip_situ_proc %TYPE,
              p_nom_tip_situ_p IN OUT g1010031.nom_valor     %TYPE) IS
    BEGIN
-    --
-PTRAZA('NIIF17.TXT','a', 'p_look_up_tip_situ_proc p_tip_situ_proc : ' || p_tip_situ_proc);
+      --
+      PTRAZA('NIIF17.TXT','a', 'p_look_up_tip_situ_proc p_tip_situ_proc : ' || p_tip_situ_proc);
     
-    IF p_tip_situ_proc IS NOT NULL
-    THEN
-      --
-      pp_lee_tip_situ_proc (p_tip_situ_proc   ,p_nom_tip_situ_p);
-      --
-    ELSE
-      --
-      p_nom_tip_situ_p := NULL;
-      --
-    END IF;
-    --
-
-PTRAZA('NIIF17.TXT','a', 'p_look_up_tip_situ_proc ANTES DE L EXEPTION');
-   EXCEPTION
-      WHEN OTHERS THEN
+      IF p_tip_situ_proc IS NOT NULL
+      THEN
+         --
+         pp_lee_tip_situ_proc (p_tip_situ_proc   ,p_nom_tip_situ_p);
+         --
+      ELSE
+         --
          p_nom_tip_situ_p := NULL;
-         PTRAZA('NIIF17.TXT','a', 'p_look_up_tip_situ_proc DENTRO DEL EXEPTION ');
+         --
+      END IF;
+      --
 
-   --
+      PTRAZA('NIIF17.TXT','a', 'p_look_up_tip_situ_proc ANTES DE L EXEPTION');
+      EXCEPTION
+         WHEN OTHERS THEN
+            p_nom_tip_situ_p := NULL;
+            PTRAZA('NIIF17.TXT','a', 'p_look_up_tip_situ_proc DENTRO DEL EXEPTION ');
+
+      --
    END p_look_up_tip_situ_proc;
    --
    -- ------------------------------------------------------------

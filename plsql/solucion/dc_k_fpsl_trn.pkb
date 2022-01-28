@@ -33,8 +33,10 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
    || Aqui comienza la declaracion de variables GLOBALES
    */ --------------------------------------------------
    --
-   g_cod_usr             a1002150.cod_usr      %TYPE;
-   g_cod_idioma          g1010010.cod_idioma    %TYPE;
+   g_cod_usr             a1002150.cod_usr%TYPE;
+   g_cod_idioma          g1010010.cod_idioma%TYPE;
+   g_cod_cia             a1000900.cod_cia%TYPE;
+   g_cod_cia_financiera  a1000900.cod_cia_financiera%TYPE;
    --
    g_existe BOOLEAN := FALSE;
    --
@@ -284,48 +286,47 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
                         COD_SIS_ORIGEN,
                         TXT_NUM_EXTERNO,
                         FEC_REGISTRO,
-                        --                       TXT_EST_CONTRATO,
-                        --                       TXT_MET_VAL,
                         FEC_EFEC_CONTRATO,
                         FEC_FIN,
                         COD_SOCIEDAD,
-                        --                       COD_INTER_CIA,
                         TXT_CTO_COSTE,
                         COD_CANAL3,
-                        --                     COD_SEGMENTO,
                         VAL_MCA_INT,
-                        num_certificados,
+                        NUM_CERTIFICADOS,
                         cod_cartera,
-                        cod_reasegurador
-                           )
-            SELECT  dat_pol.cod_cia              COD_CIA,
-                     dat_pol.num_poliza           NUM_POLIZA,
-                     dat_pol.cod_ramo             COD_RAMO,
-                     dat_pol.num_spto             NUM_SPTO,
-                     dat_pol.num_apli             NUM_APLI,
-                     dat_pol.num_spto_apli        NUM_SPTO_APLI,
-                     dat_pol.tip_spto             TIP_SPTO     ,
-                     p_idn_int_proc               IDN_INT_PROC, --Se debe de utilizar el valor del proceso como constante en la select para hacer el insert select => constante como parametro
-                     g_cod_sis_origen             COD_SIS_ORIGEN, -- constantes como parametro
-                     p_idn_int_proc               TXT_NUM_EXTERNO, --se inserta el numero de proceso temporalmente puesto que no permite nulos
-                     dat_pol.fec_efec_spto        FEC_REGISTRO,
-                     dat_pol.fec_efec_spto        FEC_EFEC_CONTRATO,
-                     dat_pol.fec_vcto_spto        FEC_FIN,
-                     cias.cod_cia_financiera      COD_SOCIEDAD,
-                     dat_pol.cod_nivel3           TXT_CTO_COSTE,
-                     NVL(dat_pol.cod_canal3, '1011')           COD_CANAL3,   -- OJO  REVISAR EL CANAL
-                     dat_pol.val_mca_int          VAL_MCA_INT,
-                     dat_pol.num_riesgos,
-                     'L09'  ,  -- ! OJO REVISAR 
-                     1         -- ! OJO   REVISAR 
-               FROM a2000030 dat_pol, A1000900 cias
-               WHERE cias.cod_cia = dat_pol.cod_cia
-               AND dat_pol.num_apli = 0   -- INDICAR QUE SE EXCLUYEN LAS APLICACIONES, ya que los tratamientos de Vida no las utilizan.
-               AND dat_pol.num_spto_apli = 0
-               AND dat_pol.tip_spto <> 'SM'
-               AND GREATEST (nvl(fec_autorizacion, fec_emision_spto),
-                           fec_emision_spto) BETWEEN p_fec_desde AND p_fec_hasta
-               AND NVL(mca_provisional, 'N') = 'N';
+                        cod_reasegurador 
+                     )
+            SELECT  dat_pol.cod_cia                   COD_CIA,
+                     dat_pol.num_poliza               NUM_POLIZA,
+                     dat_pol.cod_ramo                 COD_RAMO,
+                     dat_pol.num_spto                 NUM_SPTO,
+                     dat_pol.num_apli                 NUM_APLI,
+                     dat_pol.num_spto_apli            NUM_SPTO_APLI,
+                     dat_pol.tip_spto                 TIP_SPTO     ,
+                     p_idn_int_proc                   IDN_INT_PROC, --Se debe de utilizar el valor del proceso como constante en la select para hacer el insert select => constante como parametro
+                     g_cod_sis_origen                 COD_SIS_ORIGEN, -- constantes como parametro
+                     p_idn_int_proc                   TXT_NUM_EXTERNO, --se inserta el numero de proceso temporalmente puesto que no permite nulos
+                     dat_pol.fec_efec_spto            FEC_REGISTRO,
+                     dat_pol.fec_efec_spto            FEC_EFEC_CONTRATO,
+                     dat_pol.fec_vcto_spto            FEC_FIN,
+                     cias.cod_cia_financiera          COD_SOCIEDAD,
+                     dat_pol.cod_nivel3               TXT_CTO_COSTE,
+                     NVL(dat_pol.cod_canal3, '1011')  COD_CANAL3,       -- ! OJO  REVISAR EL CANAL
+                     dat_pol.val_mca_int              VAL_MCA_INT,
+                     dat_pol.num_riesgos              NUM_CERTIFICADOS,
+                     'L09'                            COD_CARTERA,      -- ! OJO REVISAR 
+                     1                                COD_REASEGURADOR  -- ! OJO REVISAR 
+              FROM a2000030 dat_pol, 
+                   a1000900 cias
+             WHERE cias.cod_cia              = dat_pol.cod_cia
+               AND cias.cod_cia              = g_cod_cia
+               AND dat_pol.num_apli          = 0   
+               AND dat_pol.num_spto_apli     = 0
+               AND NVL(mca_provisional, 'N') = 'N'
+               AND dat_pol.tip_spto          <> 'SM'
+               AND GREATEST( 
+                     nvl(fec_autorizacion, fec_emision_spto), fec_emision_spto
+                  ) BETWEEN p_fec_desde AND p_fec_hasta;
          --
          mx('.','p_extrae_contratos2');
          --
@@ -344,15 +345,10 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
                        COD_SIS_ORIGEN,
                        TXT_NUM_EXTERNO,
                        FEC_REGISTRO,
-                       --                       TXT_EST_CONTRATO,
-                       --                       TXT_MET_VAL,
                        FEC_EFEC_CONTRATO,
                        FEC_FIN,
                        COD_SOCIEDAD,
-                       --                       COD_INTER_CIA,
                        TXT_CTO_COSTE,
-                       --                       COD_CANAL3
-                       --                     COD_SEGMENTO,
                        VAL_MCA_INT
                      )
            SELECT  dat_pol.cod_cia              COD_CIA,
@@ -362,7 +358,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
                    dat_pol.num_apli             NUM_APLI,
                    dat_pol.num_spto_apli        NUM_SPTO_APLI,
                    dat_pol.tip_spto             TIP_SPTO     ,
-                   p_idn_int_proc               IDN_INT_PROC, --Se debe de utilizar el valor del proceso como constante en la select para hacer el insert select => constante como parametro
+                   p_idn_int_proc               IDN_INT_PROC,   -- Se debe de utilizar el valor del proceso como constante en la select para hacer el insert select => constante como parametro
                    g_cod_sis_origen             COD_SIS_ORIGEN, -- constantes como parametro
                    p_idn_int_proc               TXT_NUM_EXTERNO,
                    dat_pol.fec_efec_spto        FEC_REGISTRO,
@@ -371,14 +367,17 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
                    cias.cod_cia_financiera      COD_SOCIEDAD,
                    dat_pol.cod_nivel3           TXT_CTO_COSTE,
                    DAT_POL.VAL_MCA_INT          VAL_MCA_INT
-             FROM a2000030 dat_pol, A1000900 cias
+             FROM a2000030 dat_pol, 
+                  a1000900 cias
             WHERE cias.cod_cia          = dat_pol.cod_cia
+              AND cias.cod_cia          = g_cod_cia
               AND dat_pol.num_apli      = 0   -- INDICAR QUE SE EXCLUYEN LAS APLICACIONES, ya que los tratamientos de Vida no las utilizan.
               AND dat_pol.num_spto_apli = 0
               AND dat_pol.tip_spto      <> 'SM'
-              AND GREATEST (nvl(fec_autorizacion, fec_emision_spto),
-                         fec_emision_spto) BETWEEN p_fec_desde AND p_fec_hasta
-            AND NVL(mca_provisional, 'N') = 'N';
+               AND NVL(mca_provisional, 'N') = 'N'
+              AND GREATEST(
+                     nvl(fec_autorizacion, fec_emision_spto), fec_emision_spto
+                  ) BETWEEN p_fec_desde AND p_fec_hasta;
          --
          COMMIT;
          --
@@ -464,19 +463,25 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
              NULL                COD_ONEROSIDAD,
              NULL                TXT_MET_VAL,
              c.val_mca_int       VAL_MCA_INT
-        from a2000031 a, a2000040 b, a1004808 c, a1000400 d
-       where c.cod_cia         = a.cod_cia
-         and c.num_poliza      = a.num_poliza
-         and c.num_spto        = a.num_spto
-         and c.num_apli        = a.num_apli
-         and c.num_spto_apli   = a.num_spto_apli
-         and a.cod_cia         = b.cod_cia
-         and a.num_poliza      = b.num_poliza
-         and a.num_spto        = b.num_spto
-         and a.num_apli        = b.num_apli
-         and a.num_spto_apli   = b.num_spto_apli
-         and a.num_riesgo      = b.num_riesgo
-         and b.cod_mon_capital = d.cod_mon;
+        FROM a2000031 a, 
+             a2000040 b, 
+             ( SELECT * 
+                 FROM a1004808 
+                WHERE cod_cia = g_cod_cia 
+             ) c, 
+             a1000400 d
+       WHERE c.cod_cia         = a.cod_cia
+         AND c.num_poliza      = a.num_poliza
+         AND c.num_spto        = a.num_spto
+         AND c.num_apli        = a.num_apli
+         AND c.num_spto_apli   = a.num_spto_apli
+         AND a.cod_cia         = b.cod_cia
+         AND a.num_poliza      = b.num_poliza
+         AND a.num_spto        = b.num_spto
+         AND a.num_apli        = b.num_apli
+         AND a.num_spto_apli   = b.num_spto_apli
+         AND a.num_riesgo      = b.num_riesgo
+         AND b.cod_mon_capital = d.cod_mon;
       --
       COMMIT;
       --
@@ -587,9 +592,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       --
       mx('I','p_v_cod_pre_pag');
       --
-      IF p_cod_pre_pag IS NOT NULL
-        AND p_cod_pre_pag NOT IN (1, 2)
-      THEN
+      IF p_cod_pre_pag IS NOT NULL AND p_cod_pre_pag NOT IN (1, 2) THEN
          --
          dc_k_fpsl.p_graba_error(p_cod_sis_origen => g_cod_sis_origen,
                                  p_cod_sociedad   => greg_cobe.cod_sociedad,
@@ -622,8 +625,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       --
       mx('F','p_v_cod_nivel_granula');
       --
-      IF p_cod_nivel_granula NOT IN ('1','2')
-      THEN
+      IF p_cod_nivel_granula NOT IN ('1','2') THEN
          --
          dc_k_fpsl.p_graba_error(p_cod_sis_origen => g_cod_sis_origen,
                                  p_cod_sociedad   => greg_cobe.cod_sociedad,
@@ -727,26 +729,29 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       IS
       BEGIN
          --
-         select SUM(a.imp_acumulado_anual)
-           into greg_paa.imp_prima
-           from a2100170 a, g2000170 b, g2000161 c
-          where a.cod_cia       = greg_cobe.cod_cia
-            and a.num_poliza    = greg_cobe.num_poliza
-            and a.num_spto      = greg_cobe.num_spto
-            and a.num_apli      = greg_cobe.num_apli
-            and a.num_spto_apli = greg_cobe.num_spto_apli
-            and a.num_riesgo    = greg_cobe.num_riesgo
-            and a.num_periodo   = greg_cobe.num_periodo
-            and a.cod_cob       = greg_cobe.cod_cob
-            and a.cod_cia       = b.cod_cia
-            and a.cod_desglose  = b.cod_desglose
-            and b.fec_validez = (select max(f.fec_validez)
-                                   from g2000170 f
-                                  where b.cod_cia = f.cod_cia
-                                    and b.cod_desglose = f.cod_desglose)
-            and b.cod_cia = c.cod_cia
-            and b.cod_eco = c.cod_eco
-            and c.tip_cod_eco IN ('N','B');
+         SELECT SUM(a.imp_acumulado_anual)
+           INTO greg_paa.imp_prima
+           FROM a2100170 a, 
+                g2000170 b, 
+                g2000161 c
+          WHERE a.cod_cia       = greg_cobe.cod_cia
+            AND a.num_poliza    = greg_cobe.num_poliza
+            AND a.num_spto      = greg_cobe.num_spto
+            AND a.num_apli      = greg_cobe.num_apli
+            AND a.num_spto_apli = greg_cobe.num_spto_apli
+            AND a.num_riesgo    = greg_cobe.num_riesgo
+            AND a.num_periodo   = greg_cobe.num_periodo
+            AND a.cod_cob       = greg_cobe.cod_cob
+            AND a.cod_cia       = b.cod_cia
+            AND a.cod_desglose  = b.cod_desglose
+            AND b.fec_validez = (SELECT max(f.fec_validez)
+                                   FROM g2000170 f
+                                  WHERE b.cod_cia = f.cod_cia
+                                    AND b.cod_desglose = f.cod_desglose
+                                )
+            AND b.cod_cia = c.cod_cia
+            AND b.cod_eco = c.cod_eco
+            AND c.tip_cod_eco IN ('N','B');
          --
       EXCEPTION
          WHEN NO_DATA_FOUND THEN
@@ -933,13 +938,14 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       -- v7.00 Se incluye txt_lic_lrc
       --
       CURSOR lc_a1004805 IS
-         select a.cod_sociedad, a.cod_cartera, a.cod_cohorte, a.txt_one, 
+         SELECT a.cod_sociedad, a.cod_cartera, a.cod_cohorte, a.txt_one, 
                 a.txt_met_val, a.txt_cartera_inm, a.txt_lic_lrc
-           from a1004805 a
-          where a.fec_validez = ( select max(b.fec_validez)
-                                    from a1004805 b
-                                   where b.cod_sociedad   = a.cod_sociedad
-                                     and b.cod_cartera    = a.cod_cartera
+           FROM a1004805 a
+          WHERE a.cod_sociedad = g_cod_sociedad
+            AND a.fec_validez = ( SELECT max(b.fec_validez)
+                                    FROM a1004805 b
+                                   WHERE b.cod_sociedad   = a.cod_sociedad
+                                     AND b.cod_cartera    = a.cod_cartera
                                 );
       --
       lv_cod_sociedad           a1004805.cod_sociedad    %TYPE;
@@ -953,6 +959,9 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       vl_clave         VARCHAR2(100);
       --
    BEGIN
+      --
+      -- * se establece la variable global de sociedad
+      g_cod_sociedad := lpad( g_cod_cia_financiera, 4, '0' );
       --
       OPEN lc_a1004805;
       FETCH lc_a1004805 INTO lv_cod_sociedad, lv_cod_cartera, lv_cod_cohorte, 
@@ -990,16 +999,17 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
    IS
       --
       CURSOR lc_a1004806 IS
-         select a.cod_sociedad, a.cod_ramo, a.cod_kmodalidad, a.cod_cob, a.cod_cartera, 
+         SELECT a.cod_sociedad, a.cod_ramo, a.cod_kmodalidad, a.cod_cob, a.cod_cartera, 
                 a.nom_prg_obtiene_datos, a.cod_ramo_ctable --, COD_SOCIEDAD||COD_RAMO||COD_KMODALIDAD||COD_COB v_clave
-           from a1004806 a
-          where a.fec_validez   = (select max(b.fec_validez)
-                                   from a1004806 b
-                                  where b.cod_sociedad   = a.cod_sociedad
-                                    and b.cod_ramo       = a.cod_ramo
-                                    and b.cod_kmodalidad = a.cod_kmodalidad
-                                    and b.cod_cob        = a.cod_cob
-                                 );
+           FROM a1004806 a
+          WHERE a.cod_sociedad  = g_cod_sociedad
+            AND a.fec_validez   = ( SELECT max(b.fec_validez)
+                                      FROM a1004806 b
+                                     WHERE b.cod_sociedad   = a.cod_sociedad
+                                       AND b.cod_ramo       = a.cod_ramo
+                                       AND b.cod_kmodalidad = a.cod_kmodalidad
+                                       AND b.cod_cob        = a.cod_cob
+                                  );
       --
       lv_cod_sociedad           a1004806.cod_sociedad         %TYPE;
       lv_cod_ramo               a1004806.cod_ramo             %TYPE;
@@ -1012,6 +1022,9 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       vl_clave         VARCHAR2(100);
       --
    BEGIN
+      --
+      -- * se establece el codigo de sociedad
+      g_cod_sociedad := lpad( g_cod_cia_financiera, 4, '0' );
       --
       OPEN lc_a1004806;
       FETCH lc_a1004806 INTO lv_cod_sociedad, lv_cod_ramo, lv_cod_kmodalidad, 
@@ -1133,7 +1146,11 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
                         p_cod_cob        => greg_cobe.cod_cob,
                         p_txt_campo      => 'definicion_cartera',
                         p_cod_error      => 99999001,
-                        p_txt_error      => SUBSTR(ss_k_mensaje.f_texto_idioma(99999001,g_cod_idioma),1,4000),
+                        p_txt_error      => substr(
+                           ss_k_mensaje.f_texto_idioma(99999001,g_cod_idioma) ||' '||
+                           'Buscando por clave: '|| vl_clave_06 
+                           ,1,4000
+                        ),
                         p_idn_int_proc   => g_idn_int_proc);
          --
       END IF;
@@ -1441,37 +1458,37 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       mx('I','p_v_cod_ramo_ctable');
       --
       /*
-      BEGIN
-         --
-         l_fec_validez := em_k_a1002150.f_max_fec_validez ( greg_cobe.cod_cia,
-                                                            greg_cobe.cod_ramo,
-                                                            g_fec_hasta_proc);
-         --
-         em_k_a1002150.p_lee(p_cod_cia       => greg_cobe.cod_cia,
-                             p_cod_ramo      => greg_cobe.cod_ramo,
-                             p_cod_modalidad => greg_cobe.cod_kmodalidad,
-                             p_cod_cob       => greg_cobe.cod_cob,
-                             p_fec_validez   => l_fec_validez);
-         greg_cobe.cod_ramo_ctable := em_k_a1002150.f_cod_ramo_ctable;
-         --
-      EXCEPTION
-         WHEN OTHERS THEN
+         BEGIN
             --
-            p_graba_error(p_cod_sis_origen => g_cod_sis_origen,
-                           p_cod_sociedad   => greg_cobe.cod_sociedad,
-                           p_cod_cia        => greg_cobe.cod_cia,
-                           p_num_poliza     => greg_cobe.num_poliza,
-                           p_num_spto       => greg_cobe.num_spto,
-                           p_num_apli       => greg_cobe.num_apli,
-                           p_num_spto_apli  => greg_cobe.num_spto_apli,
-                           p_num_riesgo     => greg_cobe.num_riesgo,
-                           p_cod_cob        => greg_cobe.cod_cob,
-                           p_txt_campo      => 'COD_RAMO_CTABLE',
-                           p_cod_error      => SQLCODE,
-                           p_txt_error      => SUBSTR(SQLERRM,1,4000),
-                           p_idn_int_proc   => g_idn_int_proc);
+            l_fec_validez := em_k_a1002150.f_max_fec_validez ( greg_cobe.cod_cia,
+                                                               greg_cobe.cod_ramo,
+                                                               g_fec_hasta_proc);
             --
-      END;
+            em_k_a1002150.p_lee(p_cod_cia       => greg_cobe.cod_cia,
+                              p_cod_ramo      => greg_cobe.cod_ramo,
+                              p_cod_modalidad => greg_cobe.cod_kmodalidad,
+                              p_cod_cob       => greg_cobe.cod_cob,
+                              p_fec_validez   => l_fec_validez);
+            greg_cobe.cod_ramo_ctable := em_k_a1002150.f_cod_ramo_ctable;
+            --
+         EXCEPTION
+            WHEN OTHERS THEN
+               --
+               p_graba_error(p_cod_sis_origen => g_cod_sis_origen,
+                              p_cod_sociedad   => greg_cobe.cod_sociedad,
+                              p_cod_cia        => greg_cobe.cod_cia,
+                              p_num_poliza     => greg_cobe.num_poliza,
+                              p_num_spto       => greg_cobe.num_spto,
+                              p_num_apli       => greg_cobe.num_apli,
+                              p_num_spto_apli  => greg_cobe.num_spto_apli,
+                              p_num_riesgo     => greg_cobe.num_riesgo,
+                              p_cod_cob        => greg_cobe.cod_cob,
+                              p_txt_campo      => 'COD_RAMO_CTABLE',
+                              p_cod_error      => SQLCODE,
+                              p_txt_error      => SUBSTR(SQLERRM,1,4000),
+                              p_idn_int_proc   => g_idn_int_proc);
+               --
+         END;
       */
       --
       --llamada a procedimiento local
@@ -1515,6 +1532,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       --
       -- llamamos al procedimiento personalizado para que nos devuelva el valor.
       lv_txt_met_val := dc_k_fpsl_inst.f_txt_met_val('BPDI   ' ); --greg_cobe.txt_met_val        );
+      --
       mx('1-lv_txt_met_val', lv_txt_met_val);
       -- Comprobamos el valor devuelto (v7.00 Se contempla el cambio de talla de txt_met_val)
       IF lv_txt_met_val NOT IN ('BPDI   ', 'BPRE   ','BODI   ', 'BORE   ', 'BEDI   ', 'BERE   ', 'PPDI   ', 'PPRE   ', 'PODI   ', 'PORE   ', 'VPDI   ', 'VODI   ')
@@ -1568,6 +1586,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       FOR regb IN ( SELECT * 
                       FROM a1004809
                       WHERE idn_int_proc = g_idn_int_proc
+                        AND cod_cia      = g_cod_cia
                      ORDER BY cod_sociedad,
                               num_poliza,
                               fec_efect_cober,
@@ -1641,7 +1660,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
          dc_k_fpsl_a1004809.p_actualiza(greg_cobe); 
          --
          COMMIT;
-         --
+            --
       END LOOP;
       --
       mx('F','p_trata_datos_cobertura');
@@ -2012,17 +2031,17 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       -- v7.00 
       -- v7.01 Se toman las 3 primeras posiciones de COD_CARTERA
       IF g_txt_lic_lrc = 'UOA' THEN
-          select 'UOA_'|| greg_cont.cod_sociedad||substr(greg_cont.cod_cartera,1,3)||'_'||greg_cont.cod_cohorte 
-          || greg_cont.txt_one || '_' ||g_txt_met_val||g_spaces
-            into greg_cont.txt_uoa
-            from dual;
+         SELECT 'UOA_'|| greg_cont.cod_sociedad||substr(greg_cont.cod_cartera,1,3)||'_'||greg_cont.cod_cohorte 
+                || greg_cont.txt_one || '_' ||g_txt_met_val||g_spaces
+            INTO greg_cont.txt_uoa
+            FROM dual;
       ELSE 
          IF g_txt_lic_lrc = 'ACC' THEN
-            select 'ACC_'|| greg_cont.cod_sociedad||substr(greg_cont.cod_cartera,1,3)||'_'
+            SELECT 'ACC_'|| greg_cont.cod_sociedad||substr(greg_cont.cod_cartera,1,3)||'_'
                    ||greg_cont.cod_cohorte 
                    || 'N' || '_' ||g_txt_met_val||g_spaces
-               into greg_cont.txt_uoa
-               from dual;
+              INTO greg_cont.txt_uoa
+              FROM dual;
          END IF;
       END IF;        
       --
@@ -2064,12 +2083,16 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       --
       CURSOR c_a1004807 IS
          SELECT *
-           FROM a1004807;
+           FROM a1004807
+          WHERE cod_sociedad = g_cod_sociedad;
       --
    BEGIN
       --
       mx('I','p_trata_bt');
       --
+      -- * se estable la variable sociedad
+      g_cod_sociedad := lpad( g_cod_cia_financiera, 4, '0' );
+      -- 
       trn_k_global.asigna('IDN_INT_PROC',g_idn_int_proc);
       trn_k_global.asigna('FEC_HASTA_PROC'   , TO_CHAR(g_fec_hasta_proc, 'DDMMYYYY'));
       --
@@ -2152,6 +2175,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       BEGIN
          -- llamamos a procedimiento local
          greg_cont.cod_reasegurador := dc_k_fpsl_inst.f_cod_reasegurador(greg_cont.cod_reasegurador);
+         --
       EXCEPTION
         WHEN OTHERS THEN
            dbms_output.put_line ('P_V_COD_REasegurado  EXCEPTION');
@@ -2171,13 +2195,14 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
    PROCEDURE p_dat_cancela IS
       --
       CURSOR c_cancela IS
-         select fec_efec_spto, mca_poliza_anulada
-           from a2000030 a30
-          where a30.cod_cia    = greg_cont.cod_cia
-            and a30.num_poliza = greg_cont.num_poliza
-            and a30.num_apli   = greg_cont.num_apli
-            and NVL(a30.mca_poliza_anulada,'N') = 'S'
-            and (a30.num_spto,a30.num_spto_apli) = (SELECT MAX(NUM_SPTO),  MAX(NUM_SPTO_APLI)
+         SELECT fec_efec_spto, mca_poliza_anulada
+           FROM a2000030 a30
+          WHERE a30.cod_cia    = greg_cont.cod_cia
+            AND a30.num_poliza = greg_cont.num_poliza
+            AND a30.num_apli   = greg_cont.num_apli
+            AND NVL(a30.mca_poliza_anulada,'N') = 'S'
+            AND (a30.num_spto,a30.num_spto_apli) = (
+                               SELECT MAX(NUM_SPTO),  MAX(NUM_SPTO_APLI)
                                  FROM A2000030 POL2
                                 WHERE POL2.COD_CIA       = a30.COD_CIA 
                                   AND POL2.NUM_POLIZA    = a30.NUM_POLIZA 
@@ -2185,17 +2210,18 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
                                   AND POL2.COD_RAMO      = a30.COD_RAMO
                                   AND NVL(POL2.MCA_SPTO_ANULADO, 'N') = 'N'
                                   AND NVL(POL2.mca_provisional, 'N') = 'N'
-                                  and pol2.fec_efec_spto <= g_fec_hasta_proc
+                                  AND pol2.fec_efec_spto <= g_fec_hasta_proc
                               );
       -- V7.00
       CURSOR c_rehabilita IS
-         select fec_efec_spto
-           from a2000030 a30
-          where a30.cod_cia    = greg_cont.cod_cia
-            and a30.num_poliza = greg_cont.num_poliza
-            and a30.num_apli   = greg_cont.num_apli
-            and NVL(a30.mca_poliza_anulada,'N') = 'N'
-            and (a30.num_spto,a30.num_spto_apli) = (SELECT MAX(NUM_SPTO),  MAX(NUM_SPTO_APLI)
+         SELECT fec_efec_spto
+           FROM a2000030 a30
+          WHERE a30.cod_cia    = greg_cont.cod_cia
+            AND a30.num_poliza = greg_cont.num_poliza
+            AND a30.num_apli   = greg_cont.num_apli
+            AND NVL(a30.mca_poliza_anulada,'N') = 'N'
+            AND (a30.num_spto,a30.num_spto_apli) = (
+                               SELECT MAX(NUM_SPTO),  MAX(NUM_SPTO_APLI)
                                  FROM A2000030 POL2
                                 WHERE POL2.COD_CIA       = a30.COD_CIA 
                                   AND POL2.NUM_POLIZA    = a30.NUM_POLIZA 
@@ -2392,13 +2418,16 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       --
    BEGIN
       --
-      mx('I','p_trata_datos_contrato');
+      mx('I','p_trata_datos_contrato'); 
       --
-      FOR regg IN (SELECT * FROM a1004808 WHERE idn_int_proc = g_idn_int_proc ) LOOP
+      -- * se establece la variable de sociedad
+      g_cod_sociedad := lpad( g_cod_cia_financiera,4,'0');
+      --
+      FOR regg IN (SELECT * FROM a1004808 WHERE cod_cia = g_cod_cia AND idn_int_proc = g_idn_int_proc ) LOOP
          --v7.00
          g_txt_lic_lrc := NULL;
          g_txt_met_val := NULL;
-         --
+         -- 
          greg_cont := regg;
          --
          vl_clave_05 := greg_cont.cod_sociedad||' '||greg_cont.cod_cartera;
@@ -2421,12 +2450,14 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
                            p_cod_cob        => NULL,
                            p_txt_campo      => 'definicion_cartera (p_trata_datos_contrato)',
                            p_cod_error      => 99999012,
-                           p_txt_error      => SUBSTR(SS_K_MENSAJE.F_TEXTO_IDIOMA(99999012,g_cod_idioma),1,4000),
+                           p_txt_error      => substr(
+                              ss_k_mensaje.f_texto_idioma(99999012,g_cod_idioma) || ' ' ||
+                              'Usando la clave: ' || vl_clave_05
+                              ,1,4000
+                           ),
                            p_idn_int_proc   => g_idn_int_proc);
             --
          END IF;
-         --
-         g_cod_sociedad := greg_cont.cod_sociedad;
          --
          -- v7.01 greg_cont.txt_num_externo := f_txt_num_externo; 
          greg_cont.txt_num_externo := dc_k_fpsl_inst.f_txt_num_externo( p_greg_cobe       => greg_cobe, 
@@ -2511,10 +2542,19 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       --
       mx('I','p_recupera_glo');
       --
-      g_cod_usr        := trn_k_global.cod_usr;
-      g_cod_idioma     := trn_k_global.cod_idioma;
+      g_cod_cia         := trn_k_global.cod_cia;
+      g_cod_usr         := trn_k_global.cod_usr;
+      g_cod_idioma      := trn_k_global.cod_idioma;
+      --
+      -- determinamos el codigo financiero de la compania
+      dc_k_a1000900.p_lee(g_cod_cia);
+      g_cod_cia_financiera := dc_k_a1000900.f_cod_cia_financiera;
       --
       mx('F','p_recupera_glo');
+      --
+      EXCEPTION
+         WHEN OTHERS THEN 
+               mx('E','p_recupera_glo Error!' );
       --
    END p_recupera_globales;
    --

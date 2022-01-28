@@ -23,10 +23,6 @@ AS
    || Aqui comienza la declaracion de variables GLOBALES
    */ --------------------------------------------------
    --
-   g_cod_cia             a1000900.cod_cia%TYPE;
-   g_cod_cia_financiera  a1000900.cod_cia_financiera%TYPE;
-   g_cod_usr             g1010120.cod_usr    %TYPE;
-   --
    g_k_maximo_linea CONSTANT PLS_INTEGER:=32767;
    g_k_eol          CONSTANT VARCHAR2(1):= trn.RETORNO_CARRO;
    g_k_longitud_eol CONSTANT PLS_INTEGER:= LENGTH(trn.RETORNO_CARRO);
@@ -38,24 +34,6 @@ AS
    g_ind_fichero    NUMBER;
    --
    TYPE t_c_datos IS TABLE OF VARCHAR2(32767);
-   /**
-   || Procedimiento para iniciar el programas de mantenimiento
-   */
-   PROCEDURE p_inicio IS
-   BEGIN
-      --
-      g_cod_cia    := trn_k_global.cod_cia;
-      g_cod_usr    := trn_k_global.cod_usr;
-      --
-      -- determinamos el codigo financiero de la compania
-      dc_k_a1000900.p_lee(g_cod_cia);
-      g_cod_cia_financiera := dc_k_a1000900.f_cod_cia_financiera;
-      --
-      EXCEPTION
-         WHEN OTHERS THEN 
-            NULL;
-      --      
-   END p_inicio;  
    --
    /* --------------------------------------------------------------------
    || Funcion que devuelve manejador del fichero
@@ -292,7 +270,7 @@ AS
       l_cabecera:= 'HDREXTNO;COVID;CRCPAYCAT;CR0KEYDAT;ZRECDATE;CTRST;CTREN;KRCCFAMD;'||
                    'KRCCFAMDC;CIDSAFRE;ZPREPAID;CR2DLVPKG;C11PRDCTR;'||
                    'ZGRANID;ZGRANLE;ZTIPOPAT;ZSUBYCONT;ZPROBDEF';
-      --v7.00
+--v7.00
       --
       UTL_FILE.put_line (file      => p_fic     ,
                          buffer    => l_cabecera);
@@ -328,35 +306,34 @@ AS
       l_buffer_cab VARCHAR2(32767);
       x PLS_INTEGER;
       --
-      CURSOR lc_datos IS
-         SELECT a.txt_num_externo                    ||g_k_separador||
-                TO_CHAR(a.fec_registro,'YYYYMMDD')   ||g_k_separador||
-                a.num_secu                           ||g_k_separador||
-                TO_CHAR(a.fec_efect_cober,'YYYYMMDD')||g_k_separador||
-                TO_CHAR(a.fec_fin_cober,'YYYYMMDD')  ||g_k_separador||
-                a.idn_cobertura                      ||g_k_separador||
-                a.cod_ramo_ctable
-           FROM a1004809 a
-          WHERE a.cod_cia = g_cod_cia
-          GROUP BY a.cod_sociedad,
-                   a.cod_ramo_ctable,
-                   a.txt_num_externo,
-                   a.fec_registro, 
-                   a.num_secu, 
-                   a.fec_efect_cober,
-                   a.fec_fin_cober,
-                   a.idn_cobertura
-            ORDER BY a.cod_sociedad,
-                     a.cod_ramo_ctable;
-      --
+      CURSOR lc_datos
+      IS
+      SELECT a.txt_num_externo                    ||g_k_separador||
+             TO_CHAR(a.fec_registro,'YYYYMMDD')   ||g_k_separador||
+             a.num_secu                           ||g_k_separador||
+             TO_CHAR(a.fec_efect_cober,'YYYYMMDD')||g_k_separador||
+             TO_CHAR(a.fec_fin_cober,'YYYYMMDD')  ||g_k_separador||
+             a.idn_cobertura                      ||g_k_separador||
+             a.cod_ramo_ctable
+      FROM a1004809 a
+  group by a.cod_sociedad,
+       a.cod_ramo_ctable,
+       a.txt_num_externo,
+       a.fec_registro, 
+       a.num_secu, 
+       a.fec_efect_cober,
+       a.fec_fin_cober,
+       a.idn_cobertura
+  order by a.cod_sociedad,
+       a.cod_ramo_ctable;
+     --
       lv_ctos      NUMBER;
       l_length     NUMBER;
       l_exists     BOOLEAN;
       l_block_size BINARY_INTEGER;
       l_fic        UTL_FILE.file_type;
       l_fic_nombre VARCHAR2(300);
-      -- * se cambia par amantener la consistencia
-      lv_cod_soc_ant A1004803.cod_sociedad%TYPE := lpad( g_cod_cia_financiera, 4,'0');
+      lv_cod_soc_ant A1004803.cod_sociedad%TYPE := '****';
      --
    BEGIN
       --
@@ -368,27 +345,26 @@ AS
       -- Apertura cursor de datos
       OPEN lc_datos;
       --
-      SELECT count ('P')
+      select count ('P')
         INTO lv_ctos
-        FROM (
-               SELECT a.txt_num_externo                    ,
-                     a.fec_registro                       ,
-                     a.num_secu                           ,
-                     a.fec_efect_cober                    ,
-                     a.fec_fin_cober                      ,
-                     a.idn_cobertura                      ,
-                     a.cod_ramo_ctable
-                FROM a1004809 a
-               WHERE a.cod_cia = g_cod_cia
-               GROUP BY a.cod_sociedad,
-                         a.cod_ramo_ctable,
-                         a.txt_num_externo,
-                         a.fec_registro, 
-                         a.num_secu, 
-                         a.fec_efect_cober,
-                         a.fec_fin_cober,
-                         a.idn_cobertura
-            );
+        from (
+      SELECT a.txt_num_externo                    ,
+             a.fec_registro                       ,
+             a.num_secu                           ,
+             a.fec_efect_cober                    ,
+             a.fec_fin_cober                      ,
+             a.idn_cobertura                      ,
+             a.cod_ramo_ctable
+      FROM a1004809 a
+   group by a.cod_sociedad,
+       a.cod_ramo_ctable,
+       a.txt_num_externo,
+       a.fec_registro, 
+       a.num_secu, 
+       a.fec_efect_cober,
+       a.fec_fin_cober,
+       a.idn_cobertura
+       );
       --
       LOOP
          --
@@ -398,8 +374,7 @@ AS
          IF x = 0 
          THEN
             --Es la primera iteracion, creamos el fichero inicial e inicializamos lv_cod_soc_ant
-            -- ! Se corrige 
-            -- ! lv_cod_soc_ant := substr(l_tc_datos(1),4,4);
+            lv_cod_soc_ant := substr(l_tc_datos(1),4,4);
             -- Crea fichero
             l_fic_nombre:= dc_k_fpsl_inst.f_nom_fich_mcobe (p_idn_int_proc   => g_idn_int_proc  ,
                                                             p_fec_hasta_proc => g_fec_hasta_proc,
@@ -412,7 +387,8 @@ AS
             pp_cabecera_fpsl_cobertura (p_fic => l_fic);
             --
             l_buffer_cab := 'TOTAL: '||lv_ctos;
-            UTL_FILE.put_line ( file => l_fic, buffer => l_buffer_cab);
+            UTL_FILE.put_line (file      => l_fic   ,
+                               buffer    => l_buffer_cab);
             l_buffer_cab := NULL;
             --
          END IF;
@@ -440,7 +416,8 @@ AS
                   IF l_buffer IS NOT NULL
                   THEN
                      --
-                     UTL_FILE.put_line (file => l_fic , buffer => l_buffer);
+                     UTL_FILE.put_line (file      => l_fic   ,
+                                        buffer    => l_buffer);
                      --
                   END IF;
                   --
@@ -453,16 +430,14 @@ AS
                                      file_length  => l_length                           ,
                                      block_size   => l_block_size);
                   --
-                  -- ! Se cambia en funcion de que la entidad no va a cambiar
-                  -- ! IF l_length >= 200000000 or lv_cod_soc_ant <> substr(l_buffer,4,4)
-                  IF l_length >= 200000000 THEN
+                  IF l_length >= 200000000 or lv_cod_soc_ant <> substr(l_buffer,4,4)
+                  THEN
                     --
                     -- Cerramos el fichero actual
                     pp_cierre_fichero(p_fic => l_fic);
                     -- Comprobamos si ha cambiado el cod_sociedad
-                    -- ! Se cambia en funcion de que la entidad no va a cambiar
-                    -- ! IF lv_cod_soc_ant <> substr(l_buffer,4,4)
-                    IF 1 <> 1 THEN
+                    IF lv_cod_soc_ant <> substr(l_buffer,4,4)
+                    THEN
                        --
                        g_ind_fichero  := 1;
                        lv_cod_soc_ant := substr(l_buffer,4,4);
@@ -544,59 +519,57 @@ AS
    --
    PROCEDURE p_genera_fpsl_contrato 
    IS
-      --
-      CURSOR lc_datos
-      IS
-      SELECT b.txt_num_externo                      ||g_k_separador||
-             TO_CHAR(a.fec_registro,'YYYYMMDD')     ||g_k_separador||
-             b.txt_met_val                          ||g_k_separador||
-             TO_CHAR(a.fec_efec_contrato,'YYYYMMDD')||g_k_separador|| 
-             TO_CHAR(a.fec_fin,'YYYYMMDD')          ||g_k_separador||
-             a.cod_sociedad                         ||g_k_separador||
-             -- v1.06              a.cod_inter_cia                        ||g_k_separador||
-             a.cod_reasegurador                     ||g_k_separador||
-             -- v7.0               a.num_asegurados                       ||g_k_separador|| --v1.06
-             a.num_certificados                     ||g_k_separador|| --v7.00
-             a.txt_cto_coste                        ||g_k_separador||
-             a.cod_canal3                           ||g_k_separador||
-             a.num_poliza                           ||g_k_separador||
-             b.cod_cohorte                          ||g_k_separador||
-             b.cod_cartera                          ||g_k_separador||
-             decode(b.cod_onerosidad,'O',1,'N',2)   ||g_k_separador||
-             NVL(a.txt_uoa,'UOA_' || a.cod_sociedad || b.cod_cartera || '_' || b.cod_cohorte || b.cod_onerosidad || '_' || b.txt_met_val)||g_k_separador||
-             a.idn_cancelacion                      ||g_k_separador||
-             TO_CHAR(a.fec_efec_cancelacion,'YYYYMMDD')
-        FROM a1004808 a, 
-             a1004809 b
-       WHERE a.cod_cia = g_cod_cia
-         AND a.cod_cia = b.cod_cia
-         AND a.num_poliza = b.num_poliza
-         AND a.num_spto = b.num_spto
-         AND a.num_apli = b.num_apli
-         AND a.num_spto_apli = b.num_spto_apli
-       GROUP BY b.cod_ramo_ctable,
-                b.txt_num_externo,
-                a.fec_registro,
-                b.txt_met_val,
-                a.fec_efec_contrato,
-                a.fec_fin,
-                a.cod_sociedad,
-                --v1.06              a.cod_inter_cia,
-                a.cod_reasegurador,
+       --
+       CURSOR lc_datos
+       IS
+       SELECT b.txt_num_externo                      ||g_k_separador||
+              TO_CHAR(a.fec_registro,'YYYYMMDD')     ||g_k_separador||
+              b.txt_met_val                          ||g_k_separador||
+              TO_CHAR(a.fec_efec_contrato,'YYYYMMDD')||g_k_separador|| 
+              TO_CHAR(a.fec_fin,'YYYYMMDD')          ||g_k_separador||
+              a.cod_sociedad                         ||g_k_separador||
+               -- v1.06              a.cod_inter_cia                        ||g_k_separador||
+              a.cod_reasegurador                     ||g_k_separador||
+              -- v7.0               a.num_asegurados                       ||g_k_separador|| --v1.06
+              a.num_certificados                     ||g_k_separador|| --v7.00
+              a.txt_cto_coste                        ||g_k_separador||
+              a.cod_canal3                           ||g_k_separador||
+              a.num_poliza                           ||g_k_separador||
+              b.cod_cohorte                          ||g_k_separador||
+              b.cod_cartera                          ||g_k_separador||
+              decode(b.cod_onerosidad,'O',1,'N',2)   ||g_k_separador||
+              NVL(a.txt_uoa,'UOA_' || a.cod_sociedad || b.cod_cartera || '_' || b.cod_cohorte || b.cod_onerosidad || '_' || b.txt_met_val)||g_k_separador||
+              a.idn_cancelacion                      ||g_k_separador||
+              TO_CHAR(a.fec_efec_cancelacion,'YYYYMMDD')
+       FROM a1004808 a, a1004809 b
+     where a.cod_cia = b.cod_cia
+       and a.num_poliza = b.num_poliza
+       and a.num_spto = b.num_spto
+       and a.num_apli = b.num_apli
+       and a.num_spto_apli = b.num_spto_apli
+     GROUP BY b.cod_ramo_ctable,
+              b.txt_num_externo,
+              a.fec_registro,
+              b.txt_met_val,
+              a.fec_efec_contrato,
+              a.fec_fin,
+              a.cod_sociedad,
+              --v1.06              a.cod_inter_cia,
+              a.cod_reasegurador,
               --v7.00              a.num_asegurados, --v1.06
-               a.num_certificados, --v7.00
-               a.txt_cto_coste,
-               a.cod_canal3,
-               a.num_poliza,
-               b.cod_cohorte,
-               b.cod_cartera,
-               b.cod_onerosidad,
-               a.txt_uoa,
-               a.idn_cancelacion,
-               a.fec_efec_cancelacion
-      ORDER BY a.cod_sociedad,
-               b.cod_ramo_ctable,
-               b.txt_num_externo;
+              a.num_certificados, --v7.00
+              a.txt_cto_coste,
+              a.cod_canal3,
+              a.num_poliza,
+              b.cod_cohorte,
+              b.cod_cartera,
+              b.cod_onerosidad,
+              a.txt_uoa,
+              a.idn_cancelacion,
+              a.fec_efec_cancelacion
+     ORDER BY a.cod_sociedad,
+              b.cod_ramo_ctable,
+              b.txt_num_externo;
       --
       l_tc_datos t_c_datos;
       l_buffer VARCHAR2(32767);
@@ -609,8 +582,7 @@ AS
       l_block_size BINARY_INTEGER;
       l_fic        UTL_FILE.file_type;
       l_fic_nombre VARCHAR2(300);
-      -- * se cambia para mantener consistencia
-      lv_cod_soc_ant A1004803.cod_sociedad%TYPE :=  lpad( g_cod_cia_financiera, 4,'0');
+      lv_cod_soc_ant A1004803.cod_sociedad%TYPE := '****';
       --
    BEGIN
       --
@@ -625,57 +597,55 @@ AS
       --
       SELECT count('p')
         INTO lv_ctos
-        FROM (SELECT b.txt_num_externo                 ,
-                   a.fec_registro     ,
-                   b.txt_met_val                          ,
-                   a.fec_efec_contrato, 
-                   a.fec_fin          ,
-                   a.cod_sociedad                         ,
-                   --v1.06              a.cod_inter_cia                        ,
-                   a.cod_reasegurador                     ,
-                   --v7.00              a.num_asegurados                       , -- v1.06
-                   a.num_certificados                     , -- v7.00
-                   a.txt_cto_coste                        ,
-                   a.cod_canal3                           ,
-                   a.num_poliza                           ,
-                   b.cod_cohorte                          ,
-                   b.cod_cartera                          ,
-                   b.cod_onerosidad                       ,
-                   NVL(a.txt_uoa,'UOA_' || a.cod_sociedad || b.cod_cartera || '_' || b.cod_cohorte || b.cod_onerosidad || '_' || b.txt_met_val),
-                   a.idn_cancelacion                      ,
-                   a.fec_efec_cancelacion
-             FROM a1004808 a, 
-                  a1004809 b
-            WHERE a.cod_cia = g_cod_cia 
-              AND a.cod_cia = b.cod_cia
-              AND a.num_poliza = b.num_poliza
-              AND a.num_spto = b.num_spto
-              AND a.num_apli = b.num_apli
-              AND a.num_spto_apli = b.num_spto_apli
-            GROUP BY b.cod_ramo_ctable,
-                     b.txt_num_externo,
-                     a.fec_registro,
-                     b.txt_met_val,
-                     a.fec_efec_contrato,
-                     a.fec_fin,
-                     a.cod_sociedad,
-                     --v1.06              a.cod_inter_cia,
-                     a.cod_reasegurador,
-                     --v7.00              a.num_asegurados, --v1.06
-                     a.num_certificados, --v7.00
-                     a.txt_cto_coste,
-                     a.cod_canal3,
-                     a.num_poliza,
-                     b.cod_cohorte,
-                     b.cod_cartera,
-                     b.cod_onerosidad,
-                     a.txt_uoa,
-                     a.idn_cancelacion,
-                     a.fec_efec_cancelacion
-            ORDER BY a.cod_sociedad,
-                     b.cod_ramo_ctable,
-                     b.txt_num_externo
-         );
+      FROM (SELECT b.txt_num_externo                 ,
+              a.fec_registro     ,
+              b.txt_met_val                          ,
+              a.fec_efec_contrato, 
+              a.fec_fin          ,
+              a.cod_sociedad                         ,
+              --v1.06              a.cod_inter_cia                        ,
+              a.cod_reasegurador                     ,
+              --v7.00              a.num_asegurados                       , -- v1.06
+              a.num_certificados                     , -- v7.00
+              a.txt_cto_coste                        ,
+              a.cod_canal3                           ,
+              a.num_poliza                           ,
+              b.cod_cohorte                          ,
+              b.cod_cartera                          ,
+              b.cod_onerosidad                       ,
+              NVL(a.txt_uoa,'UOA_' || a.cod_sociedad || b.cod_cartera || '_' || b.cod_cohorte || b.cod_onerosidad || '_' || b.txt_met_val),
+              a.idn_cancelacion                      ,
+              a.fec_efec_cancelacion
+       FROM a1004808 a, a1004809 b
+     where a.cod_cia = b.cod_cia
+       and a.num_poliza = b.num_poliza
+       and a.num_spto = b.num_spto
+       and a.num_apli = b.num_apli
+       and a.num_spto_apli = b.num_spto_apli
+     GROUP BY b.cod_ramo_ctable,
+              b.txt_num_externo,
+              a.fec_registro,
+              b.txt_met_val,
+              a.fec_efec_contrato,
+              a.fec_fin,
+              a.cod_sociedad,
+              --v1.06              a.cod_inter_cia,
+              a.cod_reasegurador,
+              --v7.00              a.num_asegurados, --v1.06
+              a.num_certificados, --v7.00
+              a.txt_cto_coste,
+              a.cod_canal3,
+              a.num_poliza,
+              b.cod_cohorte,
+              b.cod_cartera,
+              b.cod_onerosidad,
+              a.txt_uoa,
+              a.idn_cancelacion,
+              a.fec_efec_cancelacion
+     ORDER BY a.cod_sociedad,
+              b.cod_ramo_ctable,
+              b.txt_num_externo)
+             ;
       --
       LOOP
          --
@@ -685,6 +655,7 @@ AS
          IF x = 0 THEN
             -- Es la primera iteracion, creamos el fichero inicial e inicializamos lv_cod_soc_ant
             -- ! Error, este proceso no selecciona la sociedad, la linea siguiente es un ejemplo del dato que evalua
+            -- ! 1;20211201;BPDI   ;20211201;20221201;0496;1;1;1011;1011;2332100000106;2020;G19;;UOA_0496L09_20201_ZPPDI00               ;;
             -- ! lv_cod_soc_ant := substr(l_tc_datos(1),4,4);
             -- ? Se corrige por consistencia
             -- Crea fichero
@@ -742,16 +713,14 @@ AS
                                      file_length  => l_length                           ,
                                      block_size   => l_block_size);
                   --
-                  -- ! Se modifica en funcion de que la entidad no cambia
-                  -- ! IF l_length >= 200000000 or lv_cod_soc_ant <> substr(l_buffer,4,4)
-                  IF l_length >= 200000000 THEN
+                  IF l_length >= 200000000 or lv_cod_soc_ant <> substr(l_buffer,4,4)
+                   THEN
                     --
                     -- Cerramos el fichero actual
                     pp_cierre_fichero(p_fic => l_fic);
                     -- Comprobamos si ha cambiado el cod_sociedad
-                    -- ! la entidad no va a cambiar
-                    -- !  IF lv_cod_soc_ant <> substr(l_buffer,4,4)
-                    IF 1 <> 1 THEN
+                    IF lv_cod_soc_ant <> substr(l_buffer,4,4)
+                    THEN
                        --
                        g_ind_fichero  := 1;
                        lv_cod_soc_ant := substr(l_buffer,4,4);
@@ -764,12 +733,12 @@ AS
                     END IF;
                     --
                     -- obtenermos nuevo nombre de fichero
-                    l_fic_nombre := dc_k_fpsl_inst.f_nom_fich_mcont (p_idn_int_proc   => g_idn_int_proc  ,
+                    l_fic_nombre:= dc_k_fpsl_inst.f_nom_fich_mcont (p_idn_int_proc   => g_idn_int_proc  ,
                                                                     p_fec_hasta_proc => g_fec_hasta_proc,
                                                                     p_cod_sociedad   => lv_cod_soc_ant  ,
                                                                     p_ind_fichero    => g_ind_fichero  );
                     --
-                    l_fic := fp_crea_fichero (p_nombre_fichero => l_fic_nombre);
+                    l_fic:= fp_crea_fichero (p_nombre_fichero => l_fic_nombre);
                     --
                     -- Genera la cabecera de fichero
                     pp_cabecera_fpsl_contrat (p_fic => l_fic);
@@ -837,7 +806,7 @@ AS
    PROCEDURE p_genera_fpsl_transacciones
    IS
       --
-      --      l_tc_datos t_c_datos;
+--      l_tc_datos t_c_datos;
       l_buffer VARCHAR2(32767);
       l_buffer_cab VARCHAR2(32767);
       x PLS_INTEGER;
@@ -857,7 +826,7 @@ AS
              a.tip_bt                          ,
              SUM(a.imp_impuesto)
       FROM a1004810 a
-      GROUP BY a.txt_num_externo  ,
+      group by a.txt_num_externo  ,
              a.idn_cobertura    ,
              a.idn_bt           ,
              a.txt_mca_bt_rev   ,
@@ -867,7 +836,7 @@ AS
              a.tip_imp          ,
              a.idn_bt_ref       ,
              a.tip_bt           
-      ORDER BY a.txt_num_externo;
+    ORDER BY a.txt_num_externo;
       --
       lv_idn_bt          a1004810.idn_bt         %TYPE;
       lv_mca_bt_rev      a1004810.txt_mca_bt_rev %TYPE;
@@ -883,14 +852,13 @@ AS
       lv_imp_impuesto    a1004810.imp_impuesto   %TYPE;
       lv_idn_fichero     a1004810.idn_fichero    %TYPE;
       --
-      lv_ctos        NUMBER := 0;
-      l_length       NUMBER := 0;
-      l_exists       BOOLEAN;
-      l_block_size   BINARY_INTEGER;
-      l_fic          UTL_FILE.file_type;
-      l_fic_nombre   VARCHAR2(300);
-      -- * Se establece el codigo de la sociedad segun la empresa o compania que ejecuta la tarea
-      lv_cod_soc_ant A1004803.cod_sociedad%TYPE := lpad(g_cod_cia_financiera, 4, '0');
+      lv_ctos      NUMBER := 0;
+      l_length     NUMBER := 0;
+      l_exists     BOOLEAN;
+      l_block_size BINARY_INTEGER;
+      l_fic        UTL_FILE.file_type;
+      l_fic_nombre VARCHAR2(300);
+      lv_cod_soc_ant A1004803.cod_sociedad%TYPE := '****';
       --
    BEGIN
       --
@@ -901,7 +869,7 @@ AS
       --
       SELECT count('p')
         INTO lv_ctos
-        FROM (SELECT 
+      FROM (SELECT 
              a.idn_bt                          ,
              a.txt_mca_bt_rev                  ,
              a.idn_bt_rev                      ,
@@ -914,18 +882,17 @@ AS
              a.idn_bt_ref                      ,
              a.tip_bt                          ,
              SUM(a.imp_impuesto)                        
-        FROM a1004810 a
-       GROUP BY a.txt_num_externo  ,
-               a.idn_cobertura    ,
-               a.idn_bt           ,
-               a.txt_mca_bt_rev   ,
-               a.idn_bt_rev       ,
-               a.fec_ctable       ,
-               a.cod_mon_iso      ,
-               a.tip_imp          ,
-               a.idn_bt_ref       ,
-               a.tip_bt           
-      );
+      FROM a1004810 a
+      group by a.txt_num_externo  ,
+             a.idn_cobertura    ,
+             a.idn_bt           ,
+             a.txt_mca_bt_rev   ,
+             a.idn_bt_rev       ,
+             a.fec_ctable       ,
+             a.cod_mon_iso      ,
+             a.tip_imp          ,
+             a.idn_bt_ref       ,
+             a.tip_bt           );
       --
       -- Apertura cursor de datos
       OPEN lc_datos;
@@ -950,8 +917,7 @@ AS
          IF x = 0 
          THEN
             --Es la primera iteracion, creamos el fichero inicial e inicializamos lv_cod_soc_ant
-            -- ! se comenta en vista de que esto esta determinando el codigo mal
-            -- ! lv_cod_soc_ant := substr(lv_num_externo,4,4);
+            lv_cod_soc_ant := substr(lv_num_externo,4,4);
             x:= 1;
             -- Crea fichero
             l_fic_nombre:= dc_k_fpsl_inst.f_nom_fich_tbtra (p_idn_int_proc   => g_idn_int_proc  ,
@@ -974,16 +940,14 @@ AS
             --
          ELSE
             --
-            -- ! la variables de sociedad no va cambiara
-            -- ! l_length >= 200000000 or lv_cod_soc_ant <> substr(l_buffer,4,4)
-            IF l_length >= 200000000  THEN
+            IF l_length >= 200000000 or lv_cod_soc_ant <> substr(l_buffer,4,4)
+            THEN
                --
                -- Cerramos el fichero actual
                pp_cierre_fichero(p_fic => l_fic);
                -- Comprobamos si ha cambiado el cod_sociedad
-               -- ! la sociedad no cambiara
-               -- ! lv_cod_soc_ant <> substr(lv_num_externo,4,4)
-               IF 1 <> 1 THEN
+               IF lv_cod_soc_ant <> substr(lv_num_externo,4,4)
+               THEN
                   --
                   g_ind_fichero  := 1;
                   lv_cod_soc_ant := substr(lv_num_externo,4,4);
@@ -996,12 +960,12 @@ AS
                END IF;
                --
                -- obtenermos nuevo nombre de fichero
-               l_fic_nombre := dc_k_fpsl_inst.f_nom_fich_tbtra (p_idn_int_proc   => g_idn_int_proc  ,
-                                                                p_fec_hasta_proc => g_fec_hasta_proc,
-                                                                p_cod_sociedad   => lv_cod_soc_ant  ,
-                                                                p_ind_fichero    => g_ind_fichero  );
+               l_fic_nombre:= dc_k_fpsl_inst.f_nom_fich_tbtra (p_idn_int_proc   => g_idn_int_proc  ,
+                                                               p_fec_hasta_proc => g_fec_hasta_proc,
+                                                               p_cod_sociedad   => lv_cod_soc_ant  ,
+                                                               p_ind_fichero    => g_ind_fichero  );
                --
-               l_fic := fp_crea_fichero (p_nombre_fichero => l_fic_nombre);
+               l_fic:= fp_crea_fichero (p_nombre_fichero => l_fic_nombre);
                --
                -- Genera la cabecera de fichero
                pp_cabecera_fpsl_transacciones (p_fic => l_fic);
@@ -1035,7 +999,7 @@ AS
          UTL_FILE.put_line (file      => l_fic   ,
                             buffer    => l_buffer);
          --
-         -- Comprobamos fichero < 200 Mb
+         -- Comprobamos que la entidad no cambie o el tamanio del fichero < 200 Mb
          UTL_FILE.fgetattr (location     => trn_k_instalacion.f_mspool_dir_real,
                             filename     => l_fic_nombre,
                             fexists      => l_exists                           ,
@@ -1088,9 +1052,9 @@ AS
       SELECT g.txt_num_externo                      ,
              g.idn_cobertura                        ,
              g.tip_registro_paa                     ,
-             --v7.00             
+--v7.00             
              g.fec_registro                         ,
-             --v7.00
+--v7.00
              g.fec_emi_tip_reg                      ,
              g.fec_efec_contrato                    ,
              g.fec_fin                              ,
@@ -1098,149 +1062,146 @@ AS
              g.cod_mon_iso                          ,
              g.cod_fracc_pago                       ,
              g.cod_pre_pag                          ,
-             --v7.00             g.cod_ratio_combinado                  , 
-             --v7.00             g.idn_prob_impago                      , 
+--v7.00             g.cod_ratio_combinado                  , 
+--v7.00             g.idn_prob_impago                      , 
              g.txt_met_val                          , 
-             --v7.00             g.id_contrato_orig                     , 
+--v7.00             g.id_contrato_orig                     , 
              g.id_granualidad                       ,
              g.cod_nivel_granula                    ,
              g.tip_patron                           ,
              g.num_poliza_subyacente                ,
-             --v7.00             g.tip_aplicacion
-            g.num_prob_incumplimiento
-            --v7.00
-       FROM ( SELECT a.cod_cia,
-                     a.num_poliza,
-                     a.num_spto,
-                     a.num_apli,
-                     a.num_spto_apli,
-                     a.cod_cob,
-                     a.txt_num_externo,
-                     a.idn_cobertura,
-                     a.tip_registro_paa,        
-                     --v7.00
-                     c.fec_registro,
-                     --v7.00
-                     a.fec_emi_tip_reg                      ,
-                     a.fec_efec_contrato                    ,
-                     a.fec_fin                              ,
-                     a.imp_prima                            ,
-                     a.cod_mon_iso                          ,
-                     a.cod_fracc_pago                       ,
-                     a.cod_pre_pag                          ,
-                     --v7.00             a.cod_ratio_combinado                  ,
-                     --v7.00             a.idn_prob_impago                      ,
-                     a.txt_met_val                          ,
-                     --v7.00             c.id_contrato_orig                     ,
-                     c.id_granualidad                       ,
-                     c.cod_nivel_granula                    ,
-                     c.tip_patron                           ,
-                     c.num_poliza_subyacente                ,
-                       --v7.00             c.tip_aplicacion
-                     c.num_prob_incumplimiento
-                     --v7.00
-                FROM a1004811 a,
-                     a1004814 c
-               where a.cod_cia    = g_cod_cia 
-                 AND a.cod_cia    = c.cod_cia
-                 AND a.num_poliza = c.num_poliza
-                 AND a.num_spto   = c.num_spto
-                 AND a.num_apli   = c.num_apli
-                 AND a.num_spto_apli = c.num_spto_apli
-                 AND a.num_riesgo = c.num_riesgo
-                 AND a.num_periodo = c.num_periodo
-                 AND a.cod_cob = c.cod_cob
-                 AND a.cod_cohorte = c.cod_cohorte
-                 AND a.cod_cartera = c.cod_cartera
-                 AND a.tip_registro_paa = c.tip_registro_paa
-            ) g 
-      FULL OUTER JOIN a1004813 b
-                  ON g.cod_cia = b.cod_cia
-                 AND g.num_poliza = b.num_poliza
-                 AND g.num_spto   = b.num_spto
-                 AND g.num_apli   = b.num_apli
-                 AND g.num_spto_apli = b.num_spto_apli
-                 AND g.cod_cob  = b.cod_cob
-      GROUP BY g.txt_num_externo                          ,
-                  g.idn_cobertura                        ,
-                  g.tip_registro_paa                     ,
-                  --v7.00
-                  g.fec_registro                         ,
-                  --v7.00
-                  g.fec_emi_tip_reg                      ,
-                  g.fec_efec_contrato                    ,
-                  g.fec_fin                              ,
-                  g.cod_mon_iso                          ,
-                  g.cod_fracc_pago                       ,
-                  g.cod_pre_pag                          ,
-                  --v7.00             g.cod_ratio_combinado                  ,
-                  --v7.00             g.idn_prob_impago                      ,
-                  g.txt_met_val                          ,
-                  --v7.00             g.id_contrato_orig                     ,
-                  g.id_granualidad                       ,
-                  g.cod_nivel_granula                    ,
-                  g.tip_patron                           ,
-                  g.num_poliza_subyacente                ,
-                  --v7.00             g.tip_aplicacion
-                  g.num_prob_incumplimiento
-                  --v7.00
-      ORDER BY g.txt_num_externo;
+--v7.00             g.tip_aplicacion
+             g.num_prob_incumplimiento
+--v7.00
+from
+(select a.cod_cia,
+        a.num_poliza,
+        a.num_spto,
+        a.num_apli,
+        a.num_spto_apli,
+        a.cod_cob,
+             a.txt_num_externo                      ,
+             a.idn_cobertura                        ,
+             a.tip_registro_paa                     ,
+--v7.00
+             c.fec_registro                         ,
+--v7.00
+             a.fec_emi_tip_reg                      ,
+             a.fec_efec_contrato                    ,
+             a.fec_fin                              ,
+             a.imp_prima                            ,
+             a.cod_mon_iso                          ,
+             a.cod_fracc_pago                       ,
+             a.cod_pre_pag                          ,
+--v7.00             a.cod_ratio_combinado                  ,
+--v7.00             a.idn_prob_impago                      ,
+             a.txt_met_val                          ,
+--v7.00             c.id_contrato_orig                     ,
+             c.id_granualidad                       ,
+             c.cod_nivel_granula                    ,
+             c.tip_patron                           ,
+             c.num_poliza_subyacente                ,
+--v7.00             c.tip_aplicacion
+             c.num_prob_incumplimiento
+--v7.00
+from a1004811 a,
+     a1004814 c
+where a.cod_cia = c.cod_cia
+  and a.num_poliza = c.num_poliza
+  and a.num_spto = c.num_spto
+  and a.num_apli = c.num_apli
+  and a.num_spto_apli = c.num_spto_apli
+  and a.num_riesgo = c.num_riesgo
+  and a.num_periodo = c.num_periodo
+  and a.cod_cob = c.cod_cob
+  and a.cod_cohorte = c.cod_cohorte
+  and a.cod_cartera = c.cod_cartera
+  and a.tip_registro_paa = c.tip_registro_paa
+) g full outer join a1004813 b
+      on g.cod_cia = b.cod_cia
+        and g.num_poliza = b.num_poliza
+        and g.num_spto   = b.num_spto
+        and g.num_apli   = b.num_apli
+        and g.num_spto_apli = b.num_spto_apli
+        and g.cod_cob  = b.cod_cob
+group by g.txt_num_externo                          ,
+             g.idn_cobertura                        ,
+             g.tip_registro_paa                     ,
+--v7.00
+             g.fec_registro                         ,
+--v7.00
+             g.fec_emi_tip_reg                      ,
+             g.fec_efec_contrato                    ,
+             g.fec_fin                              ,
+             g.cod_mon_iso                          ,
+             g.cod_fracc_pago                       ,
+             g.cod_pre_pag                          ,
+--v7.00             g.cod_ratio_combinado                  ,
+--v7.00             g.idn_prob_impago                      ,
+             g.txt_met_val                          ,
+--v7.00             g.id_contrato_orig                     ,
+             g.id_granualidad                       ,
+             g.cod_nivel_granula                    ,
+             g.tip_patron                           ,
+             g.num_poliza_subyacente                ,
+--v7.00             g.tip_aplicacion
+             g.num_prob_incumplimiento
+--v7.00
+ORDER BY g.txt_num_externo;
+/*      SELECT a.txt_num_externo                      ,
+             a.idn_cobertura                        ,
+             a.tip_registro_paa                         ,
+             a.fec_emi_tip_reg                      ,
+             a.fec_efec_contrato                    ,
+             a.fec_fin                              ,
+             SUM(a.imp_prima)                       ,
+             a.cod_mon_iso                          ,
+             a.cod_fracc_pago                       ,
+             a.cod_pre_pag                          ,
+             a.cod_ratio_combinado                  ,
+             a.idn_prob_impago                      ,
+             a.txt_met_val
+      FROM a1004811 a full outer join a1004813 b
+      on a.cod_cia = b.cod_cia
+        and a.num_poliza = b.num_poliza
+        and a.num_spto   = b.num_spto
+        and a.num_apli   = b.num_apli
+        and a.num_spto_apli = b.num_spto_apli
+        and a.cod_cob  = b.cod_cob
+      GROUP BY a.txt_num_externo  ,
+               a.idn_cobertura    ,
+               a.tip_registro_paa     ,
+               a.fec_emi_tip_reg  ,
+               a.fec_efec_contrato,
+               a.fec_fin          ,
+               a.cod_mon_iso      ,
+               a.cod_fracc_pago   ,
+               a.cod_pre_pag      ,
+               a.cod_ratio_combinado,
+               a.idn_prob_impago  ,
+               a.txt_met_val      
+      ORDER BY a.txt_num_externo;
+*/
       --
-      /*      SELECT a.txt_num_externo                      ,
-                  a.idn_cobertura                        ,
-                  a.tip_registro_paa                         ,
-                  a.fec_emi_tip_reg                      ,
-                  a.fec_efec_contrato                    ,
-                  a.fec_fin                              ,
-                  SUM(a.imp_prima)                       ,
-                  a.cod_mon_iso                          ,
-                  a.cod_fracc_pago                       ,
-                  a.cod_pre_pag                          ,
-                  a.cod_ratio_combinado                  ,
-                  a.idn_prob_impago                      ,
-                  a.txt_met_val
-            FROM a1004811 a full outer join a1004813 b
-            on a.cod_cia = b.cod_cia
-            and a.num_poliza = b.num_poliza
-            and a.num_spto   = b.num_spto
-            and a.num_apli   = b.num_apli
-            and a.num_spto_apli = b.num_spto_apli
-            and a.cod_cob  = b.cod_cob
-            GROUP BY a.txt_num_externo  ,
-                     a.idn_cobertura    ,
-                     a.tip_registro_paa     ,
-                     a.fec_emi_tip_reg  ,
-                     a.fec_efec_contrato,
-                     a.fec_fin          ,
-                     a.cod_mon_iso      ,
-                     a.cod_fracc_pago   ,
-                     a.cod_pre_pag      ,
-                     a.cod_ratio_combinado,
-                     a.idn_prob_impago  ,
-                     a.txt_met_val      
-            ORDER BY a.txt_num_externo;
-      */
-      --
-      --      l_tc_datos t_c_datos;
+--      l_tc_datos t_c_datos;
       l_buffer VARCHAR2(32767);
       l_buffer_cab VARCHAR2(32767);
       x PLS_INTEGER;
        --
-      lv_ctos        NUMBER;
-      l_length       NUMBER;
-      l_exists       BOOLEAN;
-      l_block_size   BINARY_INTEGER;
-      l_fic          UTL_FILE.file_type;
-      l_fic_nombre   VARCHAR2(300);
-      -- * Se cambia por consistencia de la data
-      lv_cod_soc_ant A1004803.cod_sociedad%TYPE := lpad( g_cod_cia_financiera, 4, '0' );
+      lv_ctos      NUMBER;
+      l_length     NUMBER;
+      l_exists     BOOLEAN;
+      l_block_size BINARY_INTEGER;
+      l_fic        UTL_FILE.file_type;
+      l_fic_nombre VARCHAR2(300);
+      lv_cod_soc_ant A1004803.cod_sociedad%TYPE := '****';
       --
       lv_num_externo         a1004811.txt_num_externo    %TYPE;
       lv_idn_cobertura       a1004811.idn_cobertura      %TYPE;
       lv_tip_registro_paa    a1004811.tip_registro_paa   %TYPE;
-      --v7.00
+--v7.00
       lv_fec_registro        a1004814.fec_registro       %TYPE;
-      --v7.00
+--v7.00
       lv_fec_emi_tip_reg     a1004811.fec_emi_tip_reg    %TYPE;
       lv_fec_efec_contrato   a1004811.fec_efec_contrato  %TYPE;
       lv_fec_fin             a1004811.fec_fin            %TYPE;  
@@ -1248,18 +1209,18 @@ AS
       lv_cod_mon_iso         a1004811.cod_mon_iso        %TYPE;
       lv_cod_frac_pago       a1004811.cod_fracc_pago      %TYPE;
       lv_cod_pre_pag         a1004811.cod_pre_pag        %TYPE;
-      --v7.00      lv_cod_ratio_combinado a1004811.cod_ratio_combinado%TYPE;
+--v7.00      lv_cod_ratio_combinado a1004811.cod_ratio_combinado%TYPE;
       lv_idn_fichero         a1004811.idn_fichero         %TYPE;
-      --v7.00      lv_idn_prob_impago     a1004811.idn_prob_impago    %TYPE;
+--v7.00      lv_idn_prob_impago     a1004811.idn_prob_impago    %TYPE;
       lv_txt_met_val         a1004811.txt_met_val        %TYPE;
-      --v7.00      lv_id_contrato_orig    a1004814.id_contrato_orig   %TYPE;
+--v7.00      lv_id_contrato_orig    a1004814.id_contrato_orig   %TYPE;
       lv_id_granularidad     a1004814.id_granualidad     %TYPE;
       lv_cod_nivel_granula   a1004814.cod_nivel_granula  %TYPE;
       lv_tip_patron          a1004814.tip_patron         %TYPE;
       lv_num_poliza_subyacente a1004814.num_poliza_subyacente%TYPE;
-      --v7.00      lv_tip_aplicacion      a1004814.tip_aplicacion     %TYPE;
+--v7.00      lv_tip_aplicacion      a1004814.tip_aplicacion     %TYPE;
       lv_num_prob_incumplimiento    a1004814.num_prob_incumplimiento   %TYPE; 
-      --v7.00
+--v7.00
       --
    BEGIN
       --
@@ -1270,145 +1231,144 @@ AS
       --
       SELECT count('p')
         INTO lv_ctos
-        FROM ( SELECT g.txt_num_externo        ,
-                      g.idn_cobertura                        ,
-                      g.tip_registro_paa                     ,
-                      --v7.00
-                      g.fec_registro                         ,
-                      --v7.00
-                      g.fec_emi_tip_reg                      ,
-                      g.fec_efec_contrato                    ,
-                      g.fec_fin                              ,
-                      SUM(g.imp_prima)                       ,
-                      g.cod_mon_iso                          ,
-                      g.cod_fracc_pago                       ,
-                      g.cod_pre_pag                          ,
-                      --v7.00             g.cod_ratio_combinado                  ,
-                      --v7.00             g.idn_prob_impago                      ,
-                      g.txt_met_val                          ,
-                      --v7.00             g.id_contrato_orig                     ,
-                      g.id_granualidad                       ,
-                      g.cod_nivel_granula                    ,
-                      g.tip_patron                           ,
-                      g.num_poliza_subyacente                ,
-                      --v7.00             g.tip_aplicacion
-                      g.num_prob_incumplimiento
-                      --v7.00
-                 FROM ( SELECT a.cod_cia,
-                               a.num_poliza,
-                               a.num_spto,
-                               a.num_apli,
-                               a.num_spto_apli,
-                               a.cod_cob,
-                               a.txt_num_externo                      ,
-                               a.idn_cobertura                        ,
-                               a.tip_registro_paa                     ,
-                               --v7.00
-                               c.fec_registro                         ,
-                               --v7.00
-                               a.fec_emi_tip_reg                      ,
-                               a.fec_efec_contrato                    ,
-                               a.fec_fin                              ,
-                               a.imp_prima                            ,
-                               a.cod_mon_iso                          ,
-                               a.cod_fracc_pago                       ,
-                               a.cod_pre_pag                          ,
-                               --v7.00             a.cod_ratio_combinado                  ,
-                               --v7.00             a.idn_prob_impago                      ,
-                               a.txt_met_val                          ,
-                               --v7.00             c.id_contrato_orig                     ,
-                               c.id_granualidad                       ,
-                               c.cod_nivel_granula                    ,
-                               c.tip_patron                           ,
-                               c.num_poliza_subyacente                ,
-                               --v7.00             c.tip_aplicacion
-                               c.num_prob_incumplimiento
-                               --v7.00
-                          FROM a1004811 a,
-                               a1004814 c
-                         WHERE a.cod_cia    = g_cod_cia
-                           AND a.cod_cia    = c.cod_cia
-                           AND a.num_poliza = c.num_poliza
-                           AND a.num_spto = c.num_spto
-                           AND a.num_apli = c.num_apli
-                           AND a.num_spto_apli = c.num_spto_apli
-                           AND a.num_riesgo = c.num_riesgo
-                           AND a.num_periodo = c.num_periodo
-                           AND a.cod_cob = c.cod_cob
-                           AND a.cod_cohorte = c.cod_cohorte
-                           AND a.cod_cartera = c.cod_cartera
-                           AND a.tip_registro_paa = c.tip_registro_paa
-                     ) g FULL OUTER JOIN a1004813 b
-                           ON g.cod_cia = b.cod_cia
-                           AND g.num_poliza = b.num_poliza
-                           AND g.num_spto   = b.num_spto
-                           AND g.num_apli   = b.num_apli
-                           AND g.num_spto_apli = b.num_spto_apli
-                           AND g.cod_cob  = b.cod_cob
-                  GROUP BY g.txt_num_externo                          ,
-                        g.idn_cobertura                        ,
-                        g.tip_registro_paa                     ,
-                        --v7.00
-                        g.fec_registro                         ,
-                        --v7.00
-                        g.fec_emi_tip_reg                      ,
-                        g.fec_efec_contrato                    ,
-                        g.fec_fin                              ,
-                        g.cod_mon_iso                          ,
-                        g.cod_fracc_pago                       ,
-                        g.cod_pre_pag                          ,
-                        --v7.00             g.cod_ratio_combinado                  ,
-                        --v7.00             g.idn_prob_impago                      ,
-                        g.txt_met_val                          ,
-                        --v7.00             g.id_contrato_orig                     ,
-                        g.id_granualidad                       ,
-                        g.cod_nivel_granula                    ,
-                        g.tip_patron                           ,
-                        g.num_poliza_subyacente                ,
-                        --v7.00             g.tip_aplicacion);
-                        g.num_prob_incumplimiento
-               );
-      --v7.00
-      /*      FROM (SELECT a.txt_num_externo                ,
-                  a.idn_cobertura                        ,
-                  a.tip_registro_paa                     ,
-                  a.fec_emi_tip_reg                      ,
-                  a.fec_efec_contrato                    ,
-                  a.fec_fin                              ,
-                  SUM(a.imp_prima)                       ,
-                  a.cod_mon_iso                          ,
-                  a.cod_fracc_pago                       ,
-                  a.cod_pre_pag                          ,
-                  a.cod_ratio_combinado                  ,
-                  a.idn_prob_impago                      ,
-                  a.txt_met_val
-            FROM a1004811 a
-            group by a.txt_num_externo  ,
-                     a.idn_cobertura    ,
-                     a.tip_registro_paa ,
-                     a.fec_emi_tip_reg  ,
-                     a.fec_efec_contrato,
-                     a.fec_fin          ,
-                     a.cod_mon_iso      ,
-                     a.cod_fracc_pago   ,
-                     a.cod_pre_pag      ,
-                     a.cod_ratio_combinado,
-                     a.idn_prob_impago  ,
-                     a.txt_met_val);
-      */
+        FROM (      SELECT g.txt_num_externo        ,
+             g.idn_cobertura                        ,
+             g.tip_registro_paa                     ,
+--v7.00
+             g.fec_registro                         ,
+--v7.00
+             g.fec_emi_tip_reg                      ,
+             g.fec_efec_contrato                    ,
+             g.fec_fin                              ,
+             SUM(g.imp_prima)                       ,
+             g.cod_mon_iso                          ,
+             g.cod_fracc_pago                       ,
+             g.cod_pre_pag                          ,
+--v7.00             g.cod_ratio_combinado                  ,
+--v7.00             g.idn_prob_impago                      ,
+             g.txt_met_val                          ,
+--v7.00             g.id_contrato_orig                     ,
+             g.id_granualidad                       ,
+             g.cod_nivel_granula                    ,
+             g.tip_patron                           ,
+             g.num_poliza_subyacente                ,
+--v7.00             g.tip_aplicacion
+             g.num_prob_incumplimiento
+--v7.00
+from
+(select a.cod_cia,
+        a.num_poliza,
+        a.num_spto,
+        a.num_apli,
+        a.num_spto_apli,
+        a.cod_cob,
+             a.txt_num_externo                      ,
+             a.idn_cobertura                        ,
+             a.tip_registro_paa                     ,
+--v7.00
+             c.fec_registro                         ,
+--v7.00
+             a.fec_emi_tip_reg                      ,
+             a.fec_efec_contrato                    ,
+             a.fec_fin                              ,
+             a.imp_prima                            ,
+             a.cod_mon_iso                          ,
+             a.cod_fracc_pago                       ,
+             a.cod_pre_pag                          ,
+--v7.00             a.cod_ratio_combinado                  ,
+--v7.00             a.idn_prob_impago                      ,
+             a.txt_met_val                          ,
+--v7.00             c.id_contrato_orig                     ,
+             c.id_granualidad                       ,
+             c.cod_nivel_granula                    ,
+             c.tip_patron                           ,
+             c.num_poliza_subyacente                ,
+--v7.00             c.tip_aplicacion
+             c.num_prob_incumplimiento
+--v7.00
+from a1004811 a,
+     a1004814 c
+where a.cod_cia = c.cod_cia
+  and a.num_poliza = c.num_poliza
+  and a.num_spto = c.num_spto
+  and a.num_apli = c.num_apli
+  and a.num_spto_apli = c.num_spto_apli
+  and a.num_riesgo = c.num_riesgo
+  and a.num_periodo = c.num_periodo
+  and a.cod_cob = c.cod_cob
+  and a.cod_cohorte = c.cod_cohorte
+  and a.cod_cartera = c.cod_cartera
+  and a.tip_registro_paa = c.tip_registro_paa
+) g full outer join a1004813 b
+      on g.cod_cia = b.cod_cia
+        and g.num_poliza = b.num_poliza
+        and g.num_spto   = b.num_spto
+        and g.num_apli   = b.num_apli
+        and g.num_spto_apli = b.num_spto_apli
+        and g.cod_cob  = b.cod_cob
+group by g.txt_num_externo                          ,
+             g.idn_cobertura                        ,
+             g.tip_registro_paa                     ,
+--v7.00
+             g.fec_registro                         ,
+--v7.00
+             g.fec_emi_tip_reg                      ,
+             g.fec_efec_contrato                    ,
+             g.fec_fin                              ,
+             g.cod_mon_iso                          ,
+             g.cod_fracc_pago                       ,
+             g.cod_pre_pag                          ,
+--v7.00             g.cod_ratio_combinado                  ,
+--v7.00             g.idn_prob_impago                      ,
+             g.txt_met_val                          ,
+--v7.00             g.id_contrato_orig                     ,
+             g.id_granualidad                       ,
+             g.cod_nivel_granula                    ,
+             g.tip_patron                           ,
+             g.num_poliza_subyacente                ,
+--v7.00             g.tip_aplicacion);
+             g.num_prob_incumplimiento);
+--v7.00
+/*      FROM (SELECT a.txt_num_externo                ,
+             a.idn_cobertura                        ,
+             a.tip_registro_paa                     ,
+             a.fec_emi_tip_reg                      ,
+             a.fec_efec_contrato                    ,
+             a.fec_fin                              ,
+             SUM(a.imp_prima)                       ,
+             a.cod_mon_iso                          ,
+             a.cod_fracc_pago                       ,
+             a.cod_pre_pag                          ,
+             a.cod_ratio_combinado                  ,
+             a.idn_prob_impago                      ,
+             a.txt_met_val
+      FROM a1004811 a
+      group by a.txt_num_externo  ,
+               a.idn_cobertura    ,
+               a.tip_registro_paa ,
+               a.fec_emi_tip_reg  ,
+               a.fec_efec_contrato,
+               a.fec_fin          ,
+               a.cod_mon_iso      ,
+               a.cod_fracc_pago   ,
+               a.cod_pre_pag      ,
+               a.cod_ratio_combinado,
+               a.idn_prob_impago  ,
+               a.txt_met_val);
+*/
       --
       -- Apertura cursor de datos
       OPEN lc_datos;
       --
       LOOP
          --
-         -- Recupera numero de registros limitado
+        -- Recupera numero de registros limitado
          FETCH lc_datos INTO lv_num_externo          ,
                              lv_idn_cobertura        ,
                              lv_tip_registro_paa     ,
-            --v7.00
+--v7.00
                              lv_fec_registro         ,
-            --v7.00
+--v7.00
                              lv_fec_emi_tip_reg      ,
                              lv_fec_efec_contrato    ,
                              lv_fec_fin              ,
@@ -1416,17 +1376,17 @@ AS
                              lv_cod_mon_iso          ,
                              lv_cod_frac_pago        ,
                              lv_cod_pre_pag          ,
-            --v7.00                             lv_cod_ratio_combinado  ,
-            --                             lv_idn_fichero,
-            --v7.00                             lv_idn_prob_impago      ,
+--v7.00                             lv_cod_ratio_combinado  ,
+--                             lv_idn_fichero,
+--v7.00                             lv_idn_prob_impago      ,
                              lv_txt_met_val          ,
                              --v1.06
-            --v7.00                             lv_id_contrato_orig     ,
+--v7.00                             lv_id_contrato_orig     ,
                              lv_id_granularidad      ,
                              lv_cod_nivel_granula    ,
                              lv_tip_patron           ,
                              lv_num_poliza_subyacente,
-            --v7.00                             lv_tip_aplicacion       ;
+--v7.00                             lv_tip_aplicacion       ;
                              lv_num_prob_incumplimiento;
          --
          EXIT WHEN lc_datos%NOTFOUND;
@@ -1434,8 +1394,7 @@ AS
          IF x = 0 
          THEN
             --Es la primera iteracion, creamos el fichero inicial e inicializamos lv_cod_soc_ant
-            -- ! se comenta ya que la sociedad no cambia
-            -- ! lv_cod_soc_ant := substr(lv_num_externo,4,4);
+            lv_cod_soc_ant := substr(lv_num_externo,4,4);
             x:= 1;
             -- Crea fichero
             l_fic_nombre:= dc_k_fpsl_inst.f_nom_fich_mprco (p_idn_int_proc   => g_idn_int_proc  ,
@@ -1458,16 +1417,14 @@ AS
             --
          ELSE
             --
-            -- ! se comenta ya que la sociedad no cambia
-            -- ! l_length >= 200000000 or lv_cod_soc_ant <> substr(lv_num_externo,4,4)
-            IF l_length >= 200000000 THEN
+            IF l_length >= 200000000 or lv_cod_soc_ant <> substr(lv_num_externo,4,4)
+            THEN
                --
                -- Cerramos el fichero actual
                pp_cierre_fichero(p_fic => l_fic);
                -- Comprobamos si ha cambiado el cod_sociedad
-               -- ! se comenta ya que la sociedad no cambia
-               -- ! lv_cod_soc_ant <> substr(lv_num_externo, 4,4)
-               IF 1 <> 1 THEN
+               IF lv_cod_soc_ant <> substr(lv_num_externo, 4,4)
+               THEN
                   --
                   g_ind_fichero  := 1;
                   lv_cod_soc_ant := substr(lv_num_externo, 4,4);
@@ -1480,12 +1437,12 @@ AS
                END IF;
                --
                -- obtenermos nuevo nombre de fichero
-               l_fic_nombre := dc_k_fpsl_inst.f_nom_fich_mprco (p_idn_int_proc   => g_idn_int_proc  ,
+               l_fic_nombre:= dc_k_fpsl_inst.f_nom_fich_mprco (p_idn_int_proc   => g_idn_int_proc  ,
                                                                p_fec_hasta_proc => g_fec_hasta_proc,
                                                                p_cod_sociedad   => lv_cod_soc_ant  ,
                                                                p_ind_fichero    => g_ind_fichero  );
                --
-               l_fic := fp_crea_fichero (p_nombre_fichero => l_fic_nombre);
+               l_fic:= fp_crea_fichero (p_nombre_fichero => l_fic_nombre);
                --
                -- Genera la cabecera de fichero
                pp_cabecera_fpsl_prima_contrat (p_fic => l_fic);
@@ -1505,9 +1462,9 @@ AS
          l_buffer := lv_num_externo                           ||g_k_separador||
                      lv_idn_cobertura                         ||g_k_separador||
                      lv_tip_registro_paa                      ||g_k_separador||
-                     --v7.00
+--v7.00
                      TO_CHAR(lv_fec_registro,'YYYYMMDD')      ||g_k_separador||
-                     --v7.00
+--v7.00
                      TO_CHAR(lv_fec_emi_tip_reg,'YYYYMMDD')   ||g_k_separador||
                      TO_CHAR(lv_fec_efec_contrato,'YYYYMMDD') ||g_k_separador||
                      TO_CHAR(lv_fec_fin,'YYYYMMDD')           ||g_k_separador||
@@ -1515,24 +1472,27 @@ AS
                      lv_cod_mon_iso                           ||g_k_separador||
                      lv_cod_frac_pago                         ||g_k_separador||
                      lv_cod_pre_pag                           ||g_k_separador||
-                     --v7.00                     lv_cod_ratio_combinado                   ||g_k_separador|| 
+--v7.00                     lv_cod_ratio_combinado                   ||g_k_separador|| 
                      lv_idn_fichero                           ||g_k_separador||
-                     --v7.00                     lv_idn_prob_impago                       ||g_k_separador|| 
+--v7.00                     lv_idn_prob_impago                       ||g_k_separador|| 
                      lv_txt_met_val                           ||g_k_separador||
                      --v1.06
-                     --v7.00                     lv_id_contrato_orig                      ||g_k_separador|| 
+--v7.00                     lv_id_contrato_orig                      ||g_k_separador|| 
                      lv_id_granularidad                       ||g_k_separador||
                      lv_cod_nivel_granula                     ||g_k_separador||
                      lv_tip_patron                            ||g_k_separador||
                      lv_num_poliza_subyacente                 ||g_k_separador|| 
-                     --v7.00                     lv_tip_aplicacion                        ;
+--v7.00                     lv_tip_aplicacion                        ;
                      lv_num_prob_incumplimiento                        ;
-                     --v7.00
+--v7.00
+            
+                     
+                     
          --
          UTL_FILE.put_line (file      => l_fic   ,
                             buffer    => l_buffer);
          --
-         -- Comprobamos que tamanio del fichero < 200 Mb
+         -- Comprobamos que la entidad no cambie o el tamanio del fichero < 200 Mb
          UTL_FILE.fgetattr (location     => trn_k_instalacion.f_mspool_dir_real,
                             filename     => l_fic_nombre,
                             fexists      => l_exists                           ,
@@ -1583,9 +1543,6 @@ AS
    IS
    BEGIN
       --
-      -- * se coloca para generar consistencia en los nombres de los archivos
-      p_inicio;
-      --
       g_idn_int_proc   := p_idn_int_proc;
       g_fec_hasta_proc := p_fec_hasta_proc;
       --
@@ -1635,7 +1592,7 @@ AS
    END pp_cabecera_fpsl_err;
    --
    PROCEDURE pp_datos_fpsl_err (p_fic            IN UTL_FILE.file_type)
-   IS
+   AS
       --
       l_tc_datos t_c_datos;
       l_buffer VARCHAR2(32767);
