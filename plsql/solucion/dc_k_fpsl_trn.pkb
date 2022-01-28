@@ -313,9 +313,14 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
                      dat_pol.cod_nivel3               TXT_CTO_COSTE,
                      NVL(dat_pol.cod_canal3, '1011')  COD_CANAL3,       -- ! OJO  REVISAR EL CANAL
                      dat_pol.val_mca_int              VAL_MCA_INT,
-                     dat_pol.num_riesgos              NUM_CERTIFICADOS,
-                     'L09'                            COD_CARTERA,      -- ! OJO REVISAR 
-                     1                                COD_REASEGURADOR  -- ! OJO REVISAR 
+                     1                                NUM_CERTIFICADOS, -- ! Se cambia segun observaciones, dat_pol.num_riesgos 
+                     ( SELECT DISTINCT cart.cod_cartera
+                         FROM a1004806 cart
+                        WHERE cart.cod_sociedad = cias.cod_cia_financiera
+                          AND cart.cod_ramo     = dat_pol.cod_ramo
+                          AND ROWNUM = 1
+                     )    COD_CARTERA,      -- ! OJO REVISAR 
+                     1    COD_REASEGURADOR  -- ! OJO REVISAR 
               FROM a2000030 dat_pol, 
                    a1000900 cias
              WHERE cias.cod_cia              = dat_pol.cod_cia
@@ -447,7 +452,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
              NULL                IDN_COBERTURA, --campo calculado
              g_idn_int_proc      IDN_INT_PROC,
              g_cod_sis_origen    COD_SIS_ORIGEN,
-             g_idn_int_proc      TXT_NUM_EXTERNO, --se inserta el numero de proceso temporalmente puesto que no permite nulos
+             g_idn_int_proc      TXT_NUM_EXTERNO, -- se inserta el numero de proceso temporalmente puesto que no permite nulos
              a.fec_efec_riesgo   FEC_REGISTRO,
              NULL                NUM_ORDEN,
              c.fec_registro      FEC_EFECT_COBER,
@@ -498,6 +503,10 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
    --
    FUNCTION f_txt_num_externo return VARCHAR2 
    IS
+      --
+      l_tipo_cartera    CHAR(1) := 'N';
+      l_tipo_negocio    CHAR(2) := 'DI';
+      --
    BEGIN
       --
       -- v7.01 En todo el paquete se cambia la llamada a esta funcion por la llamada a 'dc_k_fpsl_inst.f_txt_num_externo'
@@ -505,7 +514,13 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       --  
       mx('I','p_v_txt_num_externo');
       --
-      RETURN 'IC_' || greg_cobe.cod_sociedad || greg_cobe.cod_cartera || greg_cobe.cod_cohorte || '_' || greg_cobe.num_poliza;  
+      RETURN 'IC' || 
+             greg_cobe.cod_sociedad || 
+             greg_cobe.cod_cartera || 
+             l_tipo_negocio ||
+             l_tipo_cartera ||
+             greg_cobe.cod_cohorte || 
+             greg_cobe.num_poliza;  
       --
       mx('I','p_v_txt_num_externo');
       --
@@ -893,9 +908,10 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       greg_paa.num_orden         := greg_cobe.num_orden;
       greg_paa.idn_int_proc      := greg_cobe.idn_int_proc;
       greg_paa.cod_sis_origen    := greg_cobe.cod_sis_origen;
-      -- v7.01 greg_paa.txt_num_externo   := f_txt_num_externo;
-      greg_paa.txt_num_externo   := dc_k_fpsl_inst.f_txt_num_externo(p_greg_cobe       => greg_cobe, 
-                                                                     p_txt_num_externo => greg_paa.txt_num_externo); 
+      -- v7.01 
+      greg_paa.txt_num_externo   := f_txt_num_externo;
+      -- greg_paa.txt_num_externo   := dc_k_fpsl_inst.f_txt_num_externo(p_greg_cobe       => greg_cobe, 
+      --                                                                p_txt_num_externo => greg_paa.txt_num_externo); 
       greg_paa.fec_efec_contrato := greg_cobe.fec_efec_contrato;
       greg_paa.fec_fin           := greg_cobe.fec_fin_cober;
       greg_paa.idn_cobertura     := greg_cobe.idn_cobertura;
@@ -1531,34 +1547,41 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       mx('I','p_v_txt_met_val');
       --
       -- llamamos al procedimiento personalizado para que nos devuelva el valor.
-      lv_txt_met_val := dc_k_fpsl_inst.f_txt_met_val('BPDI   ' ); --greg_cobe.txt_met_val        );
+      -- ! se cambia debido aque el valor que debe contener es de la configuracion del tabla a1004805
+      -- ! lv_txt_met_val := dc_k_fpsl_inst.f_txt_met_val('BPDI   ' ); --greg_cobe.txt_met_val        );
+      lv_txt_met_val := dc_k_fpsl_inst.f_txt_met_val( greg_cobe.txt_met_val );
       --
       mx('1-lv_txt_met_val', lv_txt_met_val);
       -- Comprobamos el valor devuelto (v7.00 Se contempla el cambio de talla de txt_met_val)
-      IF lv_txt_met_val NOT IN ('BPDI   ', 'BPRE   ','BODI   ', 'BORE   ', 'BEDI   ', 'BERE   ', 'PPDI   ', 'PPRE   ', 'PODI   ', 'PORE   ', 'VPDI   ', 'VODI   ')
-      THEN                       
-         --
-         mx('1-lv_txt_met_val', 'ERROR');         
-         dc_k_fpsl.p_graba_error(p_cod_sis_origen => g_cod_sis_origen,
-                                 p_cod_sociedad   => greg_cobe.cod_sociedad,
-                                 p_cod_cia        => greg_cobe.cod_cia,
-                                 p_num_poliza     => greg_cobe.num_poliza,
-                                 p_num_spto       => greg_cobe.num_spto,
-                                 p_num_apli       => greg_cobe.num_apli,
-                                 p_num_spto_apli  => greg_cobe.num_spto_apli,
-                                 p_num_riesgo     => greg_cobe.num_riesgo,
-                                 p_cod_cob        => greg_cobe.cod_cob,
-                                 p_txt_campo      => 'TXT_MET_VAL - '||lv_txt_met_val,
-                                 p_cod_error      => 99999022,
-                                 p_txt_error      => SUBSTR(ss_k_mensaje.f_texto_idioma(99999022,g_cod_idioma)||' - '||lv_txt_met_val,1,4000),
-                                 p_idn_int_proc   => g_idn_int_proc);
-         --
-      ELSE
-         --
-         mx('1-lv_txt_met_val', 'SIN ERROR');                  
-         greg_cobe.txt_met_val := lv_txt_met_val;
-         --
-      END IF;
+      -- ! se cambia debido aque el valor que debe contener es de la configuracion del tabla a1004805
+      /*
+         IF lv_txt_met_val NOT IN ('BPDI   ', 'BPRE   ','BODI   ', 'BORE   ', 'BEDI   ', 'BERE   ', 'PPDI   ', 'PPRE   ', 'PODI   ', 'PORE   ', 'VPDI   ', 'VODI   ')
+         THEN                       
+            --
+            mx('1-lv_txt_met_val', 'ERROR');         
+            dc_k_fpsl.p_graba_error(p_cod_sis_origen => g_cod_sis_origen,
+                                    p_cod_sociedad   => greg_cobe.cod_sociedad,
+                                    p_cod_cia        => greg_cobe.cod_cia,
+                                    p_num_poliza     => greg_cobe.num_poliza,
+                                    p_num_spto       => greg_cobe.num_spto,
+                                    p_num_apli       => greg_cobe.num_apli,
+                                    p_num_spto_apli  => greg_cobe.num_spto_apli,
+                                    p_num_riesgo     => greg_cobe.num_riesgo,
+                                    p_cod_cob        => greg_cobe.cod_cob,
+                                    p_txt_campo      => 'TXT_MET_VAL - '||lv_txt_met_val,
+                                    p_cod_error      => 99999022,
+                                    p_txt_error      => SUBSTR(ss_k_mensaje.f_texto_idioma(99999022,g_cod_idioma)||' - '||lv_txt_met_val,1,4000),
+                                    p_idn_int_proc   => g_idn_int_proc);
+            --
+         ELSE
+            --
+            mx('1-lv_txt_met_val', 'SIN ERROR');                  
+            greg_cobe.txt_met_val := lv_txt_met_val;
+            --
+         END IF;
+      */
+      --
+      mx('F','p_v_txt_met_val');
       --
    END p_v_txt_met_val;
    --
@@ -1601,9 +1624,10 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
          --
          p_obtiene_definicion_cartera;
          --
-         --v7.01 greg_cobe.txt_num_externo := f_txt_num_externo; 
-         greg_cobe.txt_num_externo := dc_k_fpsl_inst.f_txt_num_externo(p_greg_cobe       => greg_cobe, 
-                                                                        p_txt_num_externo => greg_cobe.txt_num_externo); 
+         --v7.01 
+         greg_cobe.txt_num_externo := f_txt_num_externo; 
+         -- greg_cobe.txt_num_externo := dc_k_fpsl_inst.f_txt_num_externo(p_greg_cobe       => greg_cobe, 
+         --                                                                p_txt_num_externo => greg_cobe.txt_num_externo); 
          p_v_fec_registro;
          --
          p_v_fec_efect_cober;
@@ -2414,7 +2438,9 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
    --
    PROCEDURE p_trata_datos_contrato IS
       --v7.00
-      vl_clave_05         VARCHAR2(100);
+      vl_clave_05          VARCHAR2(100);
+      l_tipo_negocio       CHAR(2) := 'DI';
+      l_tipo_cartera       CHAR(1) := 'N';
       --
    BEGIN
       --
@@ -2460,9 +2486,9 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
          END IF;
          --
          -- v7.01 greg_cont.txt_num_externo := f_txt_num_externo; 
-         greg_cont.txt_num_externo := dc_k_fpsl_inst.f_txt_num_externo( p_greg_cobe       => greg_cobe, 
-                                                                        p_txt_num_externo => greg_cont.txt_num_externo
-                                                                      ); 
+         -- greg_cont.txt_num_externo := dc_k_fpsl_inst.f_txt_num_externo( p_greg_cobe       => greg_cobe, 
+         --                                                                p_txt_num_externo => greg_cont.txt_num_externo
+         --                                                              ); 
          p_v_fec_registro;
          --
          p_v_txt_est_contrato; 
@@ -2492,11 +2518,19 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
          --
          p_dat_cancela;
          --
-         -- V6.00
+         -- V6.00 
          p_v_num_asegurados;
          --
          -- V7.00
          p_v_num_certificados; 
+         --
+         greg_cont.txt_num_externo := 'IC'|| 
+                                      greg_cont.cod_sociedad||
+                                      greg_cont.cod_cartera ||
+                                      l_tipo_negocio ||
+                                      l_tipo_cartera ||
+                                      greg_cont.cod_cohorte ||
+                                      greg_cont.num_poliza;
          --
          dc_k_fpsl_a1004808.p_actualiza(greg_cont);
          --
