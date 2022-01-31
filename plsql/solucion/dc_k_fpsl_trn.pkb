@@ -313,14 +313,14 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
                      dat_pol.cod_nivel3               TXT_CTO_COSTE,
                      NVL(dat_pol.cod_canal3, '1011')  COD_CANAL3,       -- ! OJO  REVISAR EL CANAL
                      dat_pol.val_mca_int              VAL_MCA_INT,
-                     1                                NUM_CERTIFICADOS, -- ! Se cambia segun observaciones, dat_pol.num_riesgos 
+                     1                                NUM_CERTIFICADOS, -- ! Se cambia segun observaciones del 28/01/2022, dat_pol.num_riesgos 
                      ( SELECT DISTINCT cart.cod_cartera
                          FROM a1004806 cart
                         WHERE cart.cod_sociedad = cias.cod_cia_financiera
                           AND cart.cod_ramo     = dat_pol.cod_ramo
                           AND ROWNUM = 1
                      )    COD_CARTERA,      -- ! OJO REVISAR 
-                     1    COD_REASEGURADOR  -- ! OJO REVISAR 
+                     ' '  COD_REASEGURADOR  -- ! OJO REVISAR 
               FROM a2000030 dat_pol, 
                    a1000900 cias
              WHERE cias.cod_cia              = dat_pol.cod_cia
@@ -2055,8 +2055,11 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       -- v7.00 
       -- v7.01 Se toman las 3 primeras posiciones de COD_CARTERA
       IF g_txt_lic_lrc = 'UOA' THEN
-         SELECT 'UOA_'|| greg_cont.cod_sociedad||substr(greg_cont.cod_cartera,1,3)||'_'||greg_cont.cod_cohorte 
-                || greg_cont.txt_one || '_' ||g_txt_met_val||g_spaces
+         SELECT 'UOA_'|| greg_cont.cod_sociedad||
+                 substr(greg_cont.cod_cartera,1,3) ||
+                 greg_cont.cod_cohorte || '_' ||
+                 greg_cont.txt_one || '_' ||
+                 g_txt_met_val || g_spaces
             INTO greg_cont.txt_uoa
             FROM dual;
       ELSE 

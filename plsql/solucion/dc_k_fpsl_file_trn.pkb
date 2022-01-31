@@ -562,8 +562,14 @@ AS
              a.num_poliza                           ||g_k_separador||
              b.cod_cohorte                          ||g_k_separador||
              b.cod_cartera                          ||g_k_separador||
-             decode(b.cod_onerosidad,'O',1,'N',2)   ||g_k_separador||
-             NVL(a.txt_uoa,'UOA_' || a.cod_sociedad || b.cod_cartera || '_' || b.cod_cohorte || b.cod_onerosidad || '_' || b.txt_met_val)||g_k_separador||
+             b.cod_onerosidad                       ||g_k_separador||   -- ! Se cambia segun observaciones de fecha 28/01/2022.  decode(b.cod_onerosidad,'O',1,'N',2)
+             NVL(a.txt_uoa,'UOA_' || 
+                              a.cod_sociedad || 
+                              b.cod_cartera ||
+                              b.cod_cohorte || '_' || 
+                              b.cod_onerosidad || '_' || 
+                              b.txt_met_val
+             ) ||g_k_separador||
              a.idn_cancelacion                      ||g_k_separador||
              TO_CHAR(a.fec_efec_cancelacion,'YYYYMMDD')
         FROM a1004808 a, 
