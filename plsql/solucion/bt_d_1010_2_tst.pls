@@ -4,7 +4,7 @@ IS
    -- En este ejemplo se obtiene el importe de los recibos y el importe del impuesto
    -- de todas ´los contratos cargados en la tabla del modelo intermedio.
    CURSOR c1 IS
-      SELECT 'BT_'||a.cod_sociedad||to_char(b.fec_emision_spto,'yyyymm')||'_'||rownum IDN_BT
+      SELECT 'BT'||a.cod_sociedad||to_char(b.fec_emision_spto,'yyyymm')||'_'||rownum IDN_BT
             ,a.idn_int_proc     IDN_INT_PROC
             ,a.cod_sis_origen   COD_SIS_ORIGEN
             ,b.fec_emision_spto FEC_REGISTRO
@@ -38,14 +38,36 @@ IS
    reg_a1004810 a1004810%ROWTYPE;
    --
    lv_fec_hasta_proc DATE;
+   lv_fec_desde_proc DATE;
    lv_nom_fich       varchar2(20);
    lv_cod_operacion  a1004807.cod_operacion%TYPE;
+   --
+   -- funcion de manejo de moneda
+   FUNCTION pf_desc_moneda( p_cod_moneda a1000400.cod_mon%TYPE ) RETURN VARCHAR2 IS 
+      --
+      l_cod_moneda a1000400.cod_mon_iso%TYPE;
+      -- 
+   BEGIN 
+      --
+      SELECT cod_mon_iso
+        INTO l_cod_moneda
+        FROM a1000400 
+       WHERE cod_mon = p_cod_moneda; 
+      --
+      RETURN l_cod_moneda;
+      --
+      EXCEPTION 
+         WHEN OTHERS THEN 
+            RETURN ' ';
+      --      
+   END pf_desc_moneda;
    --
 BEGIN
    --
    -- Recuperamos la fecha hasta del proceso que se cargó en una
    -- variable global en el paquete dc_k_fpsl,p_trata_bt
    lv_fec_hasta_proc := trn_k_global.f_devuelve_f('FEC_HASTA_PROC');
+   lv_fec_desde_proc := trn_k_global.f_devuelve_f('FEC_DESDE_PROC');
    -- Recuperamos el tipo de bt que se cargo en una variable
    -- global en el paquete dc_k_fpsl,p_trata_bt
    lv_cod_operacion  := trn_k_global.f_devuelve_c('COD_OPERACION');
@@ -70,7 +92,10 @@ BEGIN
       reg_a1004810.idn_fichero     := lv_nom_fich           ;
       reg_a1004810.txt_num_externo := reg_c1.txt_num_externo;
       reg_a1004810.imp_transaccion := reg_c1.imp_transaccion;
-      reg_a1004810.cod_mon_iso     := reg_c1.cod_mon_iso    ;
+      --
+      reg_a1004810.cod_mon_iso     := pf_desc_moneda( 
+            p_cod_moneda => reg_c1.cod_mon_iso
+      );
       --
       -- Tratamos los datos que no se pueden obtener directamente de la consulta.
       -- Es un ejemplo de tratamiento

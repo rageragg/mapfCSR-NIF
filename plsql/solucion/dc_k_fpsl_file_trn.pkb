@@ -395,8 +395,7 @@ AS
          -- Recupera numero de registros limitado
          FETCH lc_datos BULK COLLECT INTO l_tc_datos LIMIT g_limite;
          --
-         IF x = 0 
-         THEN
+         IF x = 0 THEN
             --Es la primera iteracion, creamos el fichero inicial e inicializamos lv_cod_soc_ant
             -- ! Se corrige 
             -- ! lv_cod_soc_ant := substr(l_tc_datos(1),4,4);
@@ -417,8 +416,7 @@ AS
             --
          END IF;
          --
-         IF l_tc_datos IS NOT NULL AND l_tc_datos.count > trn.cero
-         THEN
+         IF l_tc_datos IS NOT NULL AND l_tc_datos.count > trn.cero THEN
             --
             FOR i IN l_tc_datos.first .. l_tc_datos.last
             LOOP

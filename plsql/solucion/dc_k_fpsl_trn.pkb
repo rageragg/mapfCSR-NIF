@@ -2122,6 +2122,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       -- 
       trn_k_global.asigna('IDN_INT_PROC',g_idn_int_proc);
       trn_k_global.asigna('FEC_HASTA_PROC'   , TO_CHAR(g_fec_hasta_proc, 'DDMMYYYY'));
+      trn_k_global.asigna('FEC_DESDE_PROC'   , TO_CHAR(g_fec_desde_proc, 'DDMMYYYY'));
       --
       OPEN c_a1004807;
       LOOP
