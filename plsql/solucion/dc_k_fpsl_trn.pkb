@@ -294,9 +294,10 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
                         VAL_MCA_INT,
                         NUM_CERTIFICADOS,
                         cod_cartera,
-                        cod_reasegurador 
+                        cod_reasegurador,
+                        cod_cohorte
                      )
-            SELECT  dat_pol.cod_cia                   COD_CIA,
+            SELECT   dat_pol.cod_cia                  COD_CIA,
                      dat_pol.num_poliza               NUM_POLIZA,
                      dat_pol.cod_ramo                 COD_RAMO,
                      dat_pol.num_spto                 NUM_SPTO,
@@ -319,8 +320,9 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
                         WHERE cart.cod_sociedad = cias.cod_cia_financiera
                           AND cart.cod_ramo     = dat_pol.cod_ramo
                           AND ROWNUM = 1
-                     )    COD_CARTERA,      -- ! OJO REVISAR 
-                     ' '  COD_REASEGURADOR  -- ! OJO REVISAR 
+                     )    COD_CARTERA,       -- ! OJO REVISAR 
+                     ' '  COD_REASEGURADOR,  -- ! OJO REVISAR
+                     to_char(dat_pol.fec_efec_spto, 'YYYY') COD_COHORTE -- ! Se modifica segun reunion con Sr. Jairo el 01/02/2022
               FROM a2000030 dat_pol, 
                    a1000900 cias
              WHERE cias.cod_cia              = dat_pol.cod_cia
@@ -464,7 +466,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
              c.fec_efec_contrato FEC_EFEC_CONTRATO,
              a.cod_modalidad     COD_KMODALIDAD,
              NULL                COD_CARTERA,
-             NULL                COD_COHORTE,
+             to_char( c.fec_registro, 'YYYY')  COD_COHORTE, -- ! se modifica segun reunion con Sr. Jairo el 01/02/2022
              NULL                COD_ONEROSIDAD,
              NULL                TXT_MET_VAL,
              c.val_mca_int       VAL_MCA_INT
@@ -1001,7 +1003,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       END LOOP;
       --
       CLOSE lc_a1004805;
-   --
+      --
    END p_carga_definicion_carteras;
    --
    /* -------------------------------------------------------
@@ -1127,7 +1129,8 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
                --
                 greg_cobe.txt_met_val     := g_tb_a1004805(vl_clave_05).txt_met_val;
                 greg_cobe.cod_onerosidad  := g_tb_a1004805(vl_clave_05).txt_one;
-                greg_cobe.cod_cohorte     := g_tb_a1004805(vl_clave_05).cod_cohorte;
+                -- ! Se modifica segun reuinion con Sr. Jairo el 01/02/2022
+                -- ! greg_cobe.cod_cohorte     := g_tb_a1004805(vl_clave_05).cod_cohorte;
                 --
             ELSE
                --
@@ -1616,7 +1619,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
                               fec_fin_cober,
                               cod_mon_iso,
                               fec_inclu_cober,
-                              cod_cob
+                              cod_ramo_ctable
                   )
       LOOP
          --
@@ -2511,7 +2514,8 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
          --
          p_v_cod_segmento;
          --v7.00
-         greg_cont.cod_cohorte := g_tb_a1004805(vl_clave_05).cod_cohorte;
+         -- ! se modifica segun reunion con Sr. Jairo Brenes el 01/02/2022
+         -- ! greg_cont.cod_cohorte := g_tb_a1004805(vl_clave_05).cod_cohorte;
          --v7.01 se toman las 3 primeras posiciones de COD_CARTERA
          greg_cont.cod_cartera := substr(g_tb_a1004805(vl_clave_05).cod_cartera,1,3);
          greg_cont.txt_one     := g_tb_a1004805(vl_clave_05).txt_one;
