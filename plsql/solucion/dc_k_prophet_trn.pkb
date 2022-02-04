@@ -247,16 +247,16 @@ create or replace PACKAGE BODY          dc_k_prophet_trn AS
     THEN
       --
       BEGIN
-      --
-      CLOSE lc_a1004800;
-      -- Obtenemos los datos de las polizas a estudiar en el proceso y lo recorremos
-      --
-      dc_k_prophet_pol_riesg_trn.p_extrae_datos_fijos (p_idn_int_proc => p_idn_int_proc               ,
-                                                       p_fec_hasta   => l_reg_a1004800.fec_hasta_proc);
-      --
-      dc_k_prophet_coberturas_trn.p_extrae_coberturas(p_idn_int_proc => p_idn_int_proc               ,
-                                                       p_fec_hasta   => l_reg_a1004800.fec_hasta_proc);
-      --
+         --
+         CLOSE lc_a1004800;
+         -- Obtenemos los datos de las polizas a estudiar en el proceso y lo recorremos
+         --
+         dc_k_prophet_pol_riesg_trn.p_extrae_datos_fijos (p_idn_int_proc => p_idn_int_proc               ,
+                                                         p_fec_hasta   => l_reg_a1004800.fec_hasta_proc);
+         --
+         dc_k_prophet_coberturas_trn.p_extrae_coberturas(p_idn_int_proc => p_idn_int_proc               ,
+                                                         p_fec_hasta   => l_reg_a1004800.fec_hasta_proc);
+         --
       EXCEPTION
         WHEN OTHERS THEN
             --

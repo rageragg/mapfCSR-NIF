@@ -73,7 +73,9 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       cod_cob         a1004806.cod_cob                     %TYPE,
       cod_cartera     a1004806.cod_cartera                 %TYPE,
       cod_ramo_ctable a1004806.cod_ramo_ctable             %TYPE,
-      nom_prg_obtiene_datos a1004806.nom_prg_obtiene_datos %TYPE
+      nom_prg_obtiene_datos a1004806.nom_prg_obtiene_datos %TYPE,
+      -- ! Se agrega por solicitud Sr. Jairo
+      cod_ramo_sap    a1004815.cod_ramo_sap                %TYPE
       );
    --
    TYPE t_a1004806 IS TABLE OF record_A1004806 INDEX BY VARCHAR2(100); --clave;
@@ -461,7 +463,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
              c.fec_fin           FEC_FIN_COBER,
              d.cod_mon_iso       COD_MON_ISO,
              NULL                FEC_INCLU_COBER, -- campo calculado
-             NULL                COD_RAMO_CTABLE, -- Campo calculado
+             NULL                COD_RAMO_CTABLE, -- campo calculado
              c.cod_sociedad      COD_SOCIEDAD,
              c.fec_efec_contrato FEC_EFEC_CONTRATO,
              a.cod_modalidad     COD_KMODALIDAD,
@@ -1018,7 +1020,12 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       --
       CURSOR lc_a1004806 IS
          SELECT a.cod_sociedad, a.cod_ramo, a.cod_kmodalidad, a.cod_cob, a.cod_cartera, 
-                a.nom_prg_obtiene_datos, a.cod_ramo_ctable --, COD_SOCIEDAD||COD_RAMO||COD_KMODALIDAD||COD_COB v_clave
+                a.nom_prg_obtiene_datos, a.cod_ramo_ctable, --, COD_SOCIEDAD||COD_RAMO||COD_KMODALIDAD||COD_COB v_clave
+                ( SELECT c.cod_ramo_sap
+                    FROM a1004815 c
+                   WHERE c.cod_cia           = g_cod_cia
+                     AND c.cod_ramo_ctable   = a.cod_ramo_ctable
+                ) cod_ramo_sap
            FROM a1004806 a
           WHERE a.cod_sociedad  = g_cod_sociedad
             AND a.fec_validez   = ( SELECT max(b.fec_validez)
@@ -1036,6 +1043,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       lv_cod_cartera            a1004806.cod_cartera          %TYPE;
       lv_nom_prg_obtiene_datos  a1004806.nom_prg_obtiene_datos%TYPE;
       lv_cod_ramo_ctable        a1004806.cod_ramo_ctable      %TYPE;
+      lv_cod_ramo_sap           a1004815.cod_ramo_sap         %TYPE;
       --
       vl_clave         VARCHAR2(100);
       --
@@ -1047,7 +1055,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       OPEN lc_a1004806;
       FETCH lc_a1004806 INTO lv_cod_sociedad, lv_cod_ramo, lv_cod_kmodalidad, 
                              lv_cod_cob, lv_cod_cartera, lv_nom_prg_obtiene_datos, 
-                             lv_cod_ramo_ctable;
+                             lv_cod_ramo_ctable, lv_cod_ramo_sap;
       --
       WHILE lc_a1004806%FOUND
       LOOP
@@ -1061,9 +1069,10 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
          g_tb_a1004806(vl_clave).cod_cartera             := lv_cod_cartera;
          g_tb_a1004806(vl_clave).nom_prg_obtiene_datos   := lv_nom_prg_obtiene_datos;
          g_tb_a1004806(vl_clave).cod_ramo_ctable         := lv_cod_ramo_ctable;
+         g_tb_a1004806(vl_clave).cod_ramo_sap            := lv_cod_ramo_sap;
          --
          FETCH lc_a1004806 INTO lv_cod_sociedad, lv_cod_ramo, lv_cod_kmodalidad, lv_cod_cob, lv_cod_cartera, 
-                                lv_nom_prg_obtiene_datos, lv_cod_ramo_ctable;
+                                lv_nom_prg_obtiene_datos, lv_cod_ramo_ctable, lv_cod_ramo_sap;
          --
       END LOOP;
       --
@@ -1112,7 +1121,9 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
             IF g_tb_a1004806(vl_clave_06).cod_cartera IS NOT NULL THEN
                --
                greg_cobe.cod_cartera     := g_tb_a1004806(vl_clave_06).cod_cartera;
-               greg_cobe.cod_ramo_ctable := g_tb_a1004806(vl_clave_06).cod_ramo_ctable;
+               -- ! se cambia a solicitud del Sr. Jairo
+               -- ! greg_cobe.cod_ramo_ctable := g_tb_a1004806(vl_clave_06).cod_ramo_ctable;
+               greg_cobe.cod_ramo_ctable := g_tb_a1004806(vl_clave_06).cod_ramo_sap;
                --
             END IF;
             --
@@ -1352,7 +1363,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
    || Nomenclatura: COV + "_" + Numero Secuencial(num_orden) + "_"+ Linea de negocio (cod_ramo)
    */ -------------------------------------------------------
    --
-   PROCEDURE p_v_idn_cobertura (p_num_orden a1004809.num_orden%TYPE)
+   PROCEDURE p_v_idn_cobertura ( p_num_orden    a1004809.num_orden%TYPE  )
    IS
    BEGIN
       --
@@ -1619,7 +1630,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
                               fec_fin_cober,
                               cod_mon_iso,
                               fec_inclu_cober,
-                              cod_ramo_ctable
+                              cod_cob
                   )
       LOOP
          --
@@ -1688,6 +1699,55 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
          --
          COMMIT;
             --
+      END LOOP;
+      --
+      -- se arma el id_cobertura
+      lv_num_orden := 0;
+      lv_clave     := NULL;
+      lv_clave_b   := NULL;
+      FOR regb IN ( SELECT * 
+                      FROM a1004809
+                      WHERE idn_int_proc = g_idn_int_proc
+                        AND cod_cia      = g_cod_cia
+                     ORDER BY cod_sociedad,
+                              num_poliza,
+                              fec_efect_cober,
+                              fec_fin_cober,
+                              cod_mon_iso,
+                              fec_inclu_cober,
+                              cod_ramo_ctable
+                  )
+      LOOP
+         --
+         greg_cobe := regb; 
+         --
+         IF NVL(lv_clave, '*') <> greg_cobe.num_poliza||greg_cobe.fec_registro||greg_cobe.fec_efect_cober||greg_cobe.fec_fin_cober||greg_cobe.cod_mon_iso||greg_cobe.fec_inclu_cober
+         THEN
+            --
+            lv_num_orden := 1;
+            lv_clave     := greg_cobe.num_poliza||greg_cobe.fec_registro||greg_cobe.fec_efect_cober||greg_cobe.fec_fin_cober||greg_cobe.cod_mon_iso||greg_cobe.fec_inclu_cober;
+            lv_clave_b   := greg_cobe.cod_ramo_ctable;
+            --
+         ELSE
+            --
+            IF NVL(lv_clave_b, '#') <> greg_cobe.cod_ramo_ctable
+            THEN
+               --
+               lv_num_orden := lv_num_orden + 1;
+               lv_clave_b   := greg_cobe.cod_ramo_ctable;
+               --
+            END IF;
+            --
+         END IF;
+         --
+         greg_cobe.num_orden := lv_num_orden;
+         greg_cobe.num_secu  := lv_num_orden;
+         p_v_idn_cobertura(lv_num_orden);
+         -- 
+         dc_k_fpsl_a1004809.p_actualiza(greg_cobe); 
+         --
+         COMMIT;
+         --
       END LOOP;
       --
       mx('F','p_trata_datos_cobertura');
