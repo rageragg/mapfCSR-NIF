@@ -1,5 +1,5 @@
 create or replace PACKAGE BODY dc_k_fpsl_trn AS
-   /* -------------------- VERSION = 1.05 -------------------- */
+   /* -------------------- VERSION = 1.05 --------------------  */
    --
    /* -------------------- MODIFICACIONES ----------------------------------------------------------
    || BLAZQUF - 25/08/2020 - 1.03 - MU-2020-058146
@@ -309,8 +309,8 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
                      p_idn_int_proc                   IDN_INT_PROC, --Se debe de utilizar el valor del proceso como constante en la select para hacer el insert select => constante como parametro
                      g_cod_sis_origen                 COD_SIS_ORIGEN, -- constantes como parametro
                      p_idn_int_proc                   TXT_NUM_EXTERNO, --se inserta el numero de proceso temporalmente puesto que no permite nulos
-                     dat_pol.fec_efec_spto            FEC_REGISTRO,
-                     dat_pol.fec_efec_spto            FEC_EFEC_CONTRATO,
+                     dat_pol.fec_emision_spto         FEC_REGISTRO,
+                     dat_pol.fec_efec_poliza          FEC_EFEC_CONTRATO,
                      dat_pol.fec_vcto_spto            FEC_FIN,
                      cias.cod_cia_financiera          COD_SOCIEDAD,
                      dat_pol.cod_nivel3               TXT_CTO_COSTE,
@@ -332,10 +332,10 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
                AND dat_pol.num_apli          = 0   
                AND dat_pol.num_spto_apli     = 0
                AND NVL(mca_provisional, 'N') = 'N'
+               AND NVL(mca_spto_anulado,'N') = 'N'
                AND dat_pol.tip_spto          <> 'SM'
-               AND GREATEST( 
-                     nvl(fec_autorizacion, fec_emision_spto), fec_emision_spto
-                  ) BETWEEN p_fec_desde AND p_fec_hasta;
+               AND NVL(mca_poliza_anulada,'N') = 'N'
+               AND fec_efec_poliza BETWEEN p_fec_desde AND p_fec_hasta;
          --
          mx('.','p_extrae_contratos2');
          --
@@ -370,8 +370,8 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
                    p_idn_int_proc               IDN_INT_PROC,   -- Se debe de utilizar el valor del proceso como constante en la select para hacer el insert select => constante como parametro
                    g_cod_sis_origen             COD_SIS_ORIGEN, -- constantes como parametro
                    p_idn_int_proc               TXT_NUM_EXTERNO,
-                   dat_pol.fec_efec_spto        FEC_REGISTRO,
-                   dat_pol.fec_efec_spto        FEC_EFEC_CONTRATO,
+                   dat_pol.fec_emision_spto        FEC_REGISTRO,
+                   dat_pol.fec_emision_spto        FEC_EFEC_CONTRATO,
                    dat_pol.fec_vcto_spto        FEC_FIN,
                    cias.cod_cia_financiera      COD_SOCIEDAD,
                    dat_pol.cod_nivel3           TXT_CTO_COSTE,
@@ -468,7 +468,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
              c.fec_efec_contrato FEC_EFEC_CONTRATO,
              a.cod_modalidad     COD_KMODALIDAD,
              NULL                COD_CARTERA,
-             to_char( c.fec_registro, 'YYYY')  COD_COHORTE, -- ! se modifica segun reunion con Sr. Jairo el 01/02/2022
+             c.cod_cohorte        COD_COHORTE, -- ! se modifica segun reunion con Sr. Jairo el 01/02/2022
              NULL                COD_ONEROSIDAD,
              NULL                TXT_MET_VAL,
              c.val_mca_int       VAL_MCA_INT
@@ -2172,9 +2172,17 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       l_reg_a1004807         a1004807%ROWTYPE;
       --
       CURSOR c_a1004807 IS
-         SELECT *
-           FROM a1004807
-          WHERE cod_sociedad = g_cod_sociedad;
+         SELECT a.*
+           FROM a1004807 a
+          WHERE a.cod_sociedad = g_cod_sociedad
+            AND a.fec_validez = ( SELECT max(b.fec_validez)
+                                    FROM a1004807 b
+                                   WHERE b.cod_sis_origen   = a.cod_sis_origen
+                                     AND b.cod_sociedad     = a.cod_sociedad
+                                     AND b.cod_agrup_bt     = a.cod_agrup_bt
+                                     AND b.cod_sub_agrup_bt = a.cod_sub_agrup_bt
+                                     AND b.cod_operacion    = a.cod_operacion
+                              );
       --
    BEGIN
       --
@@ -2201,10 +2209,13 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
             --
             -- Cargamos los datos en variables para que el procedimiento lo pueda leer
             --
+            trn_k_global.asigna('COD_SIS_ORIGEN', l_reg_a1004807.cod_sis_origen);
+            trn_k_global.asigna('COD_SOCIEDAD', l_reg_a1004807.cod_sociedad );
             trn_k_global.asigna('COD_AGRUP_BT',l_reg_a1004807.cod_agrup_bt);
             trn_k_global.asigna('COD_SUB_AGRUP_BT',l_reg_a1004807.cod_sub_agrup_bt);
             trn_k_global.asigna('COD_OPERACION',l_reg_a1004807.cod_operacion);
             trn_k_global.asigna('TIP_IMP',l_reg_a1004807.tip_imp);
+            trn_k_global.asigna('FEC_VALIDEZ', to_char( l_reg_a1004807.fec_validez, 'ddmmyyyy') );
             --
             trn_p_dinamico (l_reg_a1004807.nom_prg_obtiene_datos);
             --
@@ -2214,12 +2225,15 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
          --
       END LOOP;
       --                                   
-      trn_k_global.borra_variable ('COD_AGRUP_BT');
+      trn_k_global.borra_variable('COD_AGRUP_BT');
       trn_k_global.borra_variable('COD_SUB_AGRUP_BT');
       trn_k_global.borra_variable('COD_OPERACION');
       trn_k_global.borra_variable('TIP_IMP');
       trn_k_global.borra_variable('IDN_INT_PROC');
       trn_k_global.borra_variable('FEC_HASTA_PROC');
+      trn_k_global.borra_variable('FEC_VALIDEZ');
+      trn_k_global.borra_variable('TIP_IMP');
+      --
       CLOSE c_a1004807;
       COMMIT;
       --
