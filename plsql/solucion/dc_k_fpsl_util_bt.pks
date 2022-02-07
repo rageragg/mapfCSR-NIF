@@ -17,6 +17,12 @@ CREATE OR REPLACE PACKAGE dc_k_fpsl_util_bt IS
    -- procesamiento de Operacion S2000
    PROCEDURE p_s2000_d_siniestro_pagado;
    --
+   -- procesamiento de Operacion S3000
+   PROCEDURE p_d3100_c_comisiones_emitida;
+   --
+   -- procesamiento de Operacion S3000
+   PROCEDURE p_s3100_d_comisiones_pagada;
+   --
    -- procedimiento duumy para relleno
    PROCEDURE p_dummy;
    -- 
