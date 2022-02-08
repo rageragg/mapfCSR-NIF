@@ -235,13 +235,15 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
             --
             IF r_recibo.imp_transaccion > 0 THEN
                 -- 
-                g_reg_a1004810.tip_imp      := 'D';
-                g_reg_a1004810.imp_impuesto := r_recibo.imp_impuesto;
+                g_reg_a1004810.tip_imp          := 'D';
+                g_reg_a1004810.imp_transaccion  := r_recibo.imp_transaccion;
+                g_reg_a1004810.imp_impuesto     := r_recibo.imp_impuesto;
                 --
             ELSE
                 -- 
-                g_reg_a1004810.tip_imp      := 'C';
-                g_reg_a1004810.imp_impuesto := abs(r_recibo.imp_impuesto);
+                g_reg_a1004810.tip_imp          := 'C';
+                g_reg_a1004810.imp_transaccion  := abs(r_recibo.imp_transaccion);
+                g_reg_a1004810.imp_impuesto     := abs(r_recibo.imp_impuesto);
                 --
             END IF;
             --
@@ -281,7 +283,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
         lv_nom_fichero  VARCHAR2(20);
         --
         -- seleccionamos los recibos emitidos
-        CURSOR c_recibos_emitidos IS 
+        CURSOR c_recibos_cobrados IS 
             SELECT 'BT'||a.cod_sociedad||to_char(b.fec_emision_spto,'yyyymm')||'_' IDN_BT
                    ,a.idn_int_proc     IDN_INT_PROC
                    ,a.cod_sis_origen   COD_SIS_ORIGEN
@@ -326,7 +328,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
         --
         lv_nom_fichero:= 'EEEE'||TO_CHAR(g_reg_a1004800.fec_hasta_proc,'YYYYMMDD')||'TBTRA';
         --
-        FOR r_recibo IN c_recibos_emitidos LOOP
+        FOR r_recibo IN c_recibos_cobrados LOOP
             --
             lv_correlativo              := lv_correlativo + 1;
             g_num_poliza                := r_recibo.num_poliza; 
@@ -351,13 +353,15 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
             --
             IF r_recibo.imp_transaccion > 0 THEN
                 -- 
-                g_reg_a1004810.tip_imp      := 'C';
-                g_reg_a1004810.imp_impuesto := r_recibo.imp_impuesto;
+                g_reg_a1004810.tip_imp         := 'C';
+                g_reg_a1004810.imp_transaccion := r_recibo.imp_transaccion;
+                g_reg_a1004810.imp_impuesto    := r_recibo.imp_impuesto;
                 --
             ELSE
                 -- 
-                g_reg_a1004810.tip_imp      := 'D';
-                g_reg_a1004810.imp_impuesto := abs(r_recibo.imp_impuesto);
+                g_reg_a1004810.tip_imp         := 'D';
+                g_reg_a1004810.imp_transaccion := abs(r_recibo.imp_transaccion) ;
+                g_reg_a1004810.imp_impuesto    := abs(r_recibo.imp_impuesto);
                 --
             END IF;
             --
@@ -398,7 +402,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
         lv_nom_fichero  VARCHAR2(20);
         --
         CURSOR c_siniestros_pagados IS
-            SELECT 'BT_'||a.cod_sociedad||to_char(c.fec_emision_spto,'yyyymm')||'_' IDN_BT,
+            SELECT 'BT'||a.cod_sociedad||to_char(c.fec_emision_spto,'yyyymm')||'_' IDN_BT,
                    a.idn_int_proc     IDN_INT_PROC,
                    a.cod_sis_origen   COD_SIS_ORIGEN,
                    c.fec_emision_spto FEC_REGISTRO,
@@ -530,7 +534,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
         lv_nom_fichero  VARCHAR2(20);
         --
         CURSOR c_comisiones_emitidas IS
-            SELECT 'BT_'||a.cod_sociedad||to_char(b.fec_emision_spto,'yyyymm')||'_' IDN_BT
+            SELECT 'BT'||a.cod_sociedad||to_char(b.fec_emision_spto,'yyyymm')||'_' IDN_BT
                     ,a.idn_int_proc     IDN_INT_PROC
                     ,a.cod_sis_origen   COD_SIS_ORIGEN
                     ,b.fec_emision_spto FEC_REGISTRO
@@ -630,7 +634,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
         lv_nom_fichero  VARCHAR2(20);
         --
         CURSOR c_comisiones_pagadas IS
-            SELECT 'BT_'||a.cod_sociedad||to_char(b.fec_emision_spto,'yyyymm')||'_' IDN_BT
+            SELECT 'BT'||a.cod_sociedad||to_char(b.fec_emision_spto,'yyyymm')||'_' IDN_BT
                     ,a.idn_int_proc     IDN_INT_PROC
                     ,a.cod_sis_origen   COD_SIS_ORIGEN
                     ,b.fec_emision_spto FEC_REGISTRO

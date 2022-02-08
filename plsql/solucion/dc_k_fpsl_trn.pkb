@@ -311,7 +311,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
                      p_idn_int_proc                   TXT_NUM_EXTERNO, --se inserta el numero de proceso temporalmente puesto que no permite nulos
                      dat_pol.fec_emision_spto         FEC_REGISTRO,
                      dat_pol.fec_efec_poliza          FEC_EFEC_CONTRATO,
-                     dat_pol.fec_vcto_spto            FEC_FIN,
+                     dat_pol.fec_vcto_poliza          FEC_FIN,
                      cias.cod_cia_financiera          COD_SOCIEDAD,
                      dat_pol.cod_nivel3               TXT_CTO_COSTE,
                      NVL(dat_pol.cod_canal3, '1011')  COD_CANAL3,       -- ! OJO  REVISAR EL CANAL
@@ -335,7 +335,9 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
                AND NVL(mca_spto_anulado,'N') = 'N'
                AND dat_pol.tip_spto          <> 'SM'
                AND NVL(mca_poliza_anulada,'N') = 'N'
-               AND fec_efec_poliza BETWEEN p_fec_desde AND p_fec_hasta;
+               -- AND fec_efec_poliza BETWEEN p_fec_desde AND p_fec_hasta; -- ! Se modifica segun reunion con Sr. Jairo el 08/02/2022
+               AND ( trunc(fec_efec_poliza) >= trunc(p_fec_desde) AND trunc(fec_efec_poliza) <= trunc(p_fec_hasta) )
+               AND ( trunc(fec_vcto_poliza) >= trunc(p_fec_hasta) );
          --
          mx('.','p_extrae_contratos2');
          --
