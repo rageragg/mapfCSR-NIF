@@ -8,7 +8,10 @@
 *   04/02/2022  Se crea el paquete para albergar los proceso de BT configurados en la tabla a1004807
 *   04/02/2022  Se crea los procesos de p_d1010_d_prima_emitida,  p_s1010_c_prima_cobrada, p_s2000_d_siniestro_pagado en el paquete dc_k_fpsl_util_bt
 *   07/02/2022  Se crea proceso para el pago de comisiones p_s3100_d_comisiones_pagada y p_d3100_c_comisiones_emitida
-*   08/02/2022  Se cambia el criterio de seleccion para la seleccion del contrato 
+*   08/02/2022  Se cambia el criterio de seleccion para la seleccion del contrato.
+*   10/02/2022  Se crea proceso para determinar el codigo de reasegurador por cada poliza en p_v_cod_reasegurador 
+*   10/02/2022  Se modifica los procesos de extraccion de contratos y coberturas para adaptar al tema de reaseguro.
+*   11/02/2022  Se realizan ajustes para realizar las pruebas y entrega de los contratos y coberturas con reaseguro
 
                 
 ### Objetos Relacionados

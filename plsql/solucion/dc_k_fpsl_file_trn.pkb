@@ -552,7 +552,7 @@ AS
              TO_CHAR(a.fec_fin,'YYYYMMDD')          ||g_k_separador||
              a.cod_sociedad                         ||g_k_separador||
              -- v1.06              a.cod_inter_cia                        ||g_k_separador||
-             a.cod_reasegurador                     ||g_k_separador||
+             decode( b.mca_reaseguro, 'S', a.cod_reasegurador, ' ' )                     ||g_k_separador||
              -- v7.0               a.num_asegurados                       ||g_k_separador|| --v1.06
              a.num_certificados                     ||g_k_separador|| --v7.00
              a.txt_cto_coste                        ||g_k_separador||
@@ -564,6 +564,8 @@ AS
              'UOA_' || 
                   a.cod_sociedad || 
                   b.cod_cartera ||
+                  decode( b.mca_reaseguro, 'S', 'CE','DI' )||
+                  'N'||
                   b.cod_cohorte || '_' || 
                   b.cod_onerosidad || '_' || 
                   b.txt_met_val
@@ -597,7 +599,8 @@ AS
                b.cod_onerosidad,
                a.txt_uoa,
                a.idn_cancelacion,
-               a.fec_efec_cancelacion
+               a.fec_efec_cancelacion,
+               b.mca_reaseguro
       ORDER BY a.cod_sociedad,
                b.cod_ramo_ctable,
                b.txt_num_externo;
