@@ -1,0 +1,139 @@
+---------------------------------------------------------------------------------------------------------
+---TRONWEB TRON2000 Plantilla para PDC sobre Lógicas de TRON2000 (V1.1)                               ---
+---------------------------------------------------------------------------------------------------------
+---Nombre de la Lógica:		dc_k_fpsl_inst_trn
+---Propietario/Cedente:		TRON2000
+---Beneficiarios:		NWT_IL, ROL_TRON2000_APP
+---sinónimo personalización en:	TRON2000
+---Sinónimos en:		NWT_IL, TRON2000_APP, TRON2000
+---Nombre del Sinónimo:		dc_k_fpsl_inst
+---Variables a sustituir:       l_logica, l_sinonimo, l_personalizable
+---Fecha realización:		24-02-2020 13:35:00
+---Realizado por:		BLAZQUF
+---comentarios:			Se controla la existencia de NWT_IL y ROL_TRON2000_APP y de SINONIMOS
+---   Los valores de las variables l_logica, l_sinonimo y l_personalizable deberan sustituirse por los correspondientes 
+---------------------------------------------------------------------------------------------------------
+DECLARE
+    --
+    -- Por favor, sustituya los valores de las variables l_logica y l_sinonimo por sus correspondientes.
+    -- Cuando la lógica no es personalizable la variable l_sinonimo debe sustituirse por el mismo valor que la variable l_logica
+    -- y se debe cambiar el valor de la variable l_personalizable a 'N'
+    --
+    l_logica 		    VARCHAR2(30) := 'dc_k_fpsl_inst_trn';
+    l_sinonimo 		    VARCHAR2(30) := 'dc_k_fpsl_inst';
+    l_personalizable    VARCHAR2(1)  := 'S';
+    --
+    --
+    l_rol_tron2000_app	VARCHAR2(30) := 'ROL_TRON2000_APP';
+    l_nwt_il 		    VARCHAR2(30) := 'NWT_IL';
+    l_tron2000_app      VARCHAR2(30) := 'TRON2000_APP';
+    l_tron2000          VARCHAR2(30) := 'TRON2000';
+    --
+    l_count             INTEGER; 
+    --
+    --
+    CURSOR c_cursor_rol
+    IS
+    SELECT COUNT (1)
+        FROM dba_roles t
+        WHERE t.role = l_rol_tron2000_app;
+    --
+    CURSOR c_cursor_tron2000_syn
+    IS
+    SELECT COUNT (1)
+        FROM dba_synonyms t
+        WHERE t.owner = l_tron2000
+        AND t.synonym_name = upper(l_sinonimo);
+    --
+    CURSOR c_cursor_tron2000_app_syn
+    IS
+    SELECT COUNT (1)
+        FROM dba_synonyms t
+        WHERE t.owner = l_tron2000_app
+        AND t.synonym_name = upper(l_sinonimo);
+    --
+    CURSOR c_cursor_nwt_il
+    IS
+    SELECT COUNT (1)
+        FROM dba_users t
+        WHERE t.username = l_nwt_il;
+    --
+    CURSOR c_cursor_nwt_il_syn
+    IS
+    SELECT COUNT (1)
+        FROM dba_synonyms t
+        WHERE t.owner = l_nwt_il
+        AND t.synonym_name = upper(l_sinonimo);
+    --
+    --
+    -- Se crea un sinónimo en TRON2000 con el nombre de la lógica sin el sufijo de personalización
+    l_synonym_TRON2000       VARCHAR2 (1000) := 'CREATE SYNONYM TRON2000.'||l_sinonimo||' FOR TRON2000.'||l_logica;
+
+    -- Se otorga privilegio sobre la lógica de TRON2000 al ROL_TRON2000_APP
+    l_grant_ROL_TRON2000_APP VARCHAR2 (1000) := 'GRANT EXECUTE ON TRON2000.'||l_logica||' TO ROL_TRON2000_APP';
+
+    -- Se crea un sinónimo en TRON2000_APP sobre el sinónimo de TRON2000 o sobre la sobre la lógica de TRON2000 cuando no es personalizable
+    l_synonym_TRON2000_APP   VARCHAR2 (1000) := 'CREATE SYNONYM TRON2000_APP.'||l_sinonimo||' FOR TRON2000.'||l_sinonimo;
+
+    -- Se otorga privilegio sobre la lógica de TRON2000 a NWT_IL
+    l_grant_NWT_IL           VARCHAR2 (1000) := 'GRANT EXECUTE ON TRON2000.'||l_logica||' TO NWT_IL';
+
+    -- Se crea un sinónimo en NWT_IL sobre el sinónimo de TRON2000 o sobre la sobre la lógica de TRON2000 cuando no es personalizable
+    l_synonym_NWT_IL         VARCHAR2 (1000) := 'CREATE SYNONYM NWT_IL.'||l_sinonimo||' FOR TRON2000.'||l_sinonimo;
+    --
+BEGIN
+    --
+    -- Si la lógica es personalizable se verifica si existe sinónimo y si no existe se crea
+    --
+    IF l_personalizable = 'S'
+    THEN
+        l_count := 0;
+        OPEN  c_cursor_tron2000_syn;
+        FETCH c_cursor_tron2000_syn INTO l_count;
+        CLOSE c_cursor_tron2000_syn;
+        --
+        IF l_count = 0 THEN
+            EXECUTE IMMEDIATE l_synonym_TRON2000;
+        END IF;
+    END IF;
+    --
+    --
+    l_count := 0;
+    OPEN  c_cursor_rol;
+    FETCH c_cursor_rol INTO l_count;
+    CLOSE c_cursor_rol;
+    --
+    IF l_count = 1
+    THEN
+        EXECUTE IMMEDIATE l_grant_ROL_TRON2000_APP;
+        l_count := 0;
+        OPEN  c_cursor_tron2000_app_syn;
+        FETCH c_cursor_tron2000_app_syn INTO l_count;
+        CLOSE c_cursor_tron2000_app_syn;
+        --
+        IF l_count = 0 THEN
+            EXECUTE IMMEDIATE l_synonym_TRON2000_APP;
+        END IF;
+    END IF;
+    --
+    --
+    l_count := 0;
+    OPEN  c_cursor_nwt_il;
+    FETCH c_cursor_nwt_il INTO l_count;
+    CLOSE c_cursor_nwt_il;
+    --
+    IF l_count = 1
+    THEN
+        EXECUTE IMMEDIATE l_grant_NWT_IL;
+        l_count := 0;
+        OPEN  c_cursor_nwt_il_syn;
+        FETCH c_cursor_nwt_il_syn INTO l_count;
+        CLOSE c_cursor_nwt_il_syn;
+        --
+        IF l_count = 0 THEN
+            EXECUTE IMMEDIATE l_synonym_NWT_IL;
+        END IF;
+    END IF;
+    --
+END;
+/

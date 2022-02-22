@@ -1,0 +1,112 @@
+-----------------------------------------------------------
+---MAPFRE DGTP - Modelo de datos                        ---
+-----------------------------------------------------------
+---Nº PETICIÓN:       RF00573729 - SD01978888
+---SOLICITADA POR:    BLAZQUF
+---OBJETOS AFECTADOS: A1004801
+---PROYECTO:          TRN
+---ENTORNO:           WDMD04
+---REALIZADO POR:     MDALBE1
+---TIPOLOGÍA:         Reentrante
+-----------------------------------------------------------
+
+DECLARE
+   --
+   CURSOR c_cursor_rol
+   IS
+   SELECT COUNT (1)
+     FROM dba_roles t
+    WHERE t.role = 'ROL_TRON2000_APP';
+   --
+   CURSOR c_cursor_nwt_dl
+   IS
+   SELECT COUNT (1)
+     FROM dba_users t
+    WHERE t.username = 'NWT_DL';
+   --
+   CURSOR c_cursor_nwt_dm_app
+   IS
+   SELECT COUNT (1)
+     FROM dba_users t
+    WHERE t.username = 'NWT_DM_APP';
+   --
+   CURSOR c_cursor_nwt_il
+   IS
+   SELECT COUNT (1)
+     FROM dba_users t
+    WHERE t.username = 'NWT_IL';
+   --
+   l_count INTEGER;
+   --
+   l_grant_all VARCHAR2 (1000)      := 'GRANT SELECT,INSERT,DELETE,UPDATE ON TRON2000.A1004801 TO ROL_TRON2000_ALL';
+   l_grant_sel VARCHAR2 (1000)      := 'GRANT SELECT ON TRON2000.A1004801 TO ROL_TRON2000_SEL';
+   l_grant_NWT_DL VARCHAR2 (1000)   := 'GRANT SELECT,INSERT,DELETE,UPDATE,REFERENCES ON TRON2000.A1004801 TO NWT_DL';
+   l_synonym_NWT_DL VARCHAR2 (1000) := 'CREATE OR REPLACE SYNONYM NWT_DL.A1004801 FOR TRON2000.A1004801';
+   l_grant_NWT_DM_APP VARCHAR2 (1000)   := 'GRANT SELECT,INSERT,DELETE,UPDATE,REFERENCES ON TRON2000.A1004801 TO NWT_DM_APP';
+   l_synonym_NWT_DM_APP VARCHAR2 (1000) := 'CREATE OR REPLACE SYNONYM NWT_DM_APP.A1004801 FOR TRON2000.A1004801';
+   l_grant_NWT_IL VARCHAR2 (1000)   := 'GRANT SELECT ON TRON2000.A1004801 TO NWT_IL';
+   l_synonym_NWT_IL VARCHAR2 (1000) := 'CREATE OR REPLACE SYNONYM NWT_IL.A1004801 FOR TRON2000.A1004801';
+   --
+BEGIN
+   --
+   OPEN c_cursor_rol;
+   --
+   FETCH c_cursor_rol INTO l_count;
+   --
+   CLOSE c_cursor_rol;
+   --
+   IF l_count = 1
+   THEN
+     --
+     EXECUTE IMMEDIATE l_grant_all;
+     EXECUTE IMMEDIATE l_grant_sel;
+     --
+   END IF;
+   --
+   --
+   l_count := 0;
+   OPEN c_cursor_nwt_dl;
+   --
+   FETCH c_cursor_nwt_dl INTO l_count;
+   --
+   CLOSE c_cursor_nwt_dl;
+   --
+   IF l_count = 1
+   THEN
+     --
+     EXECUTE IMMEDIATE l_grant_NWT_DL;
+     EXECUTE IMMEDIATE l_synonym_NWT_DL;
+   END IF;
+   --
+   --
+   l_count := 0;
+   OPEN c_cursor_nwt_dm_app;
+   --
+   FETCH c_cursor_nwt_dm_app INTO l_count;
+   --
+   CLOSE c_cursor_nwt_dm_app;
+   --
+   IF l_count = 1
+   THEN
+     --
+     EXECUTE IMMEDIATE l_grant_NWT_DM_APP;
+     EXECUTE IMMEDIATE l_synonym_NWT_DM_APP;
+   END IF;
+   --
+   --
+   l_count := 0;
+   OPEN c_cursor_nwt_il;
+   --
+   FETCH c_cursor_nwt_il INTO l_count;
+   --
+   CLOSE c_cursor_nwt_il;
+   --
+   IF l_count = 1
+   THEN
+     --
+     EXECUTE IMMEDIATE l_grant_NWT_IL;
+     EXECUTE IMMEDIATE l_synonym_NWT_IL;
+   END IF;
+   --
+END;
+/

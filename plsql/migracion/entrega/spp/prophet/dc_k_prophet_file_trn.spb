@@ -1,0 +1,872 @@
+CREATE OR REPLACE PACKAGE BODY TRON2000.dc_k_prophet_file_trn
+AS
+   /* -------------------- VERSION = 1.03 -------------------- */
+   --
+   /* -------------------- MODIFICACIONES --------------------
+   || BLAZQUF - 03/06/2020 - 1.03 -
+   || Se crea procedimiento inicio para cargarlos valores de decimales
+   || utilizados por la aplicacion y se modifica el procedimiento pp_datos_prophet para darle 
+   || formato a los campos numericos
+   */ --------------------------------------------------------
+   --
+   /* --------------------------------------------------
+   || Aqui comienza la declaracion de variables GLOBALES
+   */ --------------------------------------------------
+   --
+   g_k_maximo_linea CONSTANT PLS_INTEGER:=32767;
+   g_k_eol          CONSTANT VARCHAR2(1):= trn.RETORNO_CARRO;
+   g_k_longitud_eol CONSTANT PLS_INTEGER:= LENGTH(trn.RETORNO_CARRO);
+   g_k_separador    CONSTANT CHAR(1)    :=';';
+   g_limite         PLS_INTEGER         := 100;
+   g_idn_int_proc   A1004800.idn_int_proc  %TYPE;
+   g_fec_hasta_proc A1004800.fec_hasta_proc%TYPE;
+   g_ind_fichero    NUMBER;
+   g_cod_mon        A1000400.cod_mon       %TYPE;
+   g_decimales      A1000400.num_decimales %TYPE;
+   --
+   TYPE t_c_datos IS TABLE OF VARCHAR2(32767);
+   --
+   /* ----------------------------------------------------
+   || Aqui comienza la declaracion de subprogramas LOCALES
+   */ ----------------------------------------------------
+   --
+   --
+   PROCEDURE p_inicio
+   IS
+   BEGIN
+      --
+      --@mx('I','p_inicio');
+      --
+      --
+      g_cod_mon := TO_NUMBER (trn_k_global.devuelve ('COD_MON_CIA'));
+      dc_k_a1000400.p_lee (g_cod_mon);
+      g_decimales    := dc_k_a1000400.f_num_decimales;
+      --
+      --
+      --@mx('F','p_inicio');
+      --
+   END p_inicio;
+   --
+   FUNCTION fp_crea_fichero (p_nombre_fichero IN VARCHAR2)
+   RETURN UTL_FILE.file_type
+   IS
+      --
+      l_fic UTL_FILE.file_type;
+      --
+   BEGIN
+      --
+      l_fic:= UTL_FILE.fopen (location     => trn_k_instalacion.f_mspool_dir_real,
+                              filename     => p_nombre_fichero                   ,
+                              open_mode    => 'w'                                ,
+                              max_linesize => g_k_maximo_linea                   );
+      --
+      RETURN l_fic;
+      --
+   EXCEPTION
+      WHEN OTHERS THEN
+      --
+         dc_k_prophet.p_graba_error(p_cod_sis_origen => NULL,
+                                    p_cod_sociedad   => NULL,
+                                    p_cod_cia        => NULL,
+                                    p_num_poliza     => NULL,
+                                    p_num_spto       => NULL,
+                                    p_num_apli       => NULL,
+                                    p_num_spto_apli  => NULL,
+                                    p_num_riesgo     => NULL,
+                                    p_cod_cob        => NULL,
+                                    p_txt_campo      => 'crea_fichero',
+                                    p_cod_error      => SQLCODE,
+                                    p_txt_error      => SUBSTR(SQLERRM,1,4000),
+                                    p_idn_int_proc   => g_idn_int_proc);
+      --
+   END fp_crea_fichero;
+   --
+   PROCEDURE pp_cierre_fichero (p_fic IN OUT UTL_FILE.file_type)
+   IS
+   BEGIN
+      --
+      UTL_FILE.fclose (p_fic);
+      --
+   EXCEPTION
+      WHEN OTHERS THEN
+      --
+         dc_k_prophet.p_graba_error(p_cod_sis_origen => NULL,
+                                    p_cod_sociedad   => NULL,
+                                    p_cod_cia        => NULL,
+                                    p_num_poliza     => NULL,
+                                    p_num_spto       => NULL,
+                                    p_num_apli       => NULL,
+                                    p_num_spto_apli  => NULL,
+                                    p_num_riesgo     => NULL,
+                                    p_cod_cob        => NULL,
+                                    p_txt_campo      => 'cierra_fichero',
+                                    p_cod_error      => SQLCODE,
+                                    p_txt_error      => SUBSTR(SQLERRM,1,4000),
+                                    p_idn_int_proc   => g_idn_int_proc);
+      --
+   END pp_cierre_fichero;
+   --
+   PROCEDURE pp_cabecera_prophet (p_fic IN UTL_FILE.file_type)
+   IS
+      --
+      l_cabecera VARCHAR2(10000);
+      --
+   BEGIN
+      --
+      l_cabecera:= 'SOCIEDAD;CARTERA;MET_VAL;KPRODUCTO;KSUBPRODUCTO;KRAMO;KMODALIDAD;KPOLIZA;KGARANTIA;ONE;'||
+                   'UOA;KPRESTACION;SPCOM;PB;KMODEXT;CARTERA_INM;CNEGOCIO;CCANAL;CCOSTE;NAPORT;KSUBPOLIZA;'||
+                   'CERTIFICADO;CTIPOAPORT;CSITUPOL;GAP_ACT;CTIPOPROVI;PROV;CTIPODUR;MONEDA_OBLIG;MONEDA_REPTNG;'||
+-- 1.01                   'FAEFECINI;FMEFECINI;FDEFECINI;FAEFECRED;FMEFECRED;FDEFECRED;FAINISUS;FMINISUS;FDINISUS;'||
+                   'IDENT_LIC_LRC;FAEFECINI;FMEFECINI;FDEFECINI;FAEFECRED;FMEFECRED;FDEFECRED;FAINISUS;FMINISUS;FDINISUS;'||
+                   'FAEFECFIN;FMEFECFIN;FDEFECFIN;FAFINFINANCIA;FMFINFINANCIA;FDFINFINANCIA;FAINIPAGPRIM;'||
+                   'FMINIPAGPRIM;FDINIPAGPRIM;FAFINPAGPRIM;FMFINPAGPRIM;FDFINPAGPRIM;FADESDERENOVA;FMDESDERENOVA;'||
+                   'FDDESDERENOVA;FAHASTARENOVA;FMHASTARENOVA;FDHASTARENOVA;FANACASEG1;FMNACASEG1;FDNACASEG1;'||
+                   'CSEXASEG1;PRIMANETAINI;PRIMANETAACT;PRIMASBRIESGO;CFORMAREVPRIM;PREVPRIMA;CFORMPAGO;PDTO1;'||
+                   'PDTO2;PDTO3;PDTO4;PDTO5;PDTO6;PDTO7;PDTO8;FAINIDESC1;FMINIDESC1;FDINIDESC1;FAINIDESC2;'||
+                   'FMINIDESC2;FDINIDESC2;FAINIDESC3;FMINIDESC3;FDINIDESC3;FAINIDESC4;FMINIDESC4;FDINIDESC4;'||
+                   'FAINIDESC5;FMINIDESC5;FDINIDESC5;FAINIDESC6;FMINIDESC6;FDINIDESC6;FAINIDESC7;FMINIDESC7;'||
+                   'FDINIDESC7;FAINIDESC8;FMINIDESC8;FDINIDESC8;NDURDTO1;NDURDTO2;NDURDTO3;NDURDTO4;NDURDTO5;'||
+                   'NDURDTO6;NDURDTO7;NDURDTO8;PRECARGFRAC;PFPINV;SUMPPCAP;SUMPP;SUMPPR;CAPINI;CAPACT;CAP_AUX;'||
+                   'CFORMAREVCAP;POREVALCAP;PORCAPRI;CAMAX;PCAPM;BASECALCUCOM1;BASECALCUCOM2;BASECALCUCOM3;'||
+                   'TIPOPRIMA1;TIPOPRIMA2;TIPOPRIMA3;MESPAGOCOMI;NPERICOMI1;PCOMISIONA1;NPERICOMI2;PCOMISIONA2;'||
+                   'NPERICOMI3;PCOMISIONA3;TABLA1;TASA1;AJVALY1;AJVALPC1;PINTERTECN_I1;FAINI_IT_I1;FMINI_IT_I1;'||
+                   'FDINI_IT_I1;FAFIN_IT_I1;FMFIN_IT_I1;FDFIN_IT_I1;PINTERTECN_I2;FAINI_IT_I2;FMINI_IT_I2;'||
+                   'FDINI_IT_I2;FAFIN_IT_I2;FMFIN_IT_I2;FDFIN_IT_I2;PINTERTECN_I3;FAINI_IT_I3;FMINI_IT_I3;'||
+                   'FDINI_IT_I3;FAFIN_IT_I3;FMFIN_IT_I3;FDFIN_IT_I3;PINTERTECN_I4;FAINI_IT_I4;FMINI_IT_I4;'||
+                   'FDINI_IT_I4;FAFIN_IT_I4;FMFIN_IT_I4;FDFIN_IT_I4;PINTERTECN_I5;FAINI_IT_I5;FMINI_IT_I5;'||
+                   'FDINI_IT_I5;FAFIN_IT_I5;FMFIN_IT_I5;FDFIN_IT_I5;PGASTGESEX1;PGASTGESEX2;PGASTGESIN1;'||
+                   'PGASTGESIN2;PGASTGESIN3;PGASTGESIN4;PGASTGESIN5;IMPGASMIN;IMPGASMAX;PMSOBRE_RIESGO;'||
+                   'PSOBREMORT;GGIM;PGGAPROV;TEMP_VIT;RENTIN;RENTAC;RENTMIN;FAINICIORTA;FMINICIORTA;'||
+                   'FDINICIORTA;FAFINRTA;FMFINRTA;FDFINRTA;PREVRENTA;PREVERSION;NPERGARAN;NADIFER;'||
+                   'FORPAGRENT;CPAGRENTA;CFORMA_REVRENTA;JOINTLIFE;FANACASEG2;FMNACASEG2;FDNACASEG2;CSEXASEG2;'||
+                   'TABLA2;AJVALY2;AJVALPC2;IT_PRESTMO;PAGOA_PRESTMO;DUR_PRESTMO;INDICRESCATE;COD_RM;TIRI_NI;'||
+                   'TIR_CIE;KCOASE_ORI;CTIPOCOASEG;PCOASEG;PGASTGESIN_ABRIDORA;BASECALCULOGESIN;'||
+                   'PGASTGESEX_ABRIDORA;BASECALCULOGESEX;EST_TIT;EST_CONY;EST_H1;EST_H2;EST_H3;REASEGURO;'||
+                   'CTIPOREASEG;PREASEG;PLENORET;PGREASEG;LIMITRE;PBREASEG;FANACASEG3;FMNACASEG3;FDNACASEG3;'||
+                   'CSEXASEG3;TABLA3;AJVALY3;AJVALPC3;FANACASEG4;FMNACASEG4;FDNACASEG4;CSEXASEG4;TABLA4;'||
+                   'AJVALY4;AJVALPC4;FANACASEG5;FMNACASEG5;FDNACASEG5;CSEXASEG5;TABLA5;AJVALY5;AJVALPC5;'||
+--                   'FANACA6;FMNACA6;FDNACA6;CSEXA6;TABLA6;AJVALY6;AJVALPC6;PMAGRTEMP;FDAFINGRTEMP;'||
+                   'FANACASEG6;FMNACASEG6;FDNACASEG6;CSEXASEG6;TABLA6;AJVALY6;AJVALPC6;PMAGRTEMP;FDAFINGRTEMP;'||
+                   'FMFINAGRTEMP;FAFINAGRTEMP';
+      --
+      UTL_FILE.put_line (file      => p_fic     ,
+                         buffer    => l_cabecera);
+      --
+   EXCEPTION
+      WHEN OTHERS THEN
+      --
+         dc_k_prophet.p_graba_error(p_cod_sis_origen => NULL,
+                                    p_cod_sociedad   => NULL,
+                                    p_cod_cia        => NULL,
+                                    p_num_poliza     => NULL,
+                                    p_num_spto       => NULL,
+                                    p_num_apli       => NULL,
+                                    p_num_spto_apli  => NULL,
+                                    p_num_riesgo     => NULL,
+                                    p_cod_cob        => NULL,
+                                    p_txt_campo      => 'cabecera_prophet',
+                                    p_cod_error      => SQLCODE,
+                                    p_txt_error      => SUBSTR(SQLERRM,1,4000),
+                                    p_idn_int_proc   => g_idn_int_proc);
+      --
+
+   END pp_cabecera_prophet;
+   --
+   PROCEDURE pp_datos_prophet
+   AS
+      --
+      l_tc_datos t_c_datos;
+      l_buffer VARCHAR2(32767);
+      l_buffer_cab VARCHAR2(32767);
+      x PLS_INTEGER;
+      --
+      CURSOR lc_datos
+      IS
+      SELECT a.cod_sociedad           ||g_k_separador||
+             b.cod_cartera            ||g_k_separador||
+             b.txt_met_val            ||g_k_separador||
+             a.txt_kproducto          ||g_k_separador||
+             a.txt_ksubproducto       ||g_k_separador||
+             b.txt_kramo              ||g_k_separador||
+             a.cod_kmodalidad         ||g_k_separador||
+             a.txt_kpoliza            ||g_k_separador||
+             b.cod_cob                ||g_k_separador||
+             b.txt_one                ||g_k_separador||
+             b.txt_uoa                ||g_k_separador||
+             b.txt_kprestacion        ||g_k_separador||
+             b.txt_spcom              ||g_k_separador||
+             b.txt_pb                 ||g_k_separador||
+             a.txt_kmodext            ||g_k_separador||
+             b.txt_cartera_inm        ||g_k_separador||
+             a.txt_cnegocio           ||g_k_separador||
+             a.txt_ccanal             ||g_k_separador||
+             a.txt_ccoste             ||g_k_separador||
+             a.num_naport             ||g_k_separador||
+             a.num_ksubpoliza         ||g_k_separador||
+             a.num_certificado        ||g_k_separador||
+             a.txt_ctipoaport         ||g_k_separador||
+             a.txt_csitupol           ||g_k_separador||
+             a.txt_gap_act            ||g_k_separador||
+             b.txt_ctipoprovi         ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_prov, g_decimales, 20)               ||g_k_separador||
+             b.txt_ctipodur           ||g_k_separador||
+             b.txt_moneda_oblig       ||g_k_separador||
+             a.txt_moneda_reptng      ||g_k_separador||
+             a.idn_lic_lrc          ||g_k_separador|| -- 1.01
+             to_char(a.fec_ini,'YYYY')||g_k_separador||
+             to_char(a.fec_ini,'MM')||g_k_separador||
+             to_char(a.fec_ini,'DD')||g_k_separador||
+             to_char(a.fec_red,'YYYY')||g_k_separador||
+             to_char(a.fec_red,'MM')||g_k_separador||
+             to_char(a.fec_red,'DD')||g_k_separador||
+             to_char(b.fec_inisus,'YYYY')||g_k_separador||
+             to_char(b.fec_inisus,'MM')||g_k_separador||
+             to_char(b.fec_inisus,'DD')||g_k_separador||
+             to_char(b.fec_efecfin,'YYYY')||g_k_separador||
+             to_char(b.fec_efecfin,'MM')||g_k_separador||
+             to_char(b.fec_efecfin,'DD')||g_k_separador||
+             to_char(a.fec_finfinancia,'YYYY')||g_k_separador||
+             to_char(a.fec_finfinancia,'MM')||g_k_separador||
+             to_char(a.fec_finfinancia,'DD')||g_k_separador||
+             to_char(a.fec_inipagprim,'YYYY')||g_k_separador||
+             to_char(a.fec_inipagprim,'MM')||g_k_separador||
+             to_char(a.fec_inipagprim,'DD')||g_k_separador||
+             to_char(a.fec_finpagprim,'YYYY')||g_k_separador||
+             to_char(a.fec_finpagprim,'MM')||g_k_separador||
+             to_char(a.fec_finpagprim,'DD')||g_k_separador||
+             to_char(a.fec_desderenova,'YYYY')||g_k_separador||
+             to_char(a.fec_desderenova,'MM')||g_k_separador||
+             to_char(a.fec_desderenova,'DD')||g_k_separador||
+             to_char(a.fec_hastarenova,'YYYY')||g_k_separador||
+             to_char(a.fec_hastarenova,'MM')||g_k_separador||
+             to_char(a.fec_hastarenova,'DD')||g_k_separador||
+             to_char(a.fec_nacaseg1,'YYYY')||g_k_separador||
+             to_char(a.fec_nacaseg1,'MM')||g_k_separador||
+             to_char(a.fec_nacaseg1,'DD')||g_k_separador||
+             a.txt_csexaseg1          ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_primanetaini, g_decimales, 20) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_primanetaact, g_decimales, 20) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_primasbriesgo,g_decimales, 20) ||g_k_separador||
+             b.txt_cformarevprim      ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_prevprima,    g_decimales, 20) ||g_k_separador||
+             a.txt_cformpago          ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pdto1,    g_decimales, 20) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pdto2,    g_decimales, 20) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pdto3,    g_decimales, 20) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pdto4,    g_decimales, 20) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pdto5,    g_decimales, 20)  ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pdto6,    g_decimales, 20) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pdto7,    g_decimales, 20) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pdto8,    g_decimales, 20) ||g_k_separador||
+             to_char(b.fec_inidesc1,'YYYY')||g_k_separador||
+             to_char(b.fec_inidesc1,'MM')||g_k_separador||
+             to_char(b.fec_inidesc1,'DD')||g_k_separador||
+             to_char(b.fec_inidesc2,'YYYY')||g_k_separador||
+             to_char(b.fec_inidesc2,'MM')||g_k_separador||
+             to_char(b.fec_inidesc2,'DD')||g_k_separador||
+             to_char(b.fec_inidesc3,'YYYY')||g_k_separador||
+             to_char(b.fec_inidesc3,'MM')||g_k_separador||
+             to_char(b.fec_inidesc3,'DD')||g_k_separador||
+             to_char(b.fec_inidesc4,'YYYY')||g_k_separador||
+             to_char(b.fec_inidesc4,'MM')||g_k_separador||
+             to_char(b.fec_inidesc4,'DD')||g_k_separador||
+             to_char(b.fec_inidesc5,'YYYY')||g_k_separador||
+             to_char(b.fec_inidesc5,'MM')||g_k_separador||
+             to_char(b.fec_inidesc5,'DD')||g_k_separador||
+             to_char(b.fec_inidesc6,'YYYY')||g_k_separador||
+             to_char(b.fec_inidesc6,'MM')||g_k_separador||
+             to_char(b.fec_inidesc6,'DD')||g_k_separador||
+             to_char(b.fec_inidesc7,'YYYY')||g_k_separador||
+             to_char(b.fec_inidesc7,'MM')||g_k_separador||
+             to_char(b.fec_inidesc7,'DD')||g_k_separador||
+             to_char(b.fec_inidesc8,'YYYY')||g_k_separador||
+             to_char(b.fec_inidesc8,'MM')||g_k_separador||
+             to_char(b.fec_inidesc8,'DD')||g_k_separador||
+             b.num_ndurdto1           ||g_k_separador||
+             b.num_ndurdto2           ||g_k_separador||
+             b.num_ndurdto3           ||g_k_separador||
+             b.num_ndurdto4           ||g_k_separador||
+             b.num_ndurdto5           ||g_k_separador||
+             b.num_ndurdto6           ||g_k_separador||
+             b.num_ndurdto7           ||g_k_separador||
+             b.num_ndurdto8           ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_precargfrac, g_decimales, 20) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pfpinv  ,    g_decimales, 20) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_sumppcap,    g_decimales, 20) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_sumpp   ,    g_decimales, 20) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_sumppr  ,    g_decimales, 20) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_capini  ,    g_decimales, 20) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_capact  ,    g_decimales, 20) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_cap_aux ,    g_decimales, 20) ||g_k_separador||
+             b.txt_cformarevcap       ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_porevalcap,  g_decimales,  3) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_porcapri  ,  g_decimales,  3) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_camax     ,  g_decimales, 20) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pcapm     ,  g_decimales, 3) ||g_k_separador||
+             b.txt_basecalcucom1      ||g_k_separador||
+             b.txt_basecalcucom2      ||g_k_separador||
+             b.txt_basecalcucom3      ||g_k_separador||
+             b.txt_tipoprima1         ||g_k_separador||
+             b.txt_tipoprima2         ||g_k_separador||
+             b.txt_tipoprima3         ||g_k_separador||
+             a.txt_mespagocomi        ||g_k_separador||
+             a.num_npericomi1         ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pcomisiona1, g_decimales, 20) ||g_k_separador||
+             a.num_npericomi2         ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pcomisiona2, g_decimales, 20) ||g_k_separador||
+             a.num_npericomi3         ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pcomisiona3, g_decimales, 20) ||g_k_separador||
+             b.txt_tabla1             ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_tasa1      , g_decimales,  3) ||g_k_separador||
+             b.num_ajvaly1            ||g_k_separador||
+             b.num_ajvalpc1           ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pintertecn_i1, g_decimales,  3) ||g_k_separador||
+             to_char(b.fec_ini_it_i1,'YYYY')||g_k_separador||
+             to_char(b.fec_ini_it_i1,'MM')||g_k_separador||
+             to_char(b.fec_ini_it_i1,'DD')||g_k_separador||
+             to_char(b.fec_fin_it_i1,'YYYY')||g_k_separador||
+             to_char(b.fec_fin_it_i1,'MM')||g_k_separador||
+             to_char(b.fec_fin_it_i1,'DD')||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pintertecn_i2, g_decimales,  3) ||g_k_separador||
+             to_char(b.fec_ini_it_i2,'YYYY')||g_k_separador||
+             to_char(b.fec_ini_it_i2,'MM')||g_k_separador||
+             to_char(b.fec_ini_it_i2,'DD')||g_k_separador||
+             to_char(b.fec_fin_it_i2,'YYYY')||g_k_separador||
+             to_char(b.fec_fin_it_i2,'MM')||g_k_separador||
+             to_char(b.fec_fin_it_i2,'DD')||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pintertecn_i3, g_decimales,  3) ||g_k_separador||
+             to_char(b.fec_ini_it_i3,'YYYY')||g_k_separador||
+             to_char(b.fec_ini_it_i3,'MM')||g_k_separador||
+             to_char(b.fec_ini_it_i3,'DD')||g_k_separador||
+             to_char(b.fec_fin_it_i3,'YYYY')||g_k_separador||
+             to_char(b.fec_fin_it_i3,'MM')||g_k_separador||
+             to_char(b.fec_fin_it_i3,'DD')||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pintertecn_i4, g_decimales,  3) ||g_k_separador||
+             to_char(b.fec_ini_it_i4,'YYYY')||g_k_separador||
+             to_char(b.fec_ini_it_i4,'MM')||g_k_separador||
+             to_char(b.fec_ini_it_i4,'DD')||g_k_separador||
+             to_char(b.fec_fin_it_i4,'YYYY')||g_k_separador||
+             to_char(b.fec_fin_it_i4,'MM')||g_k_separador||
+             to_char(b.fec_fin_it_i4,'DD')||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pintertecn_i5, g_decimales,  3) ||g_k_separador||
+             to_char(b.fec_ini_it_i5,'YYYY')||g_k_separador||
+             to_char(b.fec_ini_it_i5,'MM')||g_k_separador||
+             to_char(b.fec_ini_it_i5,'DD')||g_k_separador||
+             to_char(b.fec_fin_it_i5,'YYYY')||g_k_separador||
+             to_char(b.fec_fin_it_i5,'MM')||g_k_separador||
+             to_char(b.fec_fin_it_i5,'DD')||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pgastgesex1, g_decimales, 3) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pgastgesex2, g_decimales, 3) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pgastgesin1, g_decimales, 3) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pgastgesin2, g_decimales, 3) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pgastgesin3, g_decimales, 3) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pgastgesin4, g_decimales, 3) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pgastgesin5, g_decimales, 3) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(a.num_impgasmin  , g_decimales,20) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(a.num_impgasmax  , g_decimales,20) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_pmsobre_riesgo, g_decimales, 3) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.txt_psobremort    , g_decimales, 3) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(a.num_ggim          , g_decimales,20) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(a.num_pggaprov      , g_decimales, 3) ||g_k_separador||
+             b.txt_temp_vit           ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_rentin        , g_decimales,20) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_rentac        , g_decimales,20) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_rentmin       , g_decimales,20) ||g_k_separador||
+             to_char(b.fec_iniciorta,'YYYY')||g_k_separador||
+             to_char(b.fec_iniciorta,'MM')||g_k_separador||
+             to_char(b.fec_iniciorta,'DD')||g_k_separador||
+             to_char(b.fec_finrta,'YYYY')||g_k_separador||
+             to_char(b.fec_finrta,'MM')||g_k_separador||
+             to_char(b.fec_finrta,'DD')||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_prevrenta     , g_decimales, 3) ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(b.num_preversion    , g_decimales, 3) ||g_k_separador||
+             b.num_npergaran          ||g_k_separador||
+             b.num_nadifer            ||g_k_separador||
+             b.num_forpagrent         ||g_k_separador||
+             b.txt_cpagrenta          ||g_k_separador||
+             b.txt_cforma_revrenta    ||g_k_separador||
+             b.txt_jointlife          ||g_k_separador||
+             to_char(a.fec_nacaseg2,'YYYY')||g_k_separador||
+             to_char(a.fec_nacaseg2,'MM')||g_k_separador||
+             to_char(a.fec_nacaseg2,'DD')||g_k_separador||
+             a.txt_csexaseg2          ||g_k_separador||
+             a.txt_tabla2             ||g_k_separador||
+             a.num_ajvaly2            ||g_k_separador||
+             a.num_ajvalpc2           ||g_k_separador||
+             dc_k_a1000400.f_redondea_importe_fmt(a.num_it_prestmo, g_decimales, 20) ||g_k_separador||
+             a.num_pagoa_prestmo      ||g_k_separador||
+             a.num_dur_prestmo        ||g_k_separador||
+             a.txt_indicrescate       ||g_k_separador||
+             a.txt_cod_rm             ||g_k_separador||
+             a.num_tiri_ni            ||g_k_separador||
+             a.num_tir_cie            ||g_k_separador||
+             a.txt_kcoase_ori         ||g_k_separador||
+             a.txt_ctipocoaseg        ||g_k_separador||
+             a.num_pcoaseg            ||g_k_separador||
+             a.num_pgastgesin_abridora||g_k_separador||
+             a.txt_basecalculogesin   ||g_k_separador||
+             a.num_pgastgesex_abridora||g_k_separador||
+             a.txt_basecalculogesex   ||g_k_separador||
+             a.txt_est_tit            ||g_k_separador||
+             a.txt_est_cony           ||g_k_separador||
+             a.txt_est_h1             ||g_k_separador||
+             a.txt_est_h2             ||g_k_separador||
+             a.txt_est_h3             ||g_k_separador||
+             b.txt_reaseguro          ||g_k_separador||
+             a.txt_ctiporeaseg        ||g_k_separador||
+             b.num_preaseg            ||g_k_separador||
+             b.num_plenoret           ||g_k_separador||
+             b.num_pgreaseg           ||g_k_separador||
+             b.num_limitre            ||g_k_separador||
+             b.num_pbreaseg           ||g_k_separador||
+             to_char(a.fec_nacaseg3,'YYYY')||g_k_separador||
+             to_char(a.fec_nacaseg3,'MM')||g_k_separador||
+             to_char(a.fec_nacaseg3,'DD')||g_k_separador||
+             a.txt_csexaseg3          ||g_k_separador||
+             a.txt_tabla3             ||g_k_separador||
+             a.num_ajvaly3            ||g_k_separador||
+             a.num_ajvalpc3           ||g_k_separador||
+             to_char(a.fec_nacaseg4,'YYYY')||g_k_separador||
+             to_char(a.fec_nacaseg4,'MM')||g_k_separador||
+             to_char(a.fec_nacaseg4,'DD')||g_k_separador||
+             a.txt_csexaseg4          ||g_k_separador||
+             a.txt_tabla4             ||g_k_separador||
+             a.num_ajvaly4            ||g_k_separador||
+             a.num_ajvalpc4           ||g_k_separador||
+             to_char(a.fec_nacaseg5,'YYYY')||g_k_separador||
+             to_char(a.fec_nacaseg5,'MM')||g_k_separador||
+             to_char(a.fec_nacaseg5,'DD')||g_k_separador||
+             a.txt_csexaseg5          ||g_k_separador||
+             a.txt_tabla5             ||g_k_separador||
+             a.num_ajvaly5            ||g_k_separador||
+             a.num_ajvalpc5           ||g_k_separador||
+             to_char(a.fec_naca6,'YYYY')||g_k_separador||
+             to_char(a.fec_naca6,'MM')||g_k_separador||
+             to_char(a.fec_naca6,'DD')||g_k_separador||
+             a.txt_csexa6             ||g_k_separador||
+             a.txt_tabla6             ||g_k_separador||
+             a.num_ajvaly6            ||g_k_separador||
+             a.num_ajvalpc6           ||g_k_separador||
+             b.num_pmagrtemp          ||g_k_separador||
+             to_char(b.fec_fingrtemp,'DD')||g_k_separador||
+             to_char(b.fec_fingrtemp,'MM')||g_k_separador||
+             to_char(b.fec_fingrtemp,'YYYY')
+      FROM a1004803 a,
+           a1004804 b
+      WHERE a.cod_cia       = b.cod_cia
+        AND a.num_poliza    = b.num_poliza
+        AND a.num_spto      = b.num_spto
+        AND a.num_apli      = b.num_apli
+        AND a.num_spto_apli = b.num_spto_apli
+        AND a.num_riesgo    = b.num_riesgo
+        AND a.cod_ramo      = b.cod_ramo
+      order by a.cod_sociedad;
+     --
+      lv_ctos      NUMBER;
+      l_length     NUMBER;
+      l_exists     BOOLEAN;
+      l_block_size BINARY_INTEGER;
+      l_fic        UTL_FILE.file_type;
+      l_fic_nombre VARCHAR2(300);
+      lv_cod_soc_ant A1004803.cod_sociedad%TYPE := '****';
+      --
+   BEGIN
+      --
+      --@mx('I','pp_datos_prophet');
+      --
+      --
+      -- Apertura cursor de datos
+      OPEN lc_datos;
+      x:= 0;
+      g_ind_fichero  := 1;
+      --
+      SELECT count('p')
+        INTO lv_ctos
+      FROM a1004803 a,
+           a1004804 b
+      WHERE a.cod_cia       = b.cod_cia
+        AND a.num_poliza    = b.num_poliza
+        AND a.num_spto      = b.num_spto
+        AND a.num_apli      = b.num_apli
+        AND a.num_spto_apli = b.num_spto_apli
+        AND a.num_riesgo    = b.num_riesgo
+        AND a.cod_ramo      = b.cod_ramo;
+     --
+      LOOP
+         --
+         -- Recupera numero de registros limitado
+         FETCH lc_datos BULK COLLECT INTO l_tc_datos LIMIT g_limite;
+         --
+         IF x = 0 
+         THEN
+            --Es la primera iteracion, creamos el fichero inicial e inicializamos lv_cod_soc_ant
+            lv_cod_soc_ant := substr(l_tc_datos(1),1,4);
+            -- Crea fichero
+            l_fic_nombre:= dc_k_prophet_inst.f_nom_fich_prophet (p_idn_int_proc   => g_idn_int_proc  ,
+                                                                 p_fec_hasta_proc => g_fec_hasta_proc,
+                                                                 p_cod_sociedad   => lv_cod_soc_ant  ,
+                                                                 p_ind_fichero    => g_ind_fichero  );
+            --
+            l_fic:= fp_crea_fichero (p_nombre_fichero => l_fic_nombre);
+            --
+            -- Genera la cabecera de fichero
+            pp_cabecera_prophet (p_fic => l_fic);
+            --
+            l_buffer_cab := 'TOTAL: '||lv_ctos;
+            UTL_FILE.put_line (file      => l_fic   ,
+                               buffer    => l_buffer_cab);
+            l_buffer_cab := NULL;
+            --
+         END IF;
+         --
+         IF l_tc_datos IS NOT NULL AND l_tc_datos.count > trn.cero
+         THEN
+            --
+            FOR i IN l_tc_datos.first .. l_tc_datos.last
+            LOOP
+               x:= x+1;
+               --
+               -- Escribe la linea en el buffer del fichero.
+               -- Espera a rellenar el buffer entero antes de escribir en el fichero
+               -- Asi se reduce el numero de veces de escrituras en disco
+               --
+               -- La primera vez l_buffer es nulo y no se cumple la condicion
+               IF LENGTH(l_buffer) + g_k_longitud_eol + LENGTH(l_tc_datos(i)) <= g_k_maximo_linea
+               THEN
+                  --
+                  l_buffer := l_buffer || g_k_eol || l_tc_datos(i);
+                  --
+               ELSE
+                  --
+                  IF l_buffer IS NOT NULL
+                  THEN
+                     --
+                     UTL_FILE.put_line (file      => l_fic   ,
+                                        buffer    => l_buffer);
+                     --
+                  END IF;
+                  --
+                  l_buffer := l_tc_datos(i);
+                  --
+                  -- Comprobamos que la entidad no cambie o el tamanio del fichero < 200 Mb
+                  UTL_FILE.fgetattr (location     => trn_k_instalacion.f_mspool_dir_real,
+                                     filename     => l_fic_nombre,
+                                     fexists      => l_exists                           ,
+                                     file_length  => l_length                           ,
+                                     block_size   => l_block_size);
+                  --
+                  IF l_length >= 200000000 or lv_cod_soc_ant <> substr(l_buffer,1,4)
+                  THEN
+                    --
+                    -- Cerramos el fichero actual
+                    pp_cierre_fichero(p_fic => l_fic);
+                    -- Comprobamos si ha cambiado el cod_sociedad
+                    IF lv_cod_soc_ant <> substr(l_buffer,1,4)
+                    THEN
+                       --
+                       g_ind_fichero  := 1;
+                       lv_cod_soc_ant := substr(l_buffer,1,4);
+                       --
+                    ELSE
+                       --
+                       -- incrementamos el secuencial del nombre del fichero
+                       g_ind_fichero := g_ind_fichero + 1;
+                       --
+                    END IF;
+                    -- obtenermos nuevo nombre de fichero
+                    l_fic_nombre:= dc_k_prophet_inst.f_nom_fich_prophet (p_idn_int_proc   => g_idn_int_proc  ,
+                                                                         p_fec_hasta_proc => g_fec_hasta_proc,
+                                                                         p_cod_sociedad   => lv_cod_soc_ant  ,
+                                                                         p_ind_fichero    => g_ind_fichero  );
+                    --Abrimos el nuevo fichero
+                    l_fic:= fp_crea_fichero (p_nombre_fichero => l_fic_nombre);
+                    --
+                    -- Genera la cabecera de fichero
+                    pp_cabecera_prophet (p_fic => l_fic);
+                    --
+                    l_buffer_cab := 'TOTAL: '||lv_ctos;
+                    UTL_FILE.put_line (file      => l_fic   ,
+                                       buffer    => l_buffer_cab);
+                    l_buffer_cab := NULL;
+                    --
+                  END IF;
+                  --
+              END IF;
+              --
+            END LOOP;
+            --
+         END IF;
+         --
+         EXIT WHEN lc_datos%NOTFOUND;
+         --
+      END LOOP;
+      --
+      -- Si al final de leer fichero quedara algo sin escribir, lo hace.
+      UTL_FILE.put_line (file      => l_fic   ,
+                         buffer    => l_buffer);
+      --
+      -- Cierre de cursor de datos
+      CLOSE lc_datos;
+      --
+      -- Cierre de fichero
+      pp_cierre_fichero (p_fic => l_fic);
+      --
+      --
+      --@mx('F','pp_datos_prophet');
+      --
+   EXCEPTION
+      WHEN OTHERS THEN
+      --
+      --
+      --@mx('E','pp_datos_prophet');
+      --
+         dc_k_prophet.p_graba_error(p_cod_sis_origen => dc_k_prophet.g_cod_sis_origen,
+                                    p_cod_sociedad   => '0000',
+                                    p_cod_cia        => NULL,
+                                    p_num_poliza     => NULL,
+                                    p_num_spto       => NULL,
+                                    p_num_apli       => NULL,
+                                    p_num_spto_apli  => NULL,
+                                    p_num_riesgo     => NULL,
+                                    p_cod_cob        => NULL,
+                                    p_txt_campo      => 'datos_prophet',
+                                    p_cod_error      => SQLCODE,
+                                    p_txt_error      => SUBSTR(SQLERRM,1,4000),
+                                    p_idn_int_proc   => g_idn_int_proc);
+      --
+   END pp_datos_prophet;
+   --
+   PROCEDURE p_genera_prophet (p_idn_int_proc   IN a1004800.idn_int_proc  %TYPE,
+                               p_fec_hasta_proc IN a1004800.fec_hasta_proc%TYPE)
+   IS
+      --
+      l_fic        UTL_FILE.file_type;
+      l_fic_nombre VARCHAR2(300);
+      --
+   BEGIN
+      --
+      --@mx('I','p_genera_prophet');
+      --
+      --
+      p_inicio;
+      --
+      DELETE FROM A1004812 where idn_int_proc = p_idn_int_proc;
+      --
+      g_idn_int_proc   := p_idn_int_proc;
+      g_fec_hasta_proc := p_Fec_hasta_proc;
+      -- Genera datos del fichero
+      pp_datos_prophet;
+      --
+      --
+      --@mx('F','p_genera_prophet');
+      --
+   EXCEPTION
+      WHEN OTHERS THEN
+         -- Cierre de fichero si estuviera abierto
+         IF UTL_FILE.is_open (file => l_fic)
+         THEN
+            pp_cierre_fichero (p_fic => l_fic);
+         END IF;
+         --
+         dc_k_prophet.p_graba_error(p_cod_sis_origen => dc_k_prophet.g_cod_sis_origen,
+                                    p_cod_sociedad   => '0000',
+                                    p_cod_cia        => NULL,
+                                    p_num_poliza     => NULL,
+                                    p_num_spto       => NULL,
+                                    p_num_apli       => NULL,
+                                    p_num_spto_apli  => NULL,
+                                    p_num_riesgo     => NULL,
+                                    p_cod_cob        => NULL,
+                                    p_txt_campo      => 'genera_prophet',
+                                    p_cod_error      => SQLCODE,
+                                    p_txt_error      => SUBSTR(SQLERRM,1,4000),
+                                    p_idn_int_proc   => g_idn_int_proc);
+         --
+   END p_genera_prophet;
+   --
+   PROCEDURE pp_cabecera_prophet_err (p_fic            IN UTL_FILE.file_type)
+   IS
+      --
+      l_cabecera VARCHAR2(10000);
+      --
+   BEGIN
+      --
+      l_cabecera:= 'NUM_ORDEN;SIS_ORIGEN;SOCIEDAD;CIA;POLIZA;SPTO;APLI;SPTO_APLI;RIESGO;COBERT;CAMPO;COD_ERROR;TXT_ERROR';
+      --
+      UTL_FILE.put_line (file      => p_fic     ,
+                         buffer    => l_cabecera);
+      --
+   EXCEPTION
+      WHEN OTHERS THEN
+      --
+         dc_k_prophet.p_graba_error(p_cod_sis_origen => dc_k_prophet.g_cod_sis_origen,
+                                    p_cod_sociedad   => '0000',
+                                    p_cod_cia        => NULL,
+                                    p_num_poliza     => NULL,
+                                    p_num_spto       => NULL,
+                                    p_num_apli       => NULL,
+                                    p_num_spto_apli  => NULL,
+                                    p_num_riesgo     => NULL,
+                                    p_cod_cob        => NULL,
+                                    p_txt_campo      => 'cabecera_prophet',
+                                    p_cod_error      => SQLCODE,
+                                    p_txt_error      => SUBSTR(SQLERRM,1,4000),
+                                    p_idn_int_proc   => g_idn_int_proc);
+      --
+
+   END pp_cabecera_prophet_err;
+   --
+   PROCEDURE pp_datos_prophet_err (p_fic            IN UTL_FILE.file_type)
+   AS
+      --
+      l_tc_datos t_c_datos;
+      l_buffer VARCHAR2(32767);
+      x PLS_INTEGER;
+      --
+      CURSOR lc_datos
+      IS
+      SELECT a.num_secu_error         ||g_k_separador||
+             a.cod_sis_origen         ||g_k_separador||
+             a.cod_sociedad           ||g_k_separador||
+             a.cod_cia                ||g_k_separador||
+             a.num_poliza             ||g_k_separador||
+             a.num_spto               ||g_k_separador||
+             a.num_apli               ||g_k_separador||
+             a.num_spto_apli          ||g_k_separador||
+             a.num_riesgo             ||g_k_separador||
+             a.cod_cob                ||g_k_separador||
+             a.txt_campo              ||g_k_separador||
+             a.cod_error              ||g_k_separador||
+             a.txt_error
+      FROM a1004812 a
+      WHERE a.idn_int_proc  = g_idn_int_proc;
+     --
+   BEGIN
+      --
+      -- Apertura cursor de datos
+      OPEN lc_datos;
+      x:= 0;
+      --
+      LOOP
+         --
+         -- Recupera numero de registros limitado
+         FETCH lc_datos BULK COLLECT INTO l_tc_datos LIMIT g_limite;
+         --
+         IF l_tc_datos IS NOT NULL AND l_tc_datos.count > trn.cero
+         THEN
+            --
+            FOR i IN l_tc_datos.first .. l_tc_datos.last
+            LOOP
+               x:= x+1;
+               --
+               -- Escribe la linea en el buffer del fichero.
+               -- Espera a rellenar el buffer entero antes de escribir en el fichero
+               -- Asi se reduce el numero de veces de escrituras en disco
+               --
+               -- La primera vez l_buffer es nulo y no se cumple la condicion
+               IF LENGTH(l_buffer) + g_k_longitud_eol + LENGTH(l_tc_datos(i)) <= g_k_maximo_linea
+               THEN
+                  --
+                  l_buffer := l_buffer || g_k_eol || l_tc_datos(i);
+                  --
+               ELSE
+                  --
+                  IF l_buffer IS NOT NULL
+                  THEN
+                     --
+                     --
+                     UTL_FILE.put_line (file      => p_fic   ,
+                                        buffer    => l_buffer);
+                     --
+                  END IF;
+                  --
+                  l_buffer := l_tc_datos(i);
+                  --
+              END IF;
+              --
+              --
+            END LOOP;
+            --
+         END IF;
+         --
+         EXIT WHEN lc_datos%NOTFOUND;
+         --
+      END LOOP;
+      --
+      -- Si al final de leer fichero quedara algo sin escribir, lo hace.
+      UTL_FILE.put_line (file      => p_fic   ,
+                         buffer    => l_buffer);
+      --
+      -- Cierre de cursor de datos
+      CLOSE lc_datos;
+      --
+   EXCEPTION
+      WHEN OTHERS THEN
+      --
+         dc_k_prophet.p_graba_error(p_cod_sis_origen => dc_k_prophet.g_cod_sis_origen,
+                                    p_cod_sociedad   => '0000',
+                                    p_cod_cia        => NULL,
+                                    p_num_poliza     => NULL,
+                                    p_num_spto       => NULL,
+                                    p_num_apli       => NULL,
+                                    p_num_spto_apli  => NULL,
+                                    p_num_riesgo     => NULL,
+                                    p_cod_cob        => NULL,
+                                    p_txt_campo      => 'datos_prophet',
+                                    p_cod_error      => SQLCODE,
+                                    p_txt_error      => SUBSTR(SQLERRM,1,4000),
+                                    p_idn_int_proc   => g_idn_int_proc);
+      --
+   END pp_datos_prophet_err;
+   --
+   PROCEDURE p_genera_prophet_error (p_idn_int_proc   IN a1004800.idn_int_proc  %TYPE,
+                                     p_fec_hasta_proc IN a1004800.fec_hasta_proc%TYPE)
+   IS
+      --
+      l_fic        UTL_FILE.file_type;
+      l_fic_nombre VARCHAR2(300);
+      --
+   BEGIN
+      --
+      g_idn_int_proc := p_idn_int_proc;
+      -- Crea fichero
+      l_fic_nombre:= dc_k_prophet_inst.f_nom_fich_prophet_err (p_idn_int_proc   => p_idn_int_proc,
+                                                               p_fec_hasta_proc => p_fec_hasta_proc);
+      --
+      l_fic:= fp_crea_fichero (p_nombre_fichero => l_fic_nombre);
+      --
+      -- Genera la cabecera de fichero
+      pp_cabecera_prophet_err (p_fic => l_fic);
+      --
+      -- Genera datos del fichero
+      pp_datos_prophet_err (p_fic => l_fic);
+      --
+      -- Cierre de fichero
+      pp_cierre_fichero (p_fic => l_fic);
+      --
+   EXCEPTION
+      WHEN OTHERS THEN
+         -- Cierre de fichero si estuviera abierto
+         IF UTL_FILE.is_open (file => l_fic)
+         THEN
+            pp_cierre_fichero (p_fic => l_fic);
+         END IF;
+         --
+         dc_k_prophet.p_graba_error(p_cod_sis_origen => dc_k_prophet.g_cod_sis_origen,
+                                    p_cod_sociedad   => '0000',
+                                    p_cod_cia        => NULL,
+                                    p_num_poliza     => NULL,
+                                    p_num_spto       => NULL,
+                                    p_num_apli       => NULL,
+                                    p_num_spto_apli  => NULL,
+                                    p_num_riesgo     => NULL,
+                                    p_cod_cob        => NULL,
+                                    p_txt_campo      => 'genera_prophet',
+                                    p_cod_error      => SQLCODE,
+                                    p_txt_error      => SUBSTR(SQLERRM,1,4000),
+                                    p_idn_int_proc   => g_idn_int_proc);
+         --
+   END p_genera_prophet_error;
+   --
+END dc_k_prophet_file_trn;
+/

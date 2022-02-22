@@ -1,0 +1,536 @@
+CREATE OR REPLACE PACKAGE BODY TRON2000.dc_k_prophet_a1004802_trn
+AS
+/**
+|| Acceso a la tabla a1004802
+||
+|| Procedimientos y funciones para el acceso de la tabla a1004802
+*/
+
+--
+/* -------------------- VERSION = 1.00 -------------------- */
+--
+/* -------------------- MODIFICACIONES --------------------
+|| 2020/02/10  - TRON2000 - v 1.00
+||         Creacion del Package
+*/ --------------------------------------------------------
+--
+   --
+   /* --------------------------------------------------
+   || Aqui comienza la declaracion de variables GLOBALES
+   */ --------------------------------------------------
+   --
+   greg a1004802%ROWTYPE;
+   --
+   g_existe BOOLEAN := FALSE;
+   --
+   g_cod_mensaje_cp g1010020.cod_mensaje%TYPE;
+   --
+   g_anx_mensaje VARCHAR2(100);
+   --
+   /* ---------------------------------------------------
+   || Aqui comienza la declaracion de constantes GLOBALES
+   */ ---------------------------------------------------
+   --
+   g_k_ini_corchete CONSTANT VARCHAR2(2) := ' [';
+   g_k_fin_corchete CONSTANT VARCHAR2(1) := ']';
+   --
+   --{{ TG_GPRV
+   /* -------------------------------------------
+   || ! ATENCION ! Codigo PL del usuario
+   || Definicion de Globales Privadas al Package
+   */ -------------------------------------------
+   --
+   --}} TG_GPRV
+   --
+   --
+   /* ----------------------------------------------------
+   || Aqui comienza la declaracion de subprogramas LOCALES
+   */ ----------------------------------------------------
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el error al llamador
+   */
+   PROCEDURE pp_devuelve_error
+   IS
+    l_cod_idioma  g1010010.cod_idioma %TYPE;
+   BEGIN
+    --
+    l_cod_idioma := trn_k_global.cod_idioma;
+    --
+    IF g_cod_mensaje_cp BETWEEN 20000
+                            AND 20999
+    THEN
+       --
+       RAISE_APPLICATION_ERROR(-g_cod_mensaje_cp,
+                             ss_k_mensaje.f_texto_idioma(g_cod_mensaje_cp,
+                                                         l_cod_idioma ) ||
+                             g_anx_mensaje
+                            );
+       --
+   ELSE
+       --
+     RAISE_APPLICATION_ERROR(-20000,
+                             ss_k_mensaje.f_texto_idioma(g_cod_mensaje_cp,
+                                                         l_cod_idioma ) ||
+                             g_anx_mensaje
+                            );
+       --
+    END IF;
+    --
+   END pp_devuelve_error;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Comprueba que se haya leido informacion
+   */
+   PROCEDURE pp_comprueba_error
+   IS
+   BEGIN
+    --
+    IF NOT g_existe
+    THEN
+       --
+       g_cod_mensaje_cp := 20001;
+       g_anx_mensaje := g_k_ini_corchete || 'PK a1004802' || g_k_fin_corchete;
+       --
+       pp_devuelve_error;
+       --
+    END IF;
+    --
+   END pp_comprueba_error;
+   --
+   --{{ TG_PPRV
+   /* -------------------------------------------
+   || ! ATENCION ! Codigo PL del usuario
+   || Procedimientos Privados
+   */ -------------------------------------------
+   --
+   --}} TG_PPRV
+   --
+   --
+   /* --------------------------------------------------------
+   || Aqui comienza la declaracion de subprogramas del PACKAGE
+   */ --------------------------------------------------------
+    --
+    -- ------------------------------------------------------------
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Lee un registro por PK
+   */
+   PROCEDURE p_lee(
+                 p_cod_sociedad      a1004802.cod_sociedad     %TYPE,
+                 p_cod_ramo          a1004802.cod_ramo         %TYPE,
+                 p_cod_kmodalidad    a1004802.cod_kmodalidad   %TYPE,
+                 p_cod_cob           a1004802.cod_cob          %TYPE)
+   IS
+    --
+    CURSOR cl_a1004802   IS
+         SELECT *
+           FROM a1004802
+          WHERE cod_sociedad      = p_cod_sociedad
+            AND cod_ramo          = p_cod_ramo
+            AND cod_kmodalidad    = p_cod_kmodalidad
+            AND cod_cob           = p_cod_cob
+                ;
+    --
+   BEGIN
+    --
+    --
+    OPEN        cl_a1004802;
+    FETCH       cl_a1004802    INTO greg;
+    g_existe := cl_a1004802%FOUND;
+    CLOSE       cl_a1004802;
+    --
+    pp_comprueba_error;
+    --
+   END p_lee;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna cod_sociedad
+   */
+   FUNCTION f_cod_sociedad        RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.cod_sociedad;
+      --
+   END f_cod_sociedad;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna cod_ramo
+   */
+   FUNCTION f_cod_ramo            RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.cod_ramo;
+      --
+   END f_cod_ramo;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna cod_kmodalidad
+   */
+   FUNCTION f_cod_kmodalidad      RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.cod_kmodalidad;
+      --
+   END f_cod_kmodalidad;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna cod_cob
+   */
+   FUNCTION f_cod_cob             RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.cod_cob;
+      --
+   END f_cod_cob;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_kprestacion
+   */
+   FUNCTION f_txt_kprestacion     RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_kprestacion;
+      --
+   END f_txt_kprestacion;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_spcom
+   */
+   FUNCTION f_txt_spcom           RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_spcom;
+      --
+   END f_txt_spcom;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_pb
+   */
+   FUNCTION f_txt_pb              RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_pb;
+      --
+   END f_txt_pb;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_ctipoprovi
+   */
+   FUNCTION f_txt_ctipoprovi      RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_ctipoprovi;
+      --
+   END f_txt_ctipoprovi;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_ctipodur
+   */
+   FUNCTION f_txt_ctipodur        RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_ctipodur;
+      --
+   END f_txt_ctipodur;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_cformarevprim
+   */
+   FUNCTION f_txt_cformarevprim   RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_cformarevprim;
+      --
+   END f_txt_cformarevprim;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_prevprima
+   */
+   FUNCTION f_num_prevprima       RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_prevprima;
+      --
+   END f_num_prevprima;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_cformarevcap
+   */
+   FUNCTION f_txt_cformarevcap    RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_cformarevcap;
+      --
+   END f_txt_cformarevcap;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_porevalcap
+   */
+   FUNCTION f_num_porevalcap      RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_porevalcap;
+      --
+   END f_num_porevalcap;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_tabla1
+   */
+   FUNCTION f_txt_tabla1          RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_tabla1;
+      --
+   END f_txt_tabla1;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_tasa1
+   */
+   FUNCTION f_num_tasa1           RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_tasa1;
+      --
+   END f_num_tasa1;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_ajvaly1
+   */
+   FUNCTION f_num_ajvaly1         RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_ajvaly1;
+      --
+   END f_num_ajvaly1;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_ajvalpc1
+   */
+   FUNCTION f_num_ajvalpc1        RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_ajvalpc1;
+      --
+   END f_num_ajvalpc1;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna cod_usr
+   */
+   FUNCTION f_cod_usr             RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.cod_usr;
+      --
+   END f_cod_usr;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna fec_actu
+   */
+   FUNCTION f_fec_actu            RETURN DATE
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.fec_actu;
+      --
+   END f_fec_actu;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Inserta un registro en la tabla
+   */
+   PROCEDURE p_inserta(p_reg a1004802%ROWTYPE)
+   IS
+   BEGIN
+      --
+      INSERT INTO a1004802
+      VALUES p_reg;
+      --
+    --
+   END p_inserta;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Inserta el registro pasado como parametro y devuelve el ROWID
+   */
+   FUNCTION f_inserta(p_reg      IN    a1004802%ROWTYPE)
+    --
+   RETURN ROWID
+   IS
+      --
+      v_clave     ROWID;
+      --
+   BEGIN
+      --
+      INSERT INTO a1004802
+           VALUES p_reg
+        RETURNING ROWID INTO v_clave;
+      --
+      RETURN  v_clave;
+      --
+   END f_inserta;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Modifica un registro en la tabla
+   */
+   PROCEDURE p_actualiza (p_reg a1004802%ROWTYPE)
+   IS
+   BEGIN
+      --
+      UPDATE a1004802
+         SET   row = p_reg
+     WHERE
+           cod_sociedad      = p_reg.cod_sociedad
+       AND cod_ramo          = p_reg.cod_ramo
+       AND cod_kmodalidad    = p_reg.cod_kmodalidad
+       AND cod_cob           = p_reg.cod_cob
+          ;
+        --
+    END p_actualiza;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Modifica un registro en la tabla, por rowid
+   */
+   PROCEDURE p_actualiza (p_reg a1004802%ROWTYPE,
+                        p_rowid         ROWID)
+   IS
+   BEGIN
+      --
+      UPDATE a1004802
+         SET   row = p_reg
+      WHERE ROWID = p_rowid;
+      --
+   END p_actualiza;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el registro completo
+   */
+   FUNCTION f_devuelve_reg RETURN a1004802%ROWTYPE
+   IS
+   BEGIN
+       --
+       pp_comprueba_error;
+       --
+       RETURN greg;
+    --
+    END f_devuelve_reg;
+   --
+   --{{ TG_PPUB
+   /* -------------------------------------------
+   || ! ATENCION ! Codigo PL del usuario
+   || Procedimientos Publicos
+   */ -------------------------------------------
+   --
+   --}} TG_PPUB
+   --
+   --
+END dc_k_prophet_a1004802_trn;
+/

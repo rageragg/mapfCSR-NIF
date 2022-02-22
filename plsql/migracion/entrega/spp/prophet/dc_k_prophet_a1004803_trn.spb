@@ -1,0 +1,1666 @@
+CREATE OR REPLACE PACKAGE BODY TRON2000.dc_k_prophet_a1004803_trn
+AS
+/**
+|| Acceso a la tabla a1004803
+||
+|| Procedimientos y funciones para el acceso de la tabla a1004803
+*/
+--
+/* -------------------- VERSION = 1.01 -------------------- */
+--
+/* -------------------- MODIFICACIONES --------------------
+|| 2020/03/25  - TRON2000 - v 1.01 
+|| Nueva funcion para retornar nueva columna idn_lic_lrc
+*/ --------------------------------------------------------
+--
+   --
+   /* --------------------------------------------------
+   || Aqui comienza la declaracion de variables GLOBALES
+   */ --------------------------------------------------
+   --
+   greg a1004803%ROWTYPE;
+   --
+   g_existe BOOLEAN := FALSE;
+   --
+   g_cod_mensaje_cp g1010020.cod_mensaje%TYPE;
+   --
+   g_anx_mensaje VARCHAR2(100);
+   --
+   /* ---------------------------------------------------
+   || Aqui comienza la declaracion de constantes GLOBALES
+   */ ---------------------------------------------------
+   --
+   g_k_ini_corchete CONSTANT VARCHAR2(2) := ' [';
+   g_k_fin_corchete CONSTANT VARCHAR2(1) := ']';
+   --
+   --{{ TG_GPRV
+   /* -------------------------------------------
+   || ! ATENCION ! Codigo PL del usuario
+   || Definicion de Globales Privadas al Package
+   */ -------------------------------------------
+   --
+   --}} TG_GPRV
+   --
+   --
+   /* ----------------------------------------------------
+   || Aqui comienza la declaracion de subprogramas LOCALES
+   */ ----------------------------------------------------
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el error al llamador
+   */
+   PROCEDURE pp_devuelve_error
+   IS
+    l_cod_idioma  g1010010.cod_idioma %TYPE;
+   BEGIN
+    --
+    l_cod_idioma := trn_k_global.cod_idioma;
+    --
+    IF g_cod_mensaje_cp BETWEEN 20000
+                            AND 20999
+    THEN
+       --
+       RAISE_APPLICATION_ERROR(-g_cod_mensaje_cp,
+                             ss_k_mensaje.f_texto_idioma(g_cod_mensaje_cp,
+                                                         l_cod_idioma ) ||
+                             g_anx_mensaje
+                            );
+       --
+   ELSE
+       --
+     RAISE_APPLICATION_ERROR(-20000,
+                             ss_k_mensaje.f_texto_idioma(g_cod_mensaje_cp,
+                                                         l_cod_idioma ) ||
+                             g_anx_mensaje
+                            );
+       --
+    END IF;
+    --
+   END pp_devuelve_error;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Comprueba que se haya leido informacion
+   */
+   PROCEDURE pp_comprueba_error
+   IS
+   BEGIN
+    --
+    IF NOT g_existe
+    THEN
+       --
+       g_cod_mensaje_cp := 20001;
+       g_anx_mensaje := g_k_ini_corchete || 'PK a1004803' || g_k_fin_corchete;
+       --
+       pp_devuelve_error;
+       --
+    END IF;
+    --
+   END pp_comprueba_error;
+   --
+   --{{ TG_PPRV
+   /* -------------------------------------------
+   || ! ATENCION ! Codigo PL del usuario
+   || Procedimientos Privados
+   */ -------------------------------------------
+   --
+   --}} TG_PPRV
+   --
+   --
+   /* --------------------------------------------------------
+   || Aqui comienza la declaracion de subprogramas del PACKAGE
+   */ --------------------------------------------------------
+    --
+    -- ------------------------------------------------------------
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Lee un registro por PK
+   */
+   PROCEDURE p_lee(
+                 p_cod_cia                 a1004803.cod_cia                %TYPE,
+                 p_num_poliza              a1004803.num_poliza             %TYPE,
+                 p_num_spto                a1004803.num_spto               %TYPE,
+                 p_num_apli                a1004803.num_apli               %TYPE,
+                 p_num_spto_apli           a1004803.num_spto_apli          %TYPE,
+                 p_num_riesgo              a1004803.num_riesgo             %TYPE)
+   IS
+    --
+    CURSOR cl_a1004803   IS
+         SELECT *
+           FROM a1004803
+          WHERE cod_cia                 = p_cod_cia
+            AND num_poliza              = p_num_poliza
+            AND num_spto                = p_num_spto
+            AND num_apli                = p_num_apli
+            AND num_spto_apli           = p_num_spto_apli
+            AND num_riesgo              = p_num_riesgo
+                ;
+    --
+   BEGIN
+    --
+    --
+    OPEN        cl_a1004803;
+    FETCH       cl_a1004803    INTO greg;
+    g_existe := cl_a1004803%FOUND;
+    CLOSE       cl_a1004803;
+    --
+    pp_comprueba_error;
+    --
+   END p_lee;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna cod_cia
+   */
+   FUNCTION f_cod_cia                   RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.cod_cia;
+      --
+   END f_cod_cia;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_poliza
+   */
+   FUNCTION f_num_poliza                RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_poliza;
+      --
+   END f_num_poliza;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_spto
+   */
+   FUNCTION f_num_spto                  RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_spto;
+      --
+   END f_num_spto;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_apli
+   */
+   FUNCTION f_num_apli                  RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_apli;
+      --
+   END f_num_apli;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_spto_apli
+   */
+   FUNCTION f_num_spto_apli             RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_spto_apli;
+      --
+   END f_num_spto_apli;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_riesgo
+   */
+   FUNCTION f_num_riesgo                RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_riesgo;
+      --
+   END f_num_riesgo;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna cod_ramo
+   */
+   FUNCTION f_cod_ramo                  RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.cod_ramo;
+      --
+   END f_cod_ramo;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna idn_int_proc
+   */
+   FUNCTION f_idn_int_proc              RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.idn_int_proc;
+      --
+   END f_idn_int_proc;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna cod_sis_origen
+   */
+   FUNCTION f_cod_sis_origen            RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.cod_sis_origen;
+      --
+   END f_cod_sis_origen;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna tip_spto
+   */
+   FUNCTION f_tip_spto                  RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.tip_spto;
+      --
+   END f_tip_spto;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_kpoliza
+   */
+   FUNCTION f_txt_kpoliza               RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_kpoliza;
+      --
+   END f_txt_kpoliza;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna cod_sociedad
+   */
+   FUNCTION f_cod_sociedad              RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.cod_sociedad;
+      --
+   END f_cod_sociedad;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna cod_mon
+   */
+   FUNCTION f_cod_mon                   RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.cod_mon;
+      --
+   END f_cod_mon;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_kproducto
+   */
+   FUNCTION f_txt_kproducto             RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_kproducto;
+      --
+   END f_txt_kproducto;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_ksubproducto
+   */
+   FUNCTION f_txt_ksubproducto          RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_ksubproducto;
+      --
+   END f_txt_ksubproducto;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna cod_kmodalidad
+   */
+   FUNCTION f_cod_kmodalidad            RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.cod_kmodalidad;
+      --
+   END f_cod_kmodalidad;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_kmodext
+   */
+   FUNCTION f_txt_kmodext               RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_kmodext;
+      --
+   END f_txt_kmodext;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_cnegocio
+   */
+   FUNCTION f_txt_cnegocio              RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_cnegocio;
+      --
+   END f_txt_cnegocio;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna cod_canal1
+   */
+   FUNCTION f_cod_canal1                RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.cod_canal1;
+      --
+   END f_cod_canal1;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna cod_canal2
+   */
+   FUNCTION f_cod_canal2                RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.cod_canal2;
+      --
+   END f_cod_canal2;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna cod_canal3
+   */
+   FUNCTION f_cod_canal3                RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.cod_canal3;
+      --
+   END f_cod_canal3;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_ccanal
+   */
+   FUNCTION f_txt_ccanal                RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_ccanal;
+      --
+   END f_txt_ccanal;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_ccoste
+   */
+   FUNCTION f_txt_ccoste                RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_ccoste;
+      --
+   END f_txt_ccoste;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_naport
+   */
+   FUNCTION f_num_naport                RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_naport;
+      --
+   END f_num_naport;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_ksubpoliza
+   */
+   FUNCTION f_num_ksubpoliza            RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_ksubpoliza;
+      --
+   END f_num_ksubpoliza;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_certificado
+   */
+   FUNCTION f_num_certificado           RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_certificado;
+      --
+   END f_num_certificado;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_ctipoaport
+   */
+   FUNCTION f_txt_ctipoaport            RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_ctipoaport;
+      --
+   END f_txt_ctipoaport;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_csitupol
+   */
+   FUNCTION f_txt_csitupol              RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_csitupol;
+      --
+   END f_txt_csitupol;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_gap_act
+   */
+   FUNCTION f_txt_gap_act               RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_gap_act;
+      --
+   END f_txt_gap_act;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_moneda_reptng
+   */
+   FUNCTION f_txt_moneda_reptng         RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_moneda_reptng;
+      --
+   END f_txt_moneda_reptng;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna fec_ini
+   */
+   FUNCTION f_fec_ini                   RETURN DATE
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.fec_ini;
+      --
+   END f_fec_ini;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna fec_red
+   */
+   FUNCTION f_fec_red                   RETURN DATE
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.fec_red;
+      --
+   END f_fec_red;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna fec_finfinancia
+   */
+   FUNCTION f_fec_finfinancia           RETURN DATE
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.fec_finfinancia;
+      --
+   END f_fec_finfinancia;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna fec_inipagprim
+   */
+   FUNCTION f_fec_inipagprim            RETURN DATE
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.fec_inipagprim;
+      --
+   END f_fec_inipagprim;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna fec_finpagprim
+   */
+   FUNCTION f_fec_finpagprim            RETURN DATE
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.fec_finpagprim;
+      --
+   END f_fec_finpagprim;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna fec_desderenova
+   */
+   FUNCTION f_fec_desderenova           RETURN DATE
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.fec_desderenova;
+      --
+   END f_fec_desderenova;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna fec_hastarenova
+   */
+   FUNCTION f_fec_hastarenova           RETURN DATE
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.fec_hastarenova;
+      --
+   END f_fec_hastarenova;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna fec_nacaseg1
+   */
+   FUNCTION f_fec_nacaseg1              RETURN DATE
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.fec_nacaseg1;
+      --
+   END f_fec_nacaseg1;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_csexaseg1
+   */
+   FUNCTION f_txt_csexaseg1             RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_csexaseg1;
+      --
+   END f_txt_csexaseg1;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_cformpago
+   */
+   FUNCTION f_txt_cformpago             RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_cformpago;
+      --
+   END f_txt_cformpago;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_mespagocomi
+   */
+   FUNCTION f_txt_mespagocomi           RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_mespagocomi;
+      --
+   END f_txt_mespagocomi;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_npericomi1
+   */
+   FUNCTION f_num_npericomi1            RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_npericomi1;
+      --
+   END f_num_npericomi1;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_npericomi2
+   */
+   FUNCTION f_num_npericomi2            RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_npericomi2;
+      --
+   END f_num_npericomi2;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_npericomi3
+   */
+   FUNCTION f_num_npericomi3            RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_npericomi3;
+      --
+   END f_num_npericomi3;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_impgasmin
+   */
+   FUNCTION f_num_impgasmin             RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_impgasmin;
+      --
+   END f_num_impgasmin;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_impgasmax
+   */
+   FUNCTION f_num_impgasmax             RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_impgasmax;
+      --
+   END f_num_impgasmax;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_ggim
+   */
+   FUNCTION f_num_ggim                  RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_ggim;
+      --
+   END f_num_ggim;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_pggaprov
+   */
+   FUNCTION f_num_pggaprov              RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_pggaprov;
+      --
+   END f_num_pggaprov;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna fec_nacaseg2
+   */
+   FUNCTION f_fec_nacaseg2              RETURN DATE
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.fec_nacaseg2;
+      --
+   END f_fec_nacaseg2;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_csexaseg2
+   */
+   FUNCTION f_txt_csexaseg2             RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_csexaseg2;
+      --
+   END f_txt_csexaseg2;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_tabla2
+   */
+   FUNCTION f_txt_tabla2                RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_tabla2;
+      --
+   END f_txt_tabla2;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_ajvaly2
+   */
+   FUNCTION f_num_ajvaly2               RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_ajvaly2;
+      --
+   END f_num_ajvaly2;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_ajvalpc2
+   */
+   FUNCTION f_num_ajvalpc2              RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_ajvalpc2;
+      --
+   END f_num_ajvalpc2;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_it_prestmo
+   */
+   FUNCTION f_num_it_prestmo            RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_it_prestmo;
+      --
+   END f_num_it_prestmo;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_pagoa_prestmo
+   */
+   FUNCTION f_num_pagoa_prestmo         RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_pagoa_prestmo;
+      --
+   END f_num_pagoa_prestmo;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_dur_prestmo
+   */
+   FUNCTION f_num_dur_prestmo           RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_dur_prestmo;
+      --
+   END f_num_dur_prestmo;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_indicrescate
+   */
+   FUNCTION f_txt_indicrescate          RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_indicrescate;
+      --
+   END f_txt_indicrescate;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_cod_rm
+   */
+   FUNCTION f_txt_cod_rm                RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_cod_rm;
+      --
+   END f_txt_cod_rm;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_tiri_ni
+   */
+   FUNCTION f_num_tiri_ni               RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_tiri_ni;
+      --
+   END f_num_tiri_ni;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_tir_cie
+   */
+   FUNCTION f_num_tir_cie               RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_tir_cie;
+      --
+   END f_num_tir_cie;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_kcoase_ori
+   */
+   FUNCTION f_txt_kcoase_ori            RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_kcoase_ori;
+      --
+   END f_txt_kcoase_ori;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_ctipocoaseg
+   */
+   FUNCTION f_txt_ctipocoaseg           RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_ctipocoaseg;
+      --
+   END f_txt_ctipocoaseg;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_pcoaseg
+   */
+   FUNCTION f_num_pcoaseg               RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_pcoaseg;
+      --
+   END f_num_pcoaseg;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_pgastgesin_abridora
+   */
+   FUNCTION f_num_pgastgesin_abridora   RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_pgastgesin_abridora;
+      --
+   END f_num_pgastgesin_abridora;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_basecalculogesin
+   */
+   FUNCTION f_txt_basecalculogesin      RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_basecalculogesin;
+      --
+   END f_txt_basecalculogesin;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_pgastgesex_abridora
+   */
+   FUNCTION f_num_pgastgesex_abridora   RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_pgastgesex_abridora;
+      --
+   END f_num_pgastgesex_abridora;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_basecalculogesex
+   */
+   FUNCTION f_txt_basecalculogesex      RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_basecalculogesex;
+      --
+   END f_txt_basecalculogesex;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_ctiporeaseg
+   */
+   FUNCTION f_txt_ctiporeaseg           RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_ctiporeaseg;
+      --
+   END f_txt_ctiporeaseg;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_est_tit
+   */
+   FUNCTION f_txt_est_tit               RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_est_tit;
+      --
+   END f_txt_est_tit;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_est_cony
+   */
+   FUNCTION f_txt_est_cony              RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_est_cony;
+      --
+   END f_txt_est_cony;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_est_h1
+   */
+   FUNCTION f_txt_est_h1                RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_est_h1;
+      --
+   END f_txt_est_h1;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_est_h2
+   */
+   FUNCTION f_txt_est_h2                RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_est_h2;
+      --
+   END f_txt_est_h2;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_est_h3
+   */
+   FUNCTION f_txt_est_h3                RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_est_h3;
+      --
+   END f_txt_est_h3;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna fec_nacaseg3
+   */
+   FUNCTION f_fec_nacaseg3              RETURN DATE
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.fec_nacaseg3;
+      --
+   END f_fec_nacaseg3;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_csexaseg3
+   */
+   FUNCTION f_txt_csexaseg3             RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_csexaseg3;
+      --
+   END f_txt_csexaseg3;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_tabla3
+   */
+   FUNCTION f_txt_tabla3                RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_tabla3;
+      --
+   END f_txt_tabla3;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_ajvaly3
+   */
+   FUNCTION f_num_ajvaly3               RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_ajvaly3;
+      --
+   END f_num_ajvaly3;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_ajvalpc3
+   */
+   FUNCTION f_num_ajvalpc3              RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_ajvalpc3;
+      --
+   END f_num_ajvalpc3;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna fec_nacaseg4
+   */
+   FUNCTION f_fec_nacaseg4              RETURN DATE
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.fec_nacaseg4;
+      --
+   END f_fec_nacaseg4;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_csexaseg4
+   */
+   FUNCTION f_txt_csexaseg4             RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_csexaseg4;
+      --
+   END f_txt_csexaseg4;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_tabla4
+   */
+   FUNCTION f_txt_tabla4                RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_tabla4;
+      --
+   END f_txt_tabla4;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_ajvaly4
+   */
+   FUNCTION f_num_ajvaly4               RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_ajvaly4;
+      --
+   END f_num_ajvaly4;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_ajvalpc4
+   */
+   FUNCTION f_num_ajvalpc4              RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_ajvalpc4;
+      --
+   END f_num_ajvalpc4;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna fec_nacaseg5
+   */
+   FUNCTION f_fec_nacaseg5              RETURN DATE
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.fec_nacaseg5;
+      --
+   END f_fec_nacaseg5;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_csexaseg5
+   */
+   FUNCTION f_txt_csexaseg5             RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_csexaseg5;
+      --
+   END f_txt_csexaseg5;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_tabla5
+   */
+   FUNCTION f_txt_tabla5                RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_tabla5;
+      --
+   END f_txt_tabla5;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_ajvaly5
+   */
+   FUNCTION f_num_ajvaly5               RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_ajvaly5;
+      --
+   END f_num_ajvaly5;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_ajvalpc5
+   */
+   FUNCTION f_num_ajvalpc5              RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_ajvalpc5;
+      --
+   END f_num_ajvalpc5;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna fec_naca6
+   */
+   FUNCTION f_fec_naca6                 RETURN DATE
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.fec_naca6;
+      --
+   END f_fec_naca6;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_csexa6
+   */
+   FUNCTION f_txt_csexa6                RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_csexa6;
+      --
+   END f_txt_csexa6;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_tabla6
+   */
+   FUNCTION f_txt_tabla6                RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_tabla6;
+      --
+   END f_txt_tabla6;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_ajvaly6
+   */
+   FUNCTION f_num_ajvaly6               RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_ajvaly6;
+      --
+   END f_num_ajvaly6;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna num_ajvalpc6
+   */
+   FUNCTION f_num_ajvalpc6              RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.num_ajvalpc6;
+      --
+   END f_num_ajvalpc6;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna : IDN_LIC_LRC
+   */
+   FUNCTION f_idn_lic_lrc           RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.idn_lic_lrc;
+      --
+   END f_idn_lic_lrc;
+   --
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Inserta un registro en la tabla
+   */
+   PROCEDURE p_inserta(p_reg a1004803%ROWTYPE)
+   IS
+   BEGIN
+      --
+      INSERT INTO a1004803
+      VALUES p_reg;
+      --
+    --
+   END p_inserta;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Inserta el registro pasado como parametro y devuelve el ROWID
+   */
+   FUNCTION f_inserta(p_reg      IN    a1004803%ROWTYPE)
+    --
+   RETURN ROWID
+   IS
+      --
+      v_clave     ROWID;
+      --
+   BEGIN
+      --
+      INSERT INTO a1004803
+           VALUES p_reg
+        RETURNING ROWID INTO v_clave;
+      --
+      RETURN  v_clave;
+      --
+   END f_inserta;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Modifica un registro en la tabla
+   */
+   PROCEDURE p_actualiza (p_reg a1004803%ROWTYPE)
+   IS
+   BEGIN
+      --
+      UPDATE a1004803
+         SET   row = p_reg
+     WHERE
+           cod_cia                 = p_reg.cod_cia
+       AND num_poliza              = p_reg.num_poliza
+       AND num_spto                = p_reg.num_spto
+       AND num_apli                = p_reg.num_apli
+       AND num_spto_apli           = p_reg.num_spto_apli
+          ;
+        --
+    END p_actualiza;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Modifica un registro en la tabla, por rowid
+   */
+   PROCEDURE p_actualiza (p_reg a1004803%ROWTYPE,
+                        p_rowid         ROWID)
+   IS
+   BEGIN
+      --
+      UPDATE a1004803
+         SET   row = p_reg
+      WHERE ROWID = p_rowid;
+      --
+   END p_actualiza;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el registro completo
+   */
+   FUNCTION f_devuelve_reg RETURN a1004803%ROWTYPE
+   IS
+   BEGIN
+       --
+       pp_comprueba_error;
+       --
+       RETURN greg;
+    --
+    END f_devuelve_reg;
+   --
+   --{{ TG_PPUB
+   /* -------------------------------------------
+   || ! ATENCION ! Codigo PL del usuario
+   || Procedimientos Publicos
+   */ -------------------------------------------
+   --
+   --}} TG_PPUB
+   --
+   --
+END dc_k_prophet_a1004803_trn;
+/

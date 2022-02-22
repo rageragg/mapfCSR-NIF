@@ -1,0 +1,123 @@
+-----------------------------------------------------------
+---MAPFRE DGTP - Modelo de datos                        ---
+-----------------------------------------------------------
+---Nº PETICIÓN:       RF00746587-SD02605779
+---SOLICITADA POR:    BLAZQUF
+---OBJETOS AFECTADOS: A1004814
+---PROYECTO:          TRN
+---ENTORNO:           WDMD04
+---REALIZADO POR:     LUAZNAR
+---TIPOLOGÍA:         Reentrante
+-----------------------------------------------------------
+
+DECLARE
+   --
+   CURSOR c_cursor_rol
+   IS
+   SELECT COUNT (1)
+     FROM dba_roles t
+    WHERE t.role = 'ROL_TRON2000_APP';
+   --
+   CURSOR c_cursor_nwt_dl
+   IS
+   SELECT COUNT (1)
+     FROM dba_users t
+    WHERE t.username = 'NWT_DL';
+   --
+   CURSOR c_cursor_nwt_dm_app
+   IS
+   SELECT COUNT (1)
+     FROM dba_users t
+    WHERE t.username = 'NWT_DM_APP';
+   --
+   CURSOR c_cursor_nwt_il
+   IS
+   SELECT COUNT (1)
+     FROM dba_users t
+    WHERE t.username = 'NWT_IL';
+   --
+   l_count INTEGER;
+   --
+   l_grant_all VARCHAR2 (1000)      := 'GRANT SELECT,INSERT,DELETE,UPDATE ON TRON2000.A1004814 TO ROL_TRON2000_ALL';
+   l_grant_sel VARCHAR2 (1000)      := 'GRANT SELECT ON TRON2000.A1004814 TO ROL_TRON2000_SEL';
+   l_grant_NWT_DL VARCHAR2 (1000)   := 'GRANT SELECT,INSERT,DELETE,UPDATE,REFERENCES ON TRON2000.A1004814 TO NWT_DL';
+   l_synonym_NWT_DL VARCHAR2 (1000) := 'CREATE OR REPLACE SYNONYM NWT_DL.A1004814 FOR TRON2000.A1004814';
+   l_grant_NWT_DM_APP VARCHAR2 (1000)   := 'GRANT SELECT,INSERT,DELETE,UPDATE,REFERENCES ON TRON2000.A1004814 TO NWT_DM_APP';
+   l_synonym_NWT_DM_APP VARCHAR2 (1000) := 'CREATE OR REPLACE SYNONYM NWT_DM_APP.A1004814 FOR TRON2000.A1004814';
+   l_grant_NWT_IL VARCHAR2 (1000)   := 'GRANT SELECT ON TRON2000.A1004814 TO NWT_IL';
+   l_synonym_NWT_IL VARCHAR2 (1000) := 'CREATE OR REPLACE SYNONYM NWT_IL.A1004814 FOR TRON2000.A1004814';
+   --
+BEGIN
+   --
+   OPEN c_cursor_rol;
+   --
+   FETCH c_cursor_rol INTO l_count;
+   --
+   CLOSE c_cursor_rol;
+   --
+   IF l_count = 1
+   THEN
+     --
+     DBMS_OUTPUT.PUT_LINE(TO_CHAR(SYSDATE,'YYYY/MM/DD HH24:MI:SS')||' A1004814 Granting privileges to ROL_TRON2000_SEL, ROL_TRON2000_ALL.');
+     EXECUTE IMMEDIATE l_grant_all;
+     EXECUTE IMMEDIATE l_grant_sel;
+     DBMS_OUTPUT.PUT_LINE(TO_CHAR(SYSDATE,'YYYY/MM/DD HH24:MI:SS')||' A1004814 Grant succeeded.');
+     --
+   END IF;
+   --
+   --
+   l_count := 0;
+   OPEN c_cursor_nwt_dl;
+   --
+   FETCH c_cursor_nwt_dl INTO l_count;
+   --
+   CLOSE c_cursor_nwt_dl;
+   --
+   IF l_count = 1
+   THEN
+     --
+     DBMS_OUTPUT.PUT_LINE(TO_CHAR(SYSDATE,'YYYY/MM/DD HH24:MI:SS')||' A1004814 Granting privileges to NWT_DL.');
+     EXECUTE IMMEDIATE l_grant_NWT_DL;
+     EXECUTE IMMEDIATE l_synonym_NWT_DL;
+     DBMS_OUTPUT.PUT_LINE(TO_CHAR(SYSDATE,'YYYY/MM/DD HH24:MI:SS')||' A1004814 Grant succeeded.');
+     --
+   END IF;
+   --
+   --
+   l_count := 0;
+   OPEN c_cursor_nwt_dm_app;
+   --
+   FETCH c_cursor_nwt_dm_app INTO l_count;
+   --
+   CLOSE c_cursor_nwt_dm_app;
+   --
+   IF l_count = 1
+   THEN
+     --
+     DBMS_OUTPUT.PUT_LINE(TO_CHAR(SYSDATE,'YYYY/MM/DD HH24:MI:SS')||' A1004814 Granting privileges to NWT_DM_APP.');
+     EXECUTE IMMEDIATE l_grant_NWT_DM_APP;
+     EXECUTE IMMEDIATE l_synonym_NWT_DM_APP;
+     DBMS_OUTPUT.PUT_LINE(TO_CHAR(SYSDATE,'YYYY/MM/DD HH24:MI:SS')||' A1004814 Grant succeeded.');
+     --
+   END IF;
+   --
+   --
+   l_count := 0;
+   OPEN c_cursor_nwt_il;
+   --
+   FETCH c_cursor_nwt_il INTO l_count;
+   --
+   CLOSE c_cursor_nwt_il;
+   --
+   IF l_count = 1
+   THEN
+     --
+     DBMS_OUTPUT.PUT_LINE(TO_CHAR(SYSDATE,'YYYY/MM/DD HH24:MI:SS')||' A1004814 Granting privileges to NWT_IL.');
+     EXECUTE IMMEDIATE l_grant_NWT_IL;
+     EXECUTE IMMEDIATE l_synonym_NWT_IL;
+     DBMS_OUTPUT.PUT_LINE(TO_CHAR(SYSDATE,'YYYY/MM/DD HH24:MI:SS')||' A1004814 Grant succeeded.');
+     --
+   END IF;
+   --
+END;
+/

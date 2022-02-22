@@ -159,7 +159,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
         --
     END f_correlativo;
     --
-    -- procesamiento de Operacion D_1000
+    -- procesamiento de Operacion D_1000, derecho de prima
     PROCEDURE p_d1010_d_prima_emitida IS
         --
         lv_correlativo  NUMBER := f_correlativo;
@@ -167,14 +167,14 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
         --
         -- seleccionamos los recibos emitidos
         CURSOR c_recibos_emitidos IS 
-            SELECT 'BT'||a.cod_sociedad||to_char(b.fec_emision_spto,'yyyymm')||'_' IDN_BT
-                   ,a.idn_int_proc     IDN_INT_PROC
-                   ,a.cod_sis_origen   COD_SIS_ORIGEN
-                   ,b.fec_emision_spto FEC_REGISTRO
+            SELECT 'BT'||g_cod_sociedad||to_char(b.fec_efec_recibo,'yyyymm')||'_' IDN_BT
+                   ,g_idn_int_proc     IDN_INT_PROC
+                   ,g_cod_sis_origen   COD_SIS_ORIGEN
+                   ,b.fec_efec_recibo FEC_REGISTRO
                    ,NULL               TXT_MCA_BT_REV
-                   ,null               IDN_BT_REV
-                   ,b.fec_emision_spto FEC_CTABLE
-                   ,c.fec_actu         FEC_VALOR
+                   ,NULL               IDN_BT_REV
+                   ,b.fec_efec_recibo  FEC_CTABLE
+                   ,b.fec_valor        FEC_VALOR
                    ,NULL               IDN_FICHERO
                    ,a.txt_num_externo  TXT_NUM_EXTERNO
                    ,b.imp_recibo-b.imp_imptos IMP_TRANSACCION
@@ -202,13 +202,14 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
                AND a.num_spto      = c.num_spto
                AND a.num_apli      = c.num_apli
                AND a.num_spto_apli = c.num_spto_apli
+               AND b.fec_efec_recibo BETWEEN g_fec_desde AND g_fec_hasta
              ORDER BY b.num_poliza, b.num_spto, b.num_cuota, b.num_recibo;
         --       
     BEGIN 
         --
         p_inicia_proceso;
         --
-        lv_nom_fichero:= 'EEEE'||TO_CHAR(g_reg_a1004800.fec_hasta_proc,'YYYYMMDD')||'TBTRA';
+        lv_nom_fichero:= g_cod_sociedad||TO_CHAR(g_reg_a1004800.fec_hasta_proc,'YYYYMMDD')||'TBTRA';
         --
         FOR r_recibo IN c_recibos_emitidos LOOP
             --
@@ -282,16 +283,16 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
         lv_correlativo  NUMBER := f_correlativo;
         lv_nom_fichero  VARCHAR2(20);
         --
-        -- seleccionamos los recibos emitidos
+        -- seleccionamos los recibos brados
         CURSOR c_recibos_cobrados IS 
-            SELECT 'BT'||a.cod_sociedad||to_char(b.fec_emision_spto,'yyyymm')||'_' IDN_BT
+            SELECT 'BT'||a.cod_sociedad||to_char(b.fec_efec_recibo,'yyyymm')||'_' IDN_BT
                    ,a.idn_int_proc     IDN_INT_PROC
                    ,a.cod_sis_origen   COD_SIS_ORIGEN
-                   ,b.fec_emision_spto FEC_REGISTRO
+                   ,b.fec_efec_recibo FEC_REGISTRO
                    ,NULL               TXT_MCA_BT_REV
                    ,null               IDN_BT_REV
-                   ,b.fec_emision_spto FEC_CTABLE
-                   ,c.fec_actu         FEC_VALOR
+                   ,b.fec_efec_recibo  FEC_CTABLE
+                   ,b.fec_valor         FEC_VALOR
                    ,NULL               IDN_FICHERO
                    ,a.txt_num_externo  TXT_NUM_EXTERNO
                    ,b.imp_recibo-b.imp_imptos IMP_TRANSACCION
@@ -320,13 +321,14 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
                AND a.num_spto      = c.num_spto
                AND a.num_apli      = c.num_apli
                AND a.num_spto_apli = c.num_spto_apli
+               AND b.fec_efec_recibo BETWEEN g_fec_desde AND g_fec_hasta
              ORDER BY b.num_poliza, b.num_spto, b.num_cuota, b.num_recibo;
         --
     BEGIN 
         --
         p_inicia_proceso;
         --
-        lv_nom_fichero:= 'EEEE'||TO_CHAR(g_reg_a1004800.fec_hasta_proc,'YYYYMMDD')||'TBTRA';
+        lv_nom_fichero:=  g_cod_sociedad||TO_CHAR(g_reg_a1004800.fec_hasta_proc,'YYYYMMDD')||'TBTRA';
         --
         FOR r_recibo IN c_recibos_cobrados LOOP
             --
@@ -402,13 +404,13 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
         lv_nom_fichero  VARCHAR2(20);
         --
         CURSOR c_siniestros_pagados IS
-            SELECT 'BT'||a.cod_sociedad||to_char(c.fec_emision_spto,'yyyymm')||'_' IDN_BT,
+            SELECT 'BT'||a.cod_sociedad||to_char(c.fec_efec_spto,'yyyymm')||'_' IDN_BT,
                    a.idn_int_proc     IDN_INT_PROC,
                    a.cod_sis_origen   COD_SIS_ORIGEN,
-                   c.fec_emision_spto FEC_REGISTRO,
+                   c.fec_efec_spto    FEC_REGISTRO,
                    NULL               TXT_MCA_BT_REV,
                    null               IDN_BT_REV,
-                   c.fec_emision_spto FEC_CTABLE,
+                   c.fec_efec_spto FEC_CTABLE,
                    c.fec_actu         FEC_VALOR,
                    NULL               IDN_FICHERO,
                    a.txt_num_externo  TXT_NUM_EXTERNO,
@@ -448,7 +450,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
                AND c.tip_spto      = 'XX'
                AND b.anio_mes IN ( SELECT  extract( year from fec_hasta_proc) ||  lpad(extract(month from fec_hasta_proc ), 2,0)
                                      FROM a1004800 
-                                    WHERE idn_int_proc = a.idn_int_proc
+                                    WHERE idn_int_proc = g_idn_int_proc
                                   )
                AND b.pagos != 0;
         --       
@@ -456,7 +458,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
         --
         p_inicia_proceso;
         --
-        lv_nom_fichero:= 'EEEE'||TO_CHAR(g_reg_a1004800.fec_hasta_proc,'YYYYMMDD')||'TBTRA';
+        lv_nom_fichero:= g_cod_sociedad||TO_CHAR(g_reg_a1004800.fec_hasta_proc,'YYYYMMDD')||'TBTRA';
         --
         FOR r_siniestros IN c_siniestros_pagados LOOP
             --
@@ -527,20 +529,20 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
         --
     END p_s2000_d_siniestro_pagado;
     --
-    -- procesamiento de Operacion D3000
+    -- procesamiento de Operacion D3000, comisiones
     PROCEDURE p_d3100_c_comisiones_emitida IS
         --
         lv_correlativo  NUMBER := f_correlativo;
         lv_nom_fichero  VARCHAR2(20);
         --
         CURSOR c_comisiones_emitidas IS
-            SELECT 'BT'||a.cod_sociedad||to_char(b.fec_emision_spto,'yyyymm')||'_' IDN_BT
+            SELECT 'BT'||a.cod_sociedad||to_char(b.fec_efec_recibo,'yyyymm')||'_' IDN_BT
                     ,a.idn_int_proc     IDN_INT_PROC
                     ,a.cod_sis_origen   COD_SIS_ORIGEN
-                    ,b.fec_emision_spto FEC_REGISTRO
+                    ,b.fec_efec_recibo FEC_REGISTRO
                     ,NULL               TXT_MCA_BT_REV
                     ,null               IDN_BT_REV
-                    ,b.fec_emision_spto FEC_CTABLE
+                    ,b.fec_efec_recibo FEC_CTABLE
                     ,c.fec_actu         FEC_VALOR
                     ,NULL               IDN_FICHERO
                     ,a.txt_num_externo  TXT_NUM_EXTERNO
@@ -574,7 +576,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
         --
         p_inicia_proceso;
         --
-        lv_nom_fichero:= 'EEEE'||TO_CHAR(g_reg_a1004800.fec_hasta_proc,'YYYYMMDD')||'TBTRA';
+        lv_nom_fichero:= g_cod_sociedad||TO_CHAR(g_reg_a1004800.fec_hasta_proc,'YYYYMMDD')||'TBTRA';
         --
         FOR r_comisiones IN c_comisiones_emitidas LOOP
             --
@@ -634,13 +636,13 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
         lv_nom_fichero  VARCHAR2(20);
         --
         CURSOR c_comisiones_pagadas IS
-            SELECT 'BT'||a.cod_sociedad||to_char(b.fec_emision_spto,'yyyymm')||'_' IDN_BT
+            SELECT 'BT'||a.cod_sociedad||to_char(b.fec_efec_recibo,'yyyymm')||'_' IDN_BT
                     ,a.idn_int_proc     IDN_INT_PROC
                     ,a.cod_sis_origen   COD_SIS_ORIGEN
-                    ,b.fec_emision_spto FEC_REGISTRO
+                    ,b.fec_efec_recibo FEC_REGISTRO
                     ,NULL               TXT_MCA_BT_REV
                     ,null               IDN_BT_REV
-                    ,b.fec_emision_spto FEC_CTABLE
+                    ,b.fec_efec_recibo FEC_CTABLE
                     ,c.fec_actu         FEC_VALOR
                     ,NULL               IDN_FICHERO
                     ,a.txt_num_externo  TXT_NUM_EXTERNO
@@ -674,7 +676,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
         --
         p_inicia_proceso;
         --
-        lv_nom_fichero:= 'EEEE'||TO_CHAR(g_reg_a1004800.fec_hasta_proc,'YYYYMMDD')||'TBTRA';
+        lv_nom_fichero:= g_cod_sociedad||TO_CHAR(g_reg_a1004800.fec_hasta_proc,'YYYYMMDD')||'TBTRA';
         --
         FOR r_comisiones IN c_comisiones_pagadas LOOP
             --

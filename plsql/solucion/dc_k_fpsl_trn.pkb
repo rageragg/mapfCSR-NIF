@@ -117,7 +117,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       --
    END mx;
       --
-    /* -------------------------------------------------------
+   /* -------------------------------------------------------
    || p_v_cod_reasegurador:
    ||
    || Procedimiento que recupera el valor de la columna cod_reasegurador
@@ -2210,7 +2210,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
                                   AND POL2.TIP_SPTO      = em.REHABILITACION
                                   AND NVL(POL2.MCA_SPTO_ANULADO, 'N') = 'N'
                                   AND NVL(POL2.mca_provisional, 'N') = 'N'
-                                  and pol2.fec_efec_spto >= g_fec_desde_proc
+                                  AND pol2.fec_efec_spto >= g_fec_desde_proc
                               );
       --                            
       lv_fec_efec_spto      a2000030.fec_efec_spto%TYPE;

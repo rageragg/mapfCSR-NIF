@@ -1,0 +1,381 @@
+CREATE OR REPLACE PACKAGE BODY TRON2000.dc_k_prophet_a1004800_trn
+AS
+/**
+|| Acceso a la tabla a1004800
+||
+|| Procedimientos y funciones para el acceso de la tabla a1004800
+*/
+--
+/* -------------------- VERSION = 1.00 -------------------- */
+--
+/* -------------------- MODIFICACIONES --------------------
+|| 2019/11/04  - GCRUBEN - 1.00 - ()
+|| Creacion del Package - Procedimientos y funciones para el mantenimiento de la tabla a1004800
+*/ --------------------------------------------------------
+--
+   --
+   /* --------------------------------------------------
+   || Aqui comienza la declaracion de variables GLOBALES
+   */ --------------------------------------------------
+   --
+   greg a1004800%ROWTYPE;
+   --
+   g_existe BOOLEAN := FALSE;
+   --
+   g_cod_mensaje_cp g1010020.cod_mensaje%TYPE;
+   --
+   g_anx_mensaje VARCHAR2(100);
+   --
+   /* ---------------------------------------------------
+   || Aqui comienza la declaracion de constantes GLOBALES
+   */ ---------------------------------------------------
+   --
+   g_k_ini_corchete CONSTANT VARCHAR2(2) := ' [';
+   g_k_fin_corchete CONSTANT VARCHAR2(1) := ']';
+   g_idn_int_proc   a1004800.idn_int_proc    %TYPE;
+   --
+   --{{ TG_GPRV
+   /* -------------------------------------------
+   || ! ATENCION ! Codigo PL del usuario
+   || Definicion de Globales Privadas al Package
+   */ -------------------------------------------
+   --
+   --}} TG_GPRV
+   --
+   --
+   /* ----------------------------------------------------
+   || Aqui comienza la declaracion de subprogramas LOCALES
+   */ ----------------------------------------------------
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el error al llamador
+   */
+   PROCEDURE pp_devuelve_error
+   IS
+    l_cod_idioma  g1010010.cod_idioma %TYPE;
+   BEGIN
+    --
+    l_cod_idioma := trn_k_global.cod_idioma;
+    --
+    IF g_cod_mensaje_cp BETWEEN 20000
+                            AND 20999
+    THEN
+       --
+       RAISE_APPLICATION_ERROR(-g_cod_mensaje_cp,
+                             ss_k_mensaje.f_texto_idioma(g_cod_mensaje_cp,
+                                                         l_cod_idioma ) ||
+                             g_anx_mensaje
+                            );
+       --
+   ELSE
+       --
+     RAISE_APPLICATION_ERROR(-20000,
+                             ss_k_mensaje.f_texto_idioma(g_cod_mensaje_cp,
+                                                         l_cod_idioma ) ||
+                             g_anx_mensaje
+                            );
+       --
+    END IF;
+    --
+   END pp_devuelve_error;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Comprueba que se haya leido informacion
+   */
+   PROCEDURE pp_comprueba_error
+   IS
+   BEGIN
+    --
+    IF NOT g_existe
+    THEN
+       --
+       --g_cod_mensaje_cp := 20001;
+       --g_anx_mensaje := g_k_ini_corchete || 'PK a1004800' || g_k_fin_corchete;
+       --
+       --pp_devuelve_error;
+       trn_k_error_batch.p_inserta (p_cod_int_error   => g_idn_int_proc  ,
+                                    p_cod_error       => sqlcode         ,
+                                    p_txt_error       => sqlerrm         );
+       --
+    END IF;
+    --
+   END pp_comprueba_error;
+   --
+   --{{ TG_PPRV
+   /* -------------------------------------------
+   || ! ATENCION ! Codigo PL del usuario
+   || Procedimientos Privados
+   */ -------------------------------------------
+   --
+   --}} TG_PPRV
+   --
+   --
+   /* --------------------------------------------------------
+   || Aqui comienza la declaracion de subprogramas del PACKAGE
+   */ --------------------------------------------------------
+    --
+    -- ------------------------------------------------------------
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Lee un registro por PK
+   */
+   PROCEDURE p_lee(
+                 p_idn_int_proc   a1004800.idn_int_proc  %TYPE)
+   IS
+    --
+    CURSOR cl_a1004800   IS
+         SELECT *
+           FROM a1004800
+          WHERE idn_int_proc   = p_idn_int_proc
+                ;
+    --
+   BEGIN
+    --
+    --
+    OPEN        cl_a1004800;
+    FETCH       cl_a1004800    INTO greg;
+    g_existe := cl_a1004800%FOUND;
+    CLOSE       cl_a1004800;
+    --
+    pp_comprueba_error;
+    --
+   END p_lee;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna cod_proc
+   */
+   FUNCTION f_cod_proc       RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.cod_proc;
+      --
+   END f_cod_proc;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna idn_int_proc
+   */
+   FUNCTION f_idn_int_proc     RETURN NUMBER
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.idn_int_proc;
+      --
+   END f_idn_int_proc;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna txt_alias_proc
+   */
+   FUNCTION f_txt_alias_proc       RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.txt_alias_proc;
+      --
+   END f_txt_alias_proc;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna fec_desde_proc
+   */
+   FUNCTION f_fec_desde_proc   RETURN DATE
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.fec_desde_proc;
+      --
+   END f_fec_desde_proc;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna fec_hasta_proc
+   */
+   FUNCTION f_fec_hasta_proc   RETURN DATE
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.fec_hasta_proc;
+      --
+   END f_fec_hasta_proc;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna tip_situ_proc
+   */
+   FUNCTION f_tip_situ_proc    RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.tip_situ_proc;
+      --
+   END f_tip_situ_proc;
+   --
+   -- ------------------------------------------------------------
+   --
+   --
+   /**
+   || Devuelve el valor de la columna mca_enviado
+   */
+   FUNCTION f_mca_enviado    RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.mca_enviado;
+      --
+   END f_mca_enviado;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna cod_usr
+   */
+   FUNCTION f_cod_usr          RETURN VARCHAR2
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.cod_usr;
+      --
+   END f_cod_usr;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el valor de la columna fec_actu
+   */
+   FUNCTION f_fec_actu         RETURN DATE
+   IS
+   BEGIN
+      --
+      pp_comprueba_error;
+      --
+      RETURN greg.fec_actu;
+      --
+   END f_fec_actu;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Inserta un registro en la tabla
+   */
+   PROCEDURE p_inserta(p_reg a1004800%ROWTYPE)
+   IS
+   BEGIN
+      --
+      INSERT INTO a1004800
+      VALUES p_reg;
+      --
+    --
+   END p_inserta;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Inserta el registro pasado como parametro y devuelve el ROWID
+   */
+   FUNCTION f_inserta(p_reg      IN    a1004800%ROWTYPE)
+    --
+   RETURN ROWID
+   IS
+      --
+      v_clave     ROWID;
+      --
+   BEGIN
+      --
+      INSERT INTO a1004800
+           VALUES p_reg
+        RETURNING ROWID INTO v_clave;
+      --
+      RETURN  v_clave;
+      --
+   END f_inserta;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Modifica un registro en la tabla
+   */
+   PROCEDURE p_actualiza (p_reg a1004800%ROWTYPE)
+   IS
+   BEGIN
+      --
+      UPDATE a1004800
+         SET   ROW = p_reg
+     WHERE
+           idn_int_proc   = p_reg.idn_int_proc
+          ;
+        --
+    END p_actualiza;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Modifica un registro en la tabla, por rowid
+   */
+   PROCEDURE p_actualiza (p_reg a1004800%ROWTYPE,
+                        p_rowid         ROWID)
+   IS
+   BEGIN
+      --
+      UPDATE a1004800
+         SET   ROW = p_reg
+      WHERE ROWID = p_rowid;
+      --
+   END p_actualiza;
+   --
+   -- ------------------------------------------------------------
+   --
+   /**
+   || Devuelve el registro completo
+   */
+   FUNCTION f_devuelve_reg RETURN a1004800%ROWTYPE
+   IS
+   BEGIN
+       --
+       pp_comprueba_error;
+       --
+       RETURN greg;
+    --
+    END f_devuelve_reg;
+   --
+   --{{ TG_PPUB
+   /* -------------------------------------------
+   || ! ATENCION ! Codigo PL del usuario
+   || Procedimientos Publicos
+   */ -------------------------------------------
+   --
+   --}} TG_PPUB
+   --
+   --
+END dc_k_prophet_a1004800_trn;
+/
