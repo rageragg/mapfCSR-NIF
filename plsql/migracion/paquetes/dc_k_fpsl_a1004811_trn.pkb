@@ -1,247 +1,236 @@
 CREATE OR REPLACE PACKAGE BODY TRON2000.dc_k_fpsl_a1004811_trn
 AS
-/**
-|| Acceso a la tabla a1004811
-|| 
-|| Procedimientos y funciones para el acceso de la tabla a1004811
-*/
-  
---
-/* -------------------- VERSION = 2.00 -------------------- */
---
-/* -------------------- MODIFICACIONES --------------------
-|| 2020/04/15  - TRON2000 - v 2.00
-|| Se incluyen funciones para las nuevas columnas f_fec_emi_tip_reg_paa
-|| f_cod_mon_iso, f_cod_fracc_pago, f_cod_pre_pag, f_cod_ratio_combinado
-|| f_idn_fichero, f_idn_prob_impago
-*/ --------------------------------------------------------
---
-   --
-   /* --------------------------------------------------
-   || Aqui comienza la declaracion de variables GLOBALES
-   */ --------------------------------------------------
-   --
-   greg a1004811%ROWTYPE;
-   --
-   g_existe BOOLEAN := FALSE;
-   --
-   g_cod_mensaje_cp g1010020.cod_mensaje%TYPE;
-   --
-   g_anx_mensaje VARCHAR2(100);
-   --
-   /* ---------------------------------------------------
-   || Aqui comienza la declaracion de constantes GLOBALES
-   */ ---------------------------------------------------
-   --
-   g_k_ini_corchete CONSTANT VARCHAR2(2) := ' [';
-   g_k_fin_corchete CONSTANT VARCHAR2(1) := ']';
-   --
-   --{{ TG_GPRV
-   /* -------------------------------------------
-   || ! ATENCION ! Codigo PL del usuario
-   || Definicion de Globales Privadas al Package
-   */ -------------------------------------------
-   --
-   --}} TG_GPRV
-   --
-   --
-   /* ----------------------------------------------------
-   || Aqui comienza la declaracion de subprogramas LOCALES
-   */ ----------------------------------------------------
-   --
-   -- ------------------------------------------------------------
-   --
-   /**
-   || Devuelve el error al llamador
-   */
-   PROCEDURE pp_devuelve_error
-   IS
-    l_cod_idioma  g1010010.cod_idioma %TYPE;
-   BEGIN
+    /**
+    || Acceso a la tabla a1004811
+    || 
+    || Procedimientos y funciones para el acceso de la tabla a1004811
+    */
+    
     --
-    l_cod_idioma := trn_k_global.cod_idioma;
+    /* -------------------- VERSION = 2.00 -------------------- */
     --
-    IF g_cod_mensaje_cp BETWEEN 20000
-                            AND 20999
-    THEN
-       --
-       RAISE_APPLICATION_ERROR(-g_cod_mensaje_cp,
-                             ss_k_mensaje.f_texto_idioma(g_cod_mensaje_cp,
-                                                         l_cod_idioma ) ||
-                             g_anx_mensaje
-                            );
-       --
-   ELSE
-       --
-     RAISE_APPLICATION_ERROR(-20000,
-                             ss_k_mensaje.f_texto_idioma(g_cod_mensaje_cp,
-                                                         l_cod_idioma ) ||
-                             g_anx_mensaje
-                            );
-       --
-    END IF;
+    /* -------------------- MODIFICACIONES --------------------
+    || 2020/04/15  - TRON2000 - v 2.00
+    || Se incluyen funciones para las nuevas columnas f_fec_emi_tip_reg_paa
+    || f_cod_mon_iso, f_cod_fracc_pago, f_cod_pre_pag, f_cod_ratio_combinado
+    || f_idn_fichero, f_idn_prob_impago
+    */ --------------------------------------------------------
     --
-   END pp_devuelve_error;
-   --
-   -- ------------------------------------------------------------
-   --
-   /**
-   || Comprueba que se haya leido informacion
-   */
-   PROCEDURE pp_comprueba_error
-   IS
-   BEGIN
     --
-    IF NOT g_existe
-    THEN
-       --
-       g_cod_mensaje_cp := 20001;
-       g_anx_mensaje := g_k_ini_corchete || 'PK a1004811' || g_k_fin_corchete;
-       --
-       pp_devuelve_error;
-       --
-    END IF;
+    /* --------------------------------------------------
+    || Aqui comienza la declaracion de variables GLOBALES
+    */ --------------------------------------------------
     --
-   END pp_comprueba_error;
-   --
-   --{{ TG_PPRV
-   /* -------------------------------------------
-   || ! ATENCION ! Codigo PL del usuario
-   || Procedimientos Privados
-   */ -------------------------------------------
-   --
-   --}} TG_PPRV
-   --
-   --
-   /* --------------------------------------------------------
-   || Aqui comienza la declaracion de subprogramas del PACKAGE
-   */ --------------------------------------------------------
+    greg a1004811%ROWTYPE;
+    --
+    g_existe BOOLEAN := FALSE;
+    --
+    g_cod_mensaje_cp g1010020.cod_mensaje%TYPE;
+    --
+    g_anx_mensaje VARCHAR2(100);
+    --
+    /* ---------------------------------------------------
+    || Aqui comienza la declaracion de constantes GLOBALES
+    */ ---------------------------------------------------
+    --
+    g_k_ini_corchete CONSTANT VARCHAR2(2) := ' [';
+    g_k_fin_corchete CONSTANT VARCHAR2(1) := ']';
+    --
+    --{{ TG_GPRV
+    /* -------------------------------------------
+    || ! ATENCION ! Codigo PL del usuario
+    || Definicion de Globales Privadas al Package
+    */ -------------------------------------------
+    --
+    --}} TG_GPRV
+    --
+    --
+    /* ----------------------------------------------------
+    || Aqui comienza la declaracion de subprogramas LOCALES
+    */ ----------------------------------------------------
     --
     -- ------------------------------------------------------------
-   --
-   -- ------------------------------------------------------------
-   --
-   /**
-   || Lee un registro por PK
-   */
-   PROCEDURE p_lee(
-                 p_cod_cia             a1004811.cod_cia            %TYPE,
-                 p_num_poliza          a1004811.num_poliza         %TYPE,
-                 p_cod_ramo            a1004811.cod_ramo           %TYPE,
-                 p_num_spto            a1004811.num_spto           %TYPE,
-                 p_num_apli            a1004811.num_apli           %TYPE,
-                 p_num_spto_apli       a1004811.num_spto_apli      %TYPE,
-                 p_num_riesgo          a1004811.num_riesgo         %TYPE,
-                 p_num_periodo         a1004811.num_periodo        %TYPE,
-                 p_cod_cob             a1004811.cod_cob            %TYPE,
-                 p_cod_cohorte         a1004811.cod_cohorte        %TYPE,
-                 p_cod_cartera         a1004811.cod_cartera        %TYPE,
-                 p_tip_registro_paa    a1004811.tip_registro_paa   %TYPE)
-   IS
     --
-    CURSOR cl_a1004811   IS
-         SELECT *
-           FROM a1004811
-          WHERE cod_cia             = p_cod_cia            
-            AND num_poliza          = p_num_poliza         
-            AND cod_ramo            = p_cod_ramo           
-            AND num_spto            = p_num_spto           
-            AND num_apli            = p_num_apli           
-            AND num_spto_apli       = p_num_spto_apli      
-            AND num_riesgo          = p_num_riesgo         
-            AND num_periodo         = p_num_periodo        
-            AND cod_cob             = p_cod_cob            
-            AND cod_cohorte         = p_cod_cohorte        
-            AND cod_cartera         = p_cod_cartera        
-            AND tip_registro_paa    = p_tip_registro_paa   
-                ;
+    /**
+    || Devuelve el error al llamador
+    */
+    PROCEDURE pp_devuelve_error IS
+        l_cod_idioma  g1010010.cod_idioma %TYPE;
+    BEGIN
+        --
+        l_cod_idioma := trn_k_global.cod_idioma;
+        --
+        IF g_cod_mensaje_cp BETWEEN 20000 AND 20999 THEN
+            --
+            RAISE_APPLICATION_ERROR(-g_cod_mensaje_cp,
+                                    ss_k_mensaje.f_texto_idioma(g_cod_mensaje_cp,
+                                                                l_cod_idioma ) ||
+                                    g_anx_mensaje
+                                    );
+            --
+        ELSE
+            --
+            RAISE_APPLICATION_ERROR(-20000,
+                                    ss_k_mensaje.f_texto_idioma(g_cod_mensaje_cp,
+                                                                l_cod_idioma ) ||
+                                    g_anx_mensaje
+                                    );
+            --
+        END IF;
+        --
+    END pp_devuelve_error;
     --
-   BEGIN
+    -- ------------------------------------------------------------
+    --
+    /**
+    || Comprueba que se haya leido informacion
+    */
+    PROCEDURE pp_comprueba_error IS
+    BEGIN
+        --
+        IF NOT g_existe THEN
+            --
+            g_cod_mensaje_cp := 20001;
+            g_anx_mensaje := g_k_ini_corchete || 'PK a1004811' || g_k_fin_corchete;
+            --
+            pp_devuelve_error;
+            --
+        END IF;
+        --
+    END pp_comprueba_error;
+    --
+    --{{ TG_PPRV
+    /* -------------------------------------------
+    || ! ATENCION ! Codigo PL del usuario
+    || Procedimientos Privados
+    */ -------------------------------------------
+    --
+    --}} TG_PPRV
     --
     --
-    OPEN        cl_a1004811;
-    FETCH       cl_a1004811    INTO greg;
-    g_existe := cl_a1004811%FOUND;
-    CLOSE       cl_a1004811;
+    /* --------------------------------------------------------
+    || Aqui comienza la declaracion de subprogramas del PACKAGE
+    */ --------------------------------------------------------
     --
-    pp_comprueba_error;
+    -- ------------------------------------------------------------
     --
-   END p_lee;
-   --
-   -- ------------------------------------------------------------
-   --
-   /**
-   || Devuelve el valor de la columna cod_cia
-   */
-   FUNCTION f_cod_cia             RETURN NUMBER
-   IS
-   BEGIN
-      --
-      pp_comprueba_error;
-      --
-      RETURN greg.cod_cia;
-      --
-   END f_cod_cia;
-   --
-   -- ------------------------------------------------------------
-   --
-   /**
-   || Devuelve el valor de la columna num_poliza
-   */
-   FUNCTION f_num_poliza          RETURN VARCHAR2
-   IS
-   BEGIN
-      --
-      pp_comprueba_error;
-      --
-      RETURN greg.num_poliza;
-      --
-   END f_num_poliza;
-   --
-   -- ------------------------------------------------------------
-   --
-   /**
-   || Devuelve el valor de la columna cod_ramo
-   */
-   FUNCTION f_cod_ramo            RETURN NUMBER
-   IS
-   BEGIN
-      --
-      pp_comprueba_error;
-      --
-      RETURN greg.cod_ramo;
-      --
-   END f_cod_ramo;
-   --
-   -- ------------------------------------------------------------
-   --
-   /**
-   || Devuelve el valor de la columna num_spto
-   */
-   FUNCTION f_num_spto            RETURN NUMBER
-   IS
-   BEGIN
-      --
-      pp_comprueba_error;
-      --
-      RETURN greg.num_spto;
-      --
-   END f_num_spto;
-   --
-   -- ------------------------------------------------------------
-   --
-   /**
-   || Devuelve el valor de la columna num_apli
-   */
-   FUNCTION f_num_apli            RETURN NUMBER
-   IS
-   BEGIN
-      --
-      pp_comprueba_error;
-      --
-      RETURN greg.num_apli;
-      --
-   END f_num_apli;
+    -- ------------------------------------------------------------
+    --
+    /**
+    || Lee un registro por PK
+    */
+    PROCEDURE p_lee(
+                    p_cod_cia             a1004811.cod_cia            %TYPE,
+                    p_num_poliza          a1004811.num_poliza         %TYPE,
+                    p_cod_ramo            a1004811.cod_ramo           %TYPE,
+                    p_num_spto            a1004811.num_spto           %TYPE,
+                    p_num_apli            a1004811.num_apli           %TYPE,
+                    p_num_spto_apli       a1004811.num_spto_apli      %TYPE,
+                    p_num_riesgo          a1004811.num_riesgo         %TYPE,
+                    p_num_periodo         a1004811.num_periodo        %TYPE,
+                    p_cod_cob             a1004811.cod_cob            %TYPE,
+                    p_cod_cohorte         a1004811.cod_cohorte        %TYPE,
+                    p_cod_cartera         a1004811.cod_cartera        %TYPE,
+                    p_tip_registro_paa    a1004811.tip_registro_paa   %TYPE
+                  ) IS
+        --
+        CURSOR cl_a1004811   IS
+            SELECT *
+              FROM a1004811
+             WHERE cod_cia             = p_cod_cia            
+               AND num_poliza          = p_num_poliza         
+               AND cod_ramo            = p_cod_ramo           
+               AND num_spto            = p_num_spto           
+               AND num_apli            = p_num_apli           
+               AND num_spto_apli       = p_num_spto_apli      
+               AND num_riesgo          = p_num_riesgo         
+               AND num_periodo         = p_num_periodo        
+               AND cod_cob             = p_cod_cob            
+               AND cod_cohorte         = p_cod_cohorte        
+               AND cod_cartera         = p_cod_cartera        
+               AND tip_registro_paa    = p_tip_registro_paa;
+        --
+    BEGIN
+        --
+        --
+        OPEN        cl_a1004811;
+        FETCH       cl_a1004811    INTO greg;
+        g_existe := cl_a1004811%FOUND;
+        CLOSE       cl_a1004811;
+        --
+        pp_comprueba_error;
+        --
+    END p_lee;
+    --
+    -- ------------------------------------------------------------
+    --
+    /**
+    || Devuelve el valor de la columna cod_cia
+    */
+    FUNCTION f_cod_cia RETURN NUMBER IS
+    BEGIN
+        --
+        pp_comprueba_error;
+        --
+        RETURN greg.cod_cia;
+        --
+    END f_cod_cia;
+    --
+    -- ------------------------------------------------------------
+    --
+    /**
+    || Devuelve el valor de la columna num_poliza
+    */
+    FUNCTION f_num_poliza RETURN VARCHAR2 IS
+    BEGIN
+        --
+        pp_comprueba_error;
+        --
+        RETURN greg.num_poliza;
+        --
+    END f_num_poliza;
+    --
+    -- ------------------------------------------------------------
+    --
+    /**
+    || Devuelve el valor de la columna cod_ramo
+    */
+    FUNCTION f_cod_ramo RETURN NUMBER IS
+    BEGIN
+        --
+        pp_comprueba_error;
+        --
+        RETURN greg.cod_ramo;
+        --
+    END f_cod_ramo;
+    --
+    -- ------------------------------------------------------------
+    --
+    /**
+    || Devuelve el valor de la columna num_spto
+    */
+    FUNCTION f_num_spto RETURN NUMBER IS
+    BEGIN
+        --
+        pp_comprueba_error;
+        --
+        RETURN greg.num_spto;
+        --
+    END f_num_spto;
+    --
+    -- ------------------------------------------------------------
+    --
+    /**
+    || Devuelve el valor de la columna num_apli
+    */
+    FUNCTION f_num_apli RETURN NUMBER IS
+    BEGIN
+        --
+        pp_comprueba_error;
+        --
+        RETURN greg.num_apli;
+        --
+    END f_num_apli;
    --
    -- ------------------------------------------------------------
    --
@@ -623,7 +612,7 @@ AS
    /**
    || Inserta un registro en la tabla
    */
-   PROCEDURE p_inserta(p_reg a1004811%ROWTYPE)
+   PROCEDURE p_inserta( p_reg a1004811%ROWTYPE )
    IS
    BEGIN
       --

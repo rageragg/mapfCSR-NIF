@@ -602,7 +602,9 @@ CREATE OR REPLACE PACKAGE dc_k_fpsl_inst_trn AS
    || respecto a la informaci??n de cada uno de los tipos de registro que solicitan
    */ -------------------------------------------------------
    --
-   PROCEDURE p_carga_periodificaciones (p_reg_paa       IN       a1004811%ROWTYPE);
+   PROCEDURE p_carga_periodificaciones ( p_reg_paa    IN a1004811%ROWTYPE,
+                                         p_reg_period IN a1004814%ROWTYPE
+                                       );
    --
 END dc_k_fpsl_inst_trn;
 /

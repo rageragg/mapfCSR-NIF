@@ -1119,11 +1119,19 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_inst_trn AS
    || respecto a la informaci??n de cada uno de los tipos de registro que solicitan
    */ -------------------------------------------------------
    --
-   PROCEDURE p_carga_periodificaciones (p_reg_paa       IN       a1004811%ROWTYPE)
+   PROCEDURE p_carga_periodificaciones ( p_reg_paa    IN a1004811%ROWTYPE,
+                                         p_reg_period IN a1004814%ROWTYPE
+                                       )
    IS
    BEGIN
       --
-      NULL;
+      IF p_reg_paa.cod_cia IS NOT NULL THEN
+         INSERT INTO a1004811 VALUES p_reg_paa;
+      END IF;
+      --
+      IF p_reg_period.cod_cia IS NOT NULL THEN
+         INSERT INTO a1004814 VALUES p_reg_period;
+      END IF;   
       --
    END p_carga_periodificaciones;
    --

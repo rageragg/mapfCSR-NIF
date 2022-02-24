@@ -960,7 +960,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
     greg_paa.txt_met_val       := greg_cobe.txt_met_val;
     greg_paa.cod_mon_iso       := pi_v_cod_mon_iso;
     greg_paa.fec_emi_tip_reg   := NULL;
-    greg_paa.tip_registro_paa:='1010';
+    greg_paa.tip_registro_paa  := '1010';
     --
     --**  Transaccion Primas: 1010 para A1004814
     greg_period                := null;
@@ -979,7 +979,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
     greg_period.tip_patron    := 'LN';
     greg_period.num_prob_incumplimiento:= 5;
     -- Se analizara condicionales segun documentacion roblet1/aaldana
-    --greg_period.fec_registro           :=  greg_cobe.fec_efec_contrato; 
+    -- greg_period.fec_registro           :=  greg_cobe.fec_efec_contrato; 
     
     -- Validando fecha de registro
     -- Obtiene la fecha hasta del envio y periodo de Envio, periodo efecto
@@ -1003,7 +1003,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
              'a',
              'Primas ** Mismo Periodo  '|| greg_period.fec_registro  );
         
-   --  If  l_periodo_efecto  < l_periodo_envio Then
+      --  If  l_periodo_efecto  < l_periodo_envio Then
    Else
        
       ptraza('p_trata_paa',

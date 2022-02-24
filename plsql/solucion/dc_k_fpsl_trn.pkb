@@ -35,7 +35,7 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
    g_cod_cia             a1000900.cod_cia%TYPE;
    g_cod_cia_financiera  a1000900.cod_cia_financiera%TYPE;
    --
-   g_existe BOOLEAN := FALSE;
+   g_existe              BOOLEAN := FALSE;
    --
    g_idn_int_proc        a1004803.idn_int_proc  %TYPE;
    g_fec_desde_proc      a1004800.fec_desde_proc%TYPE;
