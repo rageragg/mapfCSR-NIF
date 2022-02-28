@@ -363,7 +363,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_trn AS
                         NVL(dat_pol.cod_canal3, '1011') COD_CANAL3,
                         dat_pol.val_mca_int          VAL_MCA_INT,
                         1                            NUM_CERTIFICADOS,
-						to_char(dat_pol.fec_efec_poliza, 'YYYY') COD_COHORTE
+						to_char(dat_pol.fec_emision_spto, 'YYYY') COD_COHORTE
                   FROM  a2000030 dat_pol, 
                         a1000900 cias
                  WHERE dat_pol.cod_cia        = g_cod_cia 
@@ -371,7 +371,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_trn AS
                    AND dat_pol.num_apli      = 0  
                    AND dat_pol.num_spto_apli = 0
                    AND dat_pol.tip_spto <> 'SM'
-                   AND dat_pol.fec_efec_poliza BETWEEN p_fec_desde AND p_fec_hasta
+                   AND dat_pol.fec_emision_spto BETWEEN p_fec_desde AND p_fec_hasta
                    AND trunc(dat_pol.fec_vcto_poliza)  >= trunc(p_fec_hasta)
                    AND NVL(mca_provisional, 'N') = 'N';
                 --
@@ -914,8 +914,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_trn AS
             --
             OPEN lc_comision;
             FETCH lc_comision INTO reg_251;
-            IF lc_comision%FOUND
-            THEN
+            IF lc_comision%FOUND THEN
                 --
                 INSERT INTO a1004813 (COD_CIA, NUM_POLIZA, NUM_SPTO, NUM_APLI, NUM_SPTO_APLI, COD_KMODALIDAD, COD_COB, IMP_COMIS_NETA_SPTO)
                      VALUES ( reg_251.cod_cia, reg_251.num_poliza, reg_251.num_spto, reg_251.num_apli, reg_251.num_spto_apli, 
@@ -1045,6 +1044,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_trn AS
             --
             l_periodo_envio     NUMBER(6);
             l_periodo_efecto    NUMBER(6);
+            l_fec_efec_recibo   DATE;
             --
         BEGIN
             -- 
@@ -1072,11 +1072,27 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_trn AS
                                                             lpad( extract( month from greg_cobe.fec_efec_contrato),2,'0') ||
                                                             '01' ,'YYYYMMDD'
                                                        );
+            END IF;  
+            --
+            BEGIN
+                SELECT max(fec_efec_recibo)     
+                  INTO l_fec_efec_recibo
+                  FROM a2990700
+                 WHERE Num_poliza   = greg_paa.num_poliza
+                   AND num_spto     = greg_paa.num_spto
+                   AND num_apli     = greg_paa.num_apli
+                   AND num_cuota    = 1;
+            END;
+            --
+            IF l_fec_efec_recibo = greg_cobe.fec_efec_contrato THEN
+                greg_paa.cod_pre_pag :=  '1' ;
+            Else
+                greg_paa.cod_pre_pag :=  '2' ;
             END IF;                                        
             --
             pi_v_imp_prima;
             --
-            pi_v_imp_comision_recalculo;
+            pi_v_imp_comision;
             --
             dc_k_fpsl_inst.p_carga_periodificaciones( p_reg_paa     => greg_paa, 
                                                       p_reg_period  => greg_period
@@ -1717,19 +1733,20 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_trn AS
     --
     PROCEDURE p_trata_datos_cobertura IS
         --
-        lv_num_orden    	NUMBER := 1;
-        lv_clave        	VARCHAR2(2000);
-        lv_clave_b      	VARCHAR2(500);
+        lv_num_orden    	NUMBER          := 0;
+        lv_clave        	VARCHAR2(2000)  := '*';
 		lv_cod_cia_rea    	a2500150.cod_cia_rea%TYPE  := NULL;
         --
       	-- buscar codigo de reasegurador
       	PROCEDURE pp_buscar_reasegurador IS
+            --
+            lv_existe  BOOLEAN := FALSE;
 			--
 			-- facultativo 
 			CURSOR c_facultativo IS
 				SELECT DISTINCT a.cod_cia_facul cod_cia_rea 
 				  FROM a2501500 a
-				 WHERE a.cod_cia      = g_cod_cia
+				 WHERE a.cod_cia        = g_cod_cia
 				   AND a.num_poliza     = greg_cobe.num_poliza
 				   AND a.num_spto       = greg_cobe.num_spto
 				   AND a.num_apli       = greg_cobe.num_apli
@@ -1737,17 +1754,55 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_trn AS
 				   AND a.num_riesgo     = greg_cobe.num_riesgo
 				   AND a.num_periodo    = greg_cobe.num_periodo
 				   AND a.cod_cob        = greg_cobe.cod_cob; 
-			--	   
+			--
+            -- distribucion
+            CURSOR c_distribucion IS
+                SELECT DISTINCT a.cod_cia_rea
+                  FROM 
+                        ( SELECT DISTINCT rcob.cod_cia, rcob.cod_ramo, rcob.num_poliza, rcob.num_spto, rcob.num_apli, rcob.num_spto_apli, 
+                                          rcob.cod_contrato, 
+                                          ciar.cod_cia_rea 
+                            FROM a2501000 rcob,
+                                 a2500150 ciar
+                          WHERE rcob.cod_cia                    = ciar.cod_cia
+                            AND substr(rcob.cod_contrato, 1, 4) = ciar.num_contrato
+                            AND substr(rcob.cod_contrato, 5, 4) = ciar.anio_contrato
+                            AND substr(rcob.cod_contrato, 9, 4) = ciar.serie_contrato
+                            AND ciar.cod_cia_rea <> 999999
+                            AND rcob.num_riesgo   = greg_cobe.num_riesgo
+                            AND rcob.num_periodo  = greg_cobe.num_periodo
+                            AND rcob.cod_cob      = greg_cobe.cod_cob
+                        ) a
+                  WHERE a.cod_cia          = g_cod_cia
+                    AND a.cod_ramo       = greg_cobe.cod_ramo
+                    AND a.num_poliza     = greg_cobe.num_poliza
+                    AND a.num_spto       = greg_cobe.num_spto
+                    AND a.num_apli       = greg_cobe.num_apli
+                    AND a.num_spto_apli  = greg_cobe.num_spto_apli;  	
+            --   
 		BEGIN 
 			--
             OPEN c_facultativo;
             FETCH c_facultativo INTO lv_cod_cia_rea;
-            IF c_facultativo%FOUND THEN
+            lv_existe := c_facultativo%FOUND;
+            IF lv_existe THEN
 				greg_cobe.mca_reaseguro := 'S';
 			ELSE
 				greg_cobe.mca_reaseguro := 'N';	
 			END IF;
-            CLOSE c_facultativo;      
+            CLOSE c_facultativo;   
+            --
+            IF NOT lv_existe THEN
+                OPEN c_distribucion;
+                FETCH c_distribucion INTO lv_cod_cia_rea;
+                lv_existe := c_distribucion%FOUND;
+                IF lv_existe THEN
+                    greg_cobe.mca_reaseguro := 'S';
+                ELSE
+                    greg_cobe.mca_reaseguro := 'N';	
+                END IF;
+                CLOSE c_distribucion; 
+            END IF;    
          	--
 			EXCEPTION 
 				WHEN NO_DATA_FOUND THEN
@@ -1842,19 +1897,21 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_trn AS
         p_carga_definicion_carteras;
         p_carga_asignacion_carteras;
         --
+        ptraza( p_file => 'p_trata_datos_cobertura',
+                p_modo => 'w',
+                p_buffer => 'p_trata_datos_cobertura => inicio'
+            );         
+        --
         FOR regb IN ( SELECT * 
                         FROM a1004809
                        WHERE idn_int_proc = g_idn_int_proc 
-                      ORDER BY cod_sociedad,
-                            num_poliza,
-                            fec_registro,
-                            fec_efect_cober,
-                            fec_fin_cober,
-                            cod_mon_iso,
-                            fec_inclu_cober,
-                            cod_cob
+                      ORDER BY num_poliza
                     )
         LOOP
+            --
+            IF nvl(greg_cobe.num_poliza, '--') <> regb.num_poliza THEN
+                lv_num_orden := 0;
+            END IF;
             --
             greg_cobe := regb;
             --
@@ -1887,26 +1944,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_trn AS
             --
             p_v_cod_ramo_ctable;
             --
-            p_v_txt_met_val;
-            --
-            IF NVL(lv_clave, '**') <> greg_cobe.num_poliza||greg_cobe.fec_registro||greg_cobe.fec_efect_cober||greg_cobe.fec_fin_cober||greg_cobe.cod_mon_iso||greg_cobe.fec_inclu_cober
-            THEN
-                --
-                lv_num_orden := 1;
-                lv_clave     := greg_cobe.num_poliza||greg_cobe.fec_registro||greg_cobe.fec_efect_cober||greg_cobe.fec_fin_cober||greg_cobe.cod_mon_iso||greg_cobe.fec_inclu_cober;
-                lv_clave_b   := greg_cobe.cod_ramo_ctable;
-                --
-            ELSE
-                --
-                IF NVL(lv_clave_b, '##') <> greg_cobe.cod_ramo_ctable
-                THEN
-                    --
-                    lv_num_orden := lv_num_orden + 1;
-                    lv_clave_b   := greg_cobe.cod_ramo_ctable;
-                    --
-                END IF;
-                --
-            END IF; 
+            p_v_txt_met_val; 
             --
             greg_cobe.num_orden := lv_num_orden;
             greg_cobe.num_secu  := lv_num_orden;
@@ -1927,7 +1965,49 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_trn AS
             --
         END LOOP;
         --
-        --@mx('F','p_trata_datos_cobertura');
+        -- actualizamos la ramo contable
+        greg_cobe := NULL;
+        --
+        FOR regb IN ( SELECT * 
+                        FROM a1004809
+                       WHERE idn_int_proc = g_idn_int_proc 
+                      ORDER BY num_poliza, cod_ramo_ctable
+                    )
+        LOOP
+            --
+            IF nvl(greg_cobe.num_poliza,'-') <> regb.num_poliza THEN
+                --
+                lv_num_orden    := 1;
+                lv_clave        := regb.num_poliza || regb.cod_ramo_ctable;
+                -- 
+            ELSE
+                --
+                IF lv_clave <> greg_cobe.num_poliza || greg_cobe.cod_ramo_ctable THEN
+                    --
+                    lv_clave        := greg_cobe.num_poliza || greg_cobe.cod_ramo_ctable;
+                    lv_num_orden    := lv_num_orden + 1;
+                    --
+                END IF;    
+                --
+            END IF;
+            --
+            greg_cobe := regb;
+            --
+            greg_cobe.num_orden := lv_num_orden;
+            greg_cobe.num_secu  := lv_num_orden;
+            --
+            p_v_idn_cobertura(lv_num_orden);
+            --
+            dc_k_fpsl_a1004809.p_actualiza(greg_cobe); 
+            --
+            COMMIT;
+            --
+        END LOOP;  
+        -- 
+        ptraza( p_file => 'p_trata_datos_cobertura',
+                p_modo => 'a',
+                p_buffer => 'p_trata_datos_cobertura => Fin'
+            );
         --
     EXCEPTION
         WHEN OTHERS THEN

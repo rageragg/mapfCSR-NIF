@@ -1011,7 +1011,7 @@ AS
         CURSOR lc_datos
         IS
         SELECT g.txt_num_externo,
-               .idn_cobertura,
+               g.idn_cobertura,
                g.tip_registro_paa,            
                g.fec_registro,
                g.fec_emi_tip_reg,
@@ -1191,7 +1191,7 @@ AS
                                 AND g.cod_cob  = b.cod_cob
                            GROUP BY g.txt_num_externo,
                                     g.idn_cobertura,
-                                    g.tip_registro_paa
+                                    g.tip_registro_paa,
                                     g.fec_registro,
                                     g.fec_emi_tip_reg,
                                     g.fec_efec_contrato,

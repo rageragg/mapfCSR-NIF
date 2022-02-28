@@ -850,7 +850,6 @@ create or replace PACKAGE BODY dc_k_fpsl_trn AS
       --
       CURSOR lc_comision IS
         SELECT *
-         -- FROM A2000251 
          FROM A2000253 -- roblet1
          WHERE cod_cia = greg_cobe.cod_cia
            AND num_poliza = greg_cobe.num_poliza
