@@ -23,6 +23,9 @@ CREATE OR REPLACE PACKAGE dc_k_fpsl_util_bt IS
    -- procesamiento de Operacion S3000
    PROCEDURE p_s3100_d_comisiones_pagada;
    --
+   -- procesamiento de Financiamiento por Fraccionamiento de pago emitidos
+   PROCEDURE p_zd1015_financiacion_fracc;
+   --
    -- procedimiento duumy para relleno
    PROCEDURE p_dummy;
    -- 
