@@ -159,7 +159,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
         --
     END f_correlativo;
     --
-    -- procesamiento de Operacion D_1000, derecho de prima
+    -- procesamiento de Operacion D_1010, derecho de prima
     PROCEDURE p_d1010_d_prima_emitida IS
         --
         lv_correlativo  NUMBER := f_correlativo;
@@ -202,7 +202,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
                AND a.num_spto      = c.num_spto
                AND a.num_apli      = c.num_apli
                AND a.num_spto_apli = c.num_spto_apli
-               AND b.fec_efec_recibo BETWEEN g_fec_desde AND g_fec_hasta
+               AND b.fec_efec_recibo >= a.fec_registro 
              ORDER BY b.num_poliza, b.num_spto, b.num_cuota, b.num_recibo;
         --       
     BEGIN 
@@ -277,7 +277,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
         -- 
     END p_d1010_d_prima_emitida;
     --
-    -- procesamiento de Operacion S_1010
+    -- procesamiento de Operacion S_1010, Derecho de Primas
     PROCEDURE p_s1010_c_prima_cobrada IS 
         --
         lv_correlativo  NUMBER := f_correlativo;
@@ -321,7 +321,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
                AND a.num_spto      = c.num_spto
                AND a.num_apli      = c.num_apli
                AND a.num_spto_apli = c.num_spto_apli
-               AND b.fec_efec_recibo BETWEEN g_fec_desde AND g_fec_hasta
+               AND b.fec_efec_recibo >= a.fec_registro
              ORDER BY b.num_poliza, b.num_spto, b.num_cuota, b.num_recibo;
         --
     BEGIN 
@@ -427,7 +427,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
                    ( SELECT distinct h.num_sini, h.cod_cob ,
                             mre.num_riesgo , mre.estimacion,   mre.mas  , mre.menos   ,
                             mre.num_poliza, mre.num_spto, mre.num_apli, mre.num_spto_apli,
-                            mre.anio_mes, mre.cod_cia, mre.cod_mon, mre.pagos
+                            h.fec_mvto, mre.cod_cia, mre.cod_mon, mre.pagos
                        FROM h7001200 h, 
                             mreserva mre
                       WHERE h.num_sini    = mre.num_sini
@@ -448,10 +448,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
                AND a.num_apli      = c.num_apli
                AND a.num_spto_apli = c.num_spto_apli
                AND c.tip_spto      = 'XX'
-               AND b.anio_mes IN ( SELECT  extract( year from fec_hasta_proc) ||  lpad(extract(month from fec_hasta_proc ), 2,0)
-                                     FROM a1004800 
-                                    WHERE idn_int_proc = g_idn_int_proc
-                                  )
+               AND b.fec_mvto >= a.fec_registro
                AND b.pagos != 0;
         --       
     BEGIN
@@ -487,13 +484,13 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
             --
             IF g_reg_a1004810.imp_transaccion > 0 THEN
                 --
-                g_reg_a1004810.tip_imp         := 'C';
+                g_reg_a1004810.tip_imp         := 'D';
                 g_reg_a1004810.imp_transaccion := r_siniestros.imp_transaccion;
                 g_reg_a1004810.imp_impuesto    := r_siniestros.imp_impuesto;
                 --
             ELSE
                 --
-                g_reg_a1004810.tip_imp         := 'D'; -- Se cambia antes H
+                g_reg_a1004810.tip_imp         := 'C'; -- Se cambia antes H
                 g_reg_a1004810.imp_transaccion := abs(r_siniestros.imp_transaccion) ;
                 g_reg_a1004810.imp_impuesto    := abs(r_siniestros.imp_impuesto);
                 --
@@ -569,7 +566,8 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
                 AND a.num_spto      = c.num_spto
                 AND a.num_apli      = c.num_apli
                 AND a.num_spto_apli = c.num_spto_apli
-                AND c.tip_spto      = 'XX';
+                AND c.tip_spto      = 'XX'
+                AND b.fec_efec_recibo >= a.fec_registro;
         --        
     BEGIN 
         --
@@ -670,7 +668,8 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
                 AND a.num_apli      = c.num_apli
                 AND a.num_spto_apli = c.num_spto_apli
                 AND c.tip_spto      = 'XX'
-                AND b.tip_situacion = 'CT'  ;
+                AND b.tip_situacion = 'CT'
+                AND b.fec_efec_recibo >= a.fec_registro;
         --
     BEGIN
         --
@@ -705,13 +704,13 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
             --
             IF g_reg_a1004810.imp_transaccion > 0  THEN
                 --
-                g_reg_a1004810.tip_imp         := 'C';
+                g_reg_a1004810.tip_imp         := 'D';
                 -- roblet1
                 g_reg_a1004810.imp_transaccion := r_comisiones.imp_transaccion;
                 g_reg_a1004810.imp_impuesto    := r_comisiones.imp_impuesto   ;
             ELSE
                 --
-                g_reg_a1004810.tip_imp         := 'D'; -- Se cambia antes H
+                g_reg_a1004810.tip_imp         := 'C'; -- Se cambia antes H
                 -- roblet1
                 g_reg_a1004810.imp_transaccion := abs(r_comisiones.imp_transaccion) ;
                 g_reg_a1004810.imp_impuesto    := abs(r_comisiones.imp_impuesto)   ;
@@ -720,7 +719,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
             g_reg_a1004810.idn_cobertura   := r_comisiones.idn_cobertura  ;
             g_reg_a1004810.idn_bt_ref      := r_comisiones.idn_bt_ref     ;
             -- Cagamos en el registro el valor del tipo de bt obtenido en el tratamiento del dato
-            g_reg_a1004810.tip_bt          := g_cod_operacion      ;
+            g_reg_a1004810.tip_bt          := g_cod_operacion;
             --
             -- Llamamos al procedimiento que inserta en la tabla
             dc_k_fpsl_a1004810.p_inserta( g_reg_a1004810 );

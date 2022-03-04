@@ -359,18 +359,18 @@ AS
         OPEN lc_datos;
         --
         SELECT count ('P') + 2
-            INTO lv_ctos
-            FROM (
-                    SELECT a.txt_num_externo                    ,
-                           a.fec_registro                       ,
-                           a.num_secu                           ,
-                           a.fec_efect_cober                    ,
-                           a.fec_fin_cober                      ,
-                           a.idn_cobertura                      ,
-                           a.cod_ramo_ctable
-                      FROM a1004809 a
-                     WHERE a.idn_int_proc = g_idn_int_proc 
-                     GROUP BY a.cod_sociedad,
+          INTO lv_ctos
+          FROM (
+                    SELECT  a.txt_num_externo                    ||g_k_separador||
+                            TO_CHAR(a.fec_registro,'YYYYMMDD')   ||g_k_separador||
+                            a.num_secu                           ||g_k_separador||
+                            TO_CHAR(a.fec_efect_cober,'YYYYMMDD')||g_k_separador||
+                            TO_CHAR(a.fec_fin_cober,'YYYYMMDD')  ||g_k_separador||
+                            a.idn_cobertura                      ||g_k_separador||
+                            a.cod_ramo_ctable
+                       FROM a1004809 a
+                      WHERE a.idn_int_proc = g_idn_int_proc   
+                    GROUP BY a.cod_sociedad,
                         a.cod_ramo_ctable,
                         a.txt_num_externo,
                         a.fec_registro, 
@@ -378,7 +378,9 @@ AS
                         a.fec_efect_cober,
                         a.fec_fin_cober,
                         a.idn_cobertura
-                 );
+                    ORDER BY a.cod_sociedad,
+                            a.cod_ramo_ctable
+                );
         --
         LOOP
             --
@@ -594,49 +596,50 @@ AS
         --
         SELECT count('p') + 2
           INTO lv_ctos
-          FROM (SELECT  b.txt_num_externo                 ,
-                        a.fec_registro     ,
-                        b.txt_met_val                          ,
-                        a.fec_efec_contrato, 
-                        a.fec_fin          ,
-                        a.cod_sociedad                         ,
-                        b.cod_reasegurador                     ,
-                        a.num_certificados                     , 
-                        a.txt_cto_coste                        ,
-                        a.cod_canal3                           ,
-                        a.num_poliza                           ,
-                        a.cod_cohorte                          ,
-                        b.cod_cartera                          ,
-                        b.cod_onerosidad                       ,
-                        b.txt_uoa ,
-                        a.idn_cancelacion                      ,
-                        a.fec_efec_cancelacion
-                   FROM a1004808 a, 
-                        a1004809 b
-                  WHERE a.idn_int_proc  = g_idn_int_proc
-                    AND a.cod_cia       = b.cod_cia
-                    AND a.num_poliza    = b.num_poliza
-                    AND a.num_spto      = b.num_spto
-                    AND a.num_apli      = b.num_apli
-                    AND a.num_spto_apli = b.num_spto_apli
-                  GROUP BY b.cod_ramo_ctable,
-                        b.txt_num_externo,
-                        a.fec_registro,
-                        b.txt_met_val,
-                        a.fec_efec_contrato,
-                        a.fec_fin,
-                        a.cod_sociedad,
-                        b.cod_reasegurador,
-                        a.num_certificados, --v7.00
-                        a.txt_cto_coste,
-                        a.cod_canal3,
-                        a.num_poliza,
-                        a.cod_cohorte,
-                        b.cod_cartera,
-                        b.cod_onerosidad,
-                        b.txt_uoa,
-                        a.idn_cancelacion,
-                        a.fec_efec_cancelacion
+                FROM (
+                    SELECT  b.txt_num_externo                      ||g_k_separador||
+                            TO_CHAR(a.fec_registro,'YYYYMMDD')     ||g_k_separador||
+                            b.txt_met_val                          ||g_k_separador||
+                            TO_CHAR(a.fec_efec_contrato,'YYYYMMDD')||g_k_separador|| 
+                            TO_CHAR(a.fec_fin,'YYYYMMDD')          ||g_k_separador||
+                            a.cod_sociedad                         ||g_k_separador||
+                            b.cod_reasegurador                     ||g_k_separador||
+                            a.num_certificados                     ||g_k_separador|| 
+                            a.txt_cto_coste                        ||g_k_separador||
+                            a.cod_canal3                           ||g_k_separador||
+                            a.num_poliza                           ||g_k_separador||
+                            a.cod_cohorte                          ||g_k_separador||
+                            b.cod_cartera                          ||g_k_separador||
+                            b.cod_onerosidad                       ||g_k_separador||
+                            b.txt_uoa                              ||g_k_separador||
+                            a.idn_cancelacion                      ||g_k_separador||
+                            TO_CHAR(a.fec_efec_cancelacion,'YYYYMMDD')
+                       FROM a1004808 a, 
+                            a1004809 b
+                      WHERE a.idn_int_proc = g_idn_int_proc
+                        AND a.cod_cia = b.cod_cia
+                        AND a.num_poliza = b.num_poliza
+                        AND a.num_spto = b.num_spto
+                        AND a.num_apli = b.num_apli
+                        AND a.num_spto_apli = b.num_spto_apli
+                    GROUP BY b.cod_ramo_ctable,
+                             b.txt_num_externo,
+                             a.fec_registro,
+                             b.txt_met_val,
+                             a.fec_efec_contrato,
+                             a.fec_fin,
+                             a.cod_sociedad,
+                             b.cod_reasegurador,
+                             a.num_certificados, 
+                             a.txt_cto_coste,
+                             a.cod_canal3,
+                             a.num_poliza,
+                             a.cod_cohorte,
+                             b.cod_cartera,
+                             b.cod_onerosidad,
+                             b.txt_uoa,
+                             a.idn_cancelacion,
+                             a.fec_efec_cancelacion
                     ORDER BY a.cod_sociedad,
                             b.cod_ramo_ctable,
                             b.txt_num_externo
@@ -801,8 +804,9 @@ AS
                 a.idn_bt_ref                      ,
                 a.tip_bt                          ,
                 SUM(a.imp_impuesto)
-        FROM a1004810 a
-        group by a.txt_num_externo  ,
+           FROM a1004810 a
+          WHERE a.idn_int_proc = g_idn_int_proc
+        GROUP BY a.txt_num_externo  ,
                 a.idn_cobertura    ,
                 a.idn_bt           ,
                 a.txt_mca_bt_rev   ,
@@ -812,6 +816,28 @@ AS
                 a.tip_imp          ,
                 a.idn_bt_ref       ,
                 a.tip_bt           
+        ORDER BY a.txt_num_externo;
+        --
+        CURSOR lc_datos_transicion
+        IS
+        SELECT  'BT0496'||to_char(MAX(fec_ctable),'yyyymm')||'_' idn_bt, 
+                a.txt_mca_bt_rev,
+                a.idn_bt_rev,
+                MAX(fec_ctable) fec_ctable,
+                a.txt_num_externo,
+                SUM(a.imp_transaccion)  s_imp_transaccion,
+                a.cod_mon_iso,
+                a.tip_imp,
+                a.idn_cobertura,
+                a.idn_bt_ref, 
+                a.tip_bt ,
+                SUM(a.imp_impuesto) s_imp_impuesto
+           FROM a1004810 a
+          WHERE a.idn_int_proc = g_idn_int_proc
+        GROUP BY a.txt_mca_bt_rev, idn_bt_rev, a.txt_num_externo, 
+                 a.cod_mon_iso, a.tip_imp, a.idn_cobertura, 
+                 a.idn_bt_ref, 
+                 a.tip_bt 
         ORDER BY a.txt_num_externo;
         --
         lv_idn_bt          a1004810.idn_bt         %TYPE;
@@ -828,13 +854,14 @@ AS
         lv_imp_impuesto    a1004810.imp_impuesto   %TYPE;
         lv_idn_fichero     a1004810.idn_fichero    %TYPE;
         --
-        lv_ctos      NUMBER := 0;
-        l_length     NUMBER := 0;
-        l_exists     BOOLEAN;
-        l_block_size BINARY_INTEGER;
-        l_fic        UTL_FILE.file_type;
-        l_fic_nombre VARCHAR2(300);
-        lv_cod_soc_ant A1004803.cod_sociedad%TYPE := '****';
+        lv_correlativo  NUMBER := 0;
+        lv_ctos         NUMBER := 0;
+        l_length        NUMBER := 0;
+        l_exists        BOOLEAN;
+        l_block_size    BINARY_INTEGER;
+        l_fic           UTL_FILE.file_type;
+        l_fic_nombre    VARCHAR2(300);
+        lv_cod_soc_ant  A1004803.cod_sociedad%TYPE := '****';
         --
     BEGIN
         --
@@ -871,11 +898,11 @@ AS
                         a.tip_bt           );
         --
         -- Apertura cursor de datos
-        OPEN lc_datos;
+        OPEN lc_datos_transicion;
         --
         LOOP
             -- Recupera numero de registros limitado
-            FETCH lc_datos INTO lv_idn_bt,
+            FETCH lc_datos_transicion INTO lv_idn_bt,
                                 lv_mca_bt_rev,
                                 lv_idn_bt_rev,
                                 lv_fec_ctable,
@@ -888,7 +915,10 @@ AS
                                 lv_tip_bt,
                                 lv_imp_impuesto;
             --
-            EXIT WHEN lc_datos%NOTFOUND;
+            EXIT WHEN lc_datos_transicion%NOTFOUND;
+            --
+            lv_correlativo  := lv_correlativo + 1;
+            lv_idn_bt       := lv_idn_bt || lpad( lv_correlativo, 35 - length(lv_idn_bt), '0' );
             --
             IF x = 0 
             THEN
@@ -971,7 +1001,7 @@ AS
         END LOOP;
         --
         -- Cierre de cursor de datos
-        CLOSE lc_datos;
+        CLOSE lc_datos_transicion;
         --
         -- Cierre de fichero
         pp_cierre_fichero (p_fic => l_fic);

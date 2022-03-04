@@ -665,7 +665,8 @@ AS
           AND num_spto_apli     = p_reg.num_spto_apli
           AND num_riesgo        = p_reg.num_riesgo
           AND num_periodo       = p_reg.num_periodo
-          AND cod_cob           = p_reg.cod_cob;
+          AND cod_cob           = p_reg.cod_cob
+          AND nvl(mca_reaseguro,'N') = NVL(p_reg.mca_reaseguro, 'N' );
         --
     END p_actualiza;
    --

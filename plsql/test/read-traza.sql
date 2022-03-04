@@ -1,6 +1,6 @@
 declare
     g_file               utl_file.file_type;
-    g_nombre_archivo     VARCHAR2(60) := 'dc_k_fpsl';
+    g_nombre_archivo     VARCHAR2(60) := 'p_trata_datos_cobertura';
     --
     l_line              VARCHAR2(1024);
     --
