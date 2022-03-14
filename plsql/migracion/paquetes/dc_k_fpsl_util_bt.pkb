@@ -10,6 +10,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
     --
     -- constante
     g_keco_ff           CONSTANT NUMBER(1) := 3;    -- CONCEPTO ECONOMICO FINANCIACION POR FRACCIONAMIENTO
+    g_keco_pn           CONSTANT NUMBER(1) := 1;    -- CONCEPTO ECONOMICO PRIMA NETA
     --
     -- variables globales
     g_cod_cia           a2000030.cod_cia%TYPE;
@@ -173,14 +174,14 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
             SELECT 'BT'||g_cod_sociedad||to_char(b.fec_efec_recibo,'yyyymm')||'_' IDN_BT
                    ,g_idn_int_proc     IDN_INT_PROC
                    ,g_cod_sis_origen   COD_SIS_ORIGEN
-                   ,b.fec_efec_recibo FEC_REGISTRO
+                   ,b.fec_efec_recibo  FEC_REGISTRO
                    ,NULL               TXT_MCA_BT_REV
                    ,NULL               IDN_BT_REV
                    ,b.fec_efec_recibo  FEC_CTABLE
                    ,b.fec_valor        FEC_VALOR
                    ,NULL               IDN_FICHERO
                    ,a.txt_num_externo  TXT_NUM_EXTERNO
-                   ,b.imp_recibo-( nvl(b.imp_imptos,0) + nvl(b.imp_recargo,0) ) IMP_TRANSACCION
+                   ,b.imp_neta IMP_TRANSACCION
                    ,b.cod_mon          COD_MON_ISO
                    ,NULL               TIP_IMP
                    ,NULL               IDN_COBERTURA
@@ -189,12 +190,16 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
                    ,b.imp_imptos       IMP_IMPUESTO,
                    a.num_poliza, 
                    a.num_spto
-              FROM a1004808 a, 
+              FROM ( SELECT DISTINCT cod_cia, num_poliza, num_spto, num_apli, num_spto_apli, 
+                            txt_num_externo, fec_registro, idn_int_proc
+                       FROM a1004808
+                      WHERE idn_int_proc = g_idn_int_proc  
+                   ) a, 
                    a2990700 b, 
                    a2000030 c
              WHERE a.idn_int_proc  = g_idn_int_proc
                AND c.cod_cia       = g_cod_cia
-               AND c.tip_spto      IN ( 'XX', 'RF' )
+               --AND c.tip_spto      IN ( 'XX', 'RF' )
                AND a.cod_cia       = b.cod_cia
                AND a.num_poliza    = b.num_poliza
                AND a.num_spto      = b.num_spto
@@ -216,48 +221,52 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
         --
         FOR r_recibo IN c_recibos_emitidos LOOP
             --
-            lv_correlativo              := lv_correlativo + 1;
-            g_num_poliza                := r_recibo.num_poliza; 
-            g_num_spto                  := r_recibo.num_spto;
-            -- 
-            -- se construye el codigo unico
-            g_reg_a1004810.idn_bt         := r_recibo.idn_bt || lpad( lv_correlativo, 35 - length(r_recibo.idn_bt), '0' );
-            --
-            g_reg_a1004810.idn_int_proc     := r_recibo.idn_int_proc;
-            g_reg_a1004810.cod_sis_origen   := r_recibo.cod_sis_origen;
-            g_reg_a1004810.fec_registro     := r_recibo.fec_registro;
-            g_reg_a1004810.txt_mca_bt_rev   := r_recibo.txt_mca_bt_rev;    
-            g_reg_a1004810.idn_bt_rev       := r_recibo.idn_bt_rev;
-            g_reg_a1004810.fec_ctable       := r_recibo.fec_ctable;
-            g_reg_a1004810.fec_valor        := r_recibo.fec_valor;
-            g_reg_a1004810.idn_fichero      := lv_nom_fichero;
-            g_reg_a1004810.txt_num_externo  := r_recibo.txt_num_externo;
-            --
-            g_reg_a1004810.cod_mon_iso := f_desc_moneda( 
-                    p_cod_moneda => r_recibo.cod_mon_iso
-            );
-            --
-            IF r_recibo.imp_transaccion > 0 THEN
-                -- 
-                g_reg_a1004810.tip_imp          := 'D';
-                g_reg_a1004810.imp_transaccion  := r_recibo.imp_transaccion;
-                g_reg_a1004810.imp_impuesto     := r_recibo.imp_impuesto;
+            IF r_recibo.imp_transaccion <> 0 THEN
                 --
-            ELSE
+                lv_correlativo              := lv_correlativo + 1;
+                g_num_poliza                := r_recibo.num_poliza; 
+                g_num_spto                  := r_recibo.num_spto;
                 -- 
-                g_reg_a1004810.tip_imp          := 'C';
-                g_reg_a1004810.imp_transaccion  := abs(r_recibo.imp_transaccion);
-                g_reg_a1004810.imp_impuesto     := abs(r_recibo.imp_impuesto);
+                -- se construye el codigo unico
+                g_reg_a1004810.idn_bt         := r_recibo.idn_bt || lpad( lv_correlativo, 35 - length(r_recibo.idn_bt), '0' );
                 --
+                g_reg_a1004810.idn_int_proc     := r_recibo.idn_int_proc;
+                g_reg_a1004810.cod_sis_origen   := r_recibo.cod_sis_origen;
+                g_reg_a1004810.fec_registro     := r_recibo.fec_registro;
+                g_reg_a1004810.txt_mca_bt_rev   := r_recibo.txt_mca_bt_rev;    
+                g_reg_a1004810.idn_bt_rev       := r_recibo.idn_bt_rev;
+                g_reg_a1004810.fec_ctable       := r_recibo.fec_ctable;
+                g_reg_a1004810.fec_valor        := r_recibo.fec_valor;
+                g_reg_a1004810.idn_fichero      := lv_nom_fichero;
+                g_reg_a1004810.txt_num_externo  := r_recibo.txt_num_externo;
+                --
+                g_reg_a1004810.cod_mon_iso := f_desc_moneda( 
+                        p_cod_moneda => r_recibo.cod_mon_iso
+                );
+                --
+                IF r_recibo.imp_transaccion >= 0 THEN
+                    -- 
+                    g_reg_a1004810.tip_imp          := 'D';
+                    g_reg_a1004810.imp_transaccion  := r_recibo.imp_transaccion;
+                    g_reg_a1004810.imp_impuesto     := r_recibo.imp_impuesto;
+                    --
+                ELSE
+                    -- 
+                    g_reg_a1004810.tip_imp          := 'C';
+                    g_reg_a1004810.imp_transaccion  := abs(r_recibo.imp_transaccion);
+                    g_reg_a1004810.imp_impuesto     := abs(r_recibo.imp_impuesto);
+                    --
+                END IF;
+                --
+                g_reg_a1004810.idn_cobertura   := r_recibo.idn_cobertura;
+                g_reg_a1004810.idn_bt_ref      := r_recibo.idn_bt_ref;
+                g_reg_a1004810.tip_bt          := g_cod_operacion;
+                --
+                -- Llamamos al procedimiento que inserta en la tabla
+                dc_k_fpsl_a1004810.p_inserta(g_reg_a1004810);
+                -- 
             END IF;
-            --
-            g_reg_a1004810.idn_cobertura   := r_recibo.idn_cobertura;
-            g_reg_a1004810.idn_bt_ref      := r_recibo.idn_bt_ref;
-            g_reg_a1004810.tip_bt          := g_cod_operacion;
-            --
-            -- Llamamos al procedimiento que inserta en la tabla
-            dc_k_fpsl_a1004810.p_inserta(g_reg_a1004810);
-            -- 
+            --    
         END LOOP;
         --
         EXCEPTION 
@@ -286,7 +295,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
         lv_correlativo  NUMBER := f_correlativo;
         lv_nom_fichero  VARCHAR2(20);
         --
-        -- seleccionamos los recibos brados
+        -- seleccionamos los recibos cobrados
         CURSOR c_recibos_cobrados IS 
             SELECT 'BT'||a.cod_sociedad||to_char(b.fec_efec_recibo,'yyyymm')||'_' IDN_BT
                    ,a.idn_int_proc     IDN_INT_PROC
@@ -298,7 +307,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
                    ,b.fec_valor         FEC_VALOR
                    ,NULL               IDN_FICHERO
                    ,a.txt_num_externo  TXT_NUM_EXTERNO
-                   ,b.imp_recibo-( nvl(b.imp_imptos,0) + nvl(b.imp_recargo,0) )  IMP_TRANSACCION
+                   ,b.imp_neta  IMP_TRANSACCION
                    ,b.cod_mon          COD_MON_ISO
                    ,NULL               TIP_IMP
                    ,NULL               IDN_COBERTURA
@@ -307,12 +316,17 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
                    ,b.imp_imptos       IMP_IMPUESTO,
                    a.num_poliza, 
                    a.num_spto
-              FROM a1004808 a, 
+              FROM ( SELECT DISTINCT cod_cia, num_poliza, num_spto, num_apli, num_spto_apli, 
+                            txt_num_externo, fec_registro, idn_int_proc, cod_sis_origen,
+                            cod_sociedad
+                       FROM a1004808
+                      WHERE idn_int_proc = g_idn_int_proc  
+                   ) a, 
                    a2990700 b, 
                    a2000030 c
              WHERE a.idn_int_proc  = g_idn_int_proc
                AND c.cod_cia       = g_cod_cia
-               AND c.tip_spto      IN ( 'XX', 'RF' )
+               --AND c.tip_spto      IN ( 'XX', 'RF' )
                AND b.tip_situacion = 'CT'
                AND a.cod_cia       = b.cod_cia
                AND a.num_poliza    = b.num_poliza
@@ -327,6 +341,36 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
                AND b.fec_efec_recibo >= a.fec_registro
              ORDER BY b.num_poliza, b.num_spto, b.num_cuota, b.num_recibo;
         --
+        -- desglose de la prima
+        CURSOR c_desglose( p_num_poliza a2100170.num_poliza%TYPE,
+                           p_num_spto   a2100170.num_spto%TYPE
+                         ) IS 
+            SELECT cod_cartera, txt_num_externo, idn_cobertura, ratio_to_report(simp_acumulado_anual) OVER () AS rr
+              FROM (
+                        SELECT b.cod_cartera, c.txt_num_externo, c.idn_cobertura, sum(imp_acumulado_anual) simp_acumulado_anual
+                                FROM a2100170 a,
+                                     a1004806 b,
+                                     (
+                                        SELECT DISTINCT cod_cia, idn_int_proc, txt_num_externo, cod_cartera, idn_cobertura, num_poliza, num_spto 
+                                          FROM a1004809 
+                                         WHERE cod_cia          = g_cod_cia
+                                           AND idn_int_proc     = g_idn_int_proc
+                                           AND num_poliza       = p_num_poliza
+                                           AND num_spto         = p_num_spto
+                                           AND mca_reaseguro    = 'N'
+                                     ) c
+                                WHERE a.cod_ramo    = b.cod_ramo
+                                AND a.cod_cob     = b.cod_cob
+                                AND a.cod_cia     = c.cod_cia
+                                AND a.num_poliza  = c.num_poliza
+                                AND b.cod_cartera = c.cod_cartera
+                                AND a.num_poliza  = c.num_poliza
+                                AND a.num_spto    = c.num_spto
+                                AND a.cod_eco     = 1
+                                GROUP BY b.cod_cartera, c.txt_num_externo, c.idn_cobertura
+                
+                    );
+        --     
     BEGIN 
         --
         p_inicia_proceso;
@@ -335,49 +379,59 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
         --
         FOR r_recibo IN c_recibos_cobrados LOOP
             --
-            lv_correlativo              := lv_correlativo + 1;
-            g_num_poliza                := r_recibo.num_poliza; 
-            g_num_spto                  := r_recibo.num_spto;
-            -- 
-            -- se construye el codigo unico
-            g_reg_a1004810.idn_bt         := r_recibo.idn_bt || lpad( lv_correlativo, 35 - length(r_recibo.idn_bt), '0' );
-            --
-            g_reg_a1004810.idn_int_proc     := r_recibo.idn_int_proc;
-            g_reg_a1004810.cod_sis_origen   := r_recibo.cod_sis_origen;
-            g_reg_a1004810.fec_registro     := r_recibo.fec_registro;
-            g_reg_a1004810.txt_mca_bt_rev   := r_recibo.txt_mca_bt_rev;    
-            g_reg_a1004810.idn_bt_rev       := r_recibo.idn_bt_rev;
-            g_reg_a1004810.fec_ctable       := r_recibo.fec_ctable;
-            g_reg_a1004810.fec_valor        := r_recibo.fec_valor;
-            g_reg_a1004810.idn_fichero      := lv_nom_fichero;
-            g_reg_a1004810.txt_num_externo  := r_recibo.txt_num_externo;
-            --
-            g_reg_a1004810.cod_mon_iso := f_desc_moneda( 
-                    p_cod_moneda => r_recibo.cod_mon_iso
-            );
-            --
-            IF r_recibo.imp_transaccion > 0 THEN
-                -- 
-                g_reg_a1004810.tip_imp         := 'C';
-                g_reg_a1004810.imp_transaccion := r_recibo.imp_transaccion;
-                g_reg_a1004810.imp_impuesto    := r_recibo.imp_impuesto;
+            IF r_recibo.imp_transaccion <> 0 THEN
                 --
-            ELSE
-                -- 
-                g_reg_a1004810.tip_imp         := 'D';
-                g_reg_a1004810.imp_transaccion := abs(r_recibo.imp_transaccion) ;
-                g_reg_a1004810.imp_impuesto    := abs(r_recibo.imp_impuesto);
+                g_num_poliza                := r_recibo.num_poliza; 
+                g_num_spto                  := r_recibo.num_spto;
                 --
+                g_reg_a1004810.idn_int_proc     := r_recibo.idn_int_proc;
+                g_reg_a1004810.cod_sis_origen   := r_recibo.cod_sis_origen;
+                g_reg_a1004810.fec_registro     := r_recibo.fec_registro;
+                g_reg_a1004810.txt_mca_bt_rev   := r_recibo.txt_mca_bt_rev;    
+                g_reg_a1004810.idn_bt_rev       := r_recibo.idn_bt_rev;
+                g_reg_a1004810.fec_ctable       := r_recibo.fec_ctable;
+                g_reg_a1004810.fec_valor        := r_recibo.fec_valor;
+                g_reg_a1004810.idn_fichero      := lv_nom_fichero;
+                --
+                g_reg_a1004810.cod_mon_iso := f_desc_moneda( 
+                        p_cod_moneda => r_recibo.cod_mon_iso
+                );
+                --
+                g_reg_a1004810.idn_bt_ref      := r_recibo.idn_bt_ref;
+                -- Cagamos en el registro el valor del tipo de bt obtenido en el tratamiento del dato
+                g_reg_a1004810.tip_bt          := g_cod_operacion;
+                --
+                FOR r_desglose IN c_desglose( p_num_poliza => r_recibo.num_poliza, p_num_spto => r_recibo.num_spto) LOOP
+                    --
+                    lv_correlativo                  := lv_correlativo + 1;
+                    -- 
+                    -- se construye el codigo unico
+                    g_reg_a1004810.idn_bt           := r_recibo.idn_bt || lpad( lv_correlativo, 35 - length(r_recibo.idn_bt), '0' );
+                    g_reg_a1004810.txt_num_externo  := r_desglose.txt_num_externo;
+                    --
+                    IF r_recibo.imp_transaccion > 0 THEN
+                        -- 
+                        g_reg_a1004810.tip_imp         := 'C';
+                        g_reg_a1004810.imp_transaccion := r_recibo.imp_transaccion * r_desglose.rr;
+                        g_reg_a1004810.imp_impuesto    := r_recibo.imp_impuesto * r_desglose.rr ;
+                        --
+                    ELSE
+                        -- 
+                        g_reg_a1004810.tip_imp         := 'D';
+                        g_reg_a1004810.imp_transaccion := abs(r_recibo.imp_transaccion * r_desglose.rr ) ;
+                        g_reg_a1004810.imp_impuesto    := abs(r_recibo.imp_impuesto * r_desglose.rr );
+                        --
+                    END IF;
+                    --
+                    g_reg_a1004810.idn_cobertura   := r_desglose.idn_cobertura;
+                    --
+                    -- Llamamos al procedimiento que inserta en la tabla
+                    dc_k_fpsl_a1004810.p_inserta(g_reg_a1004810);
+                    --
+                END LOOP;    
+                -- 
             END IF;
-            --
-            g_reg_a1004810.idn_cobertura   := r_recibo.idn_cobertura;
-            g_reg_a1004810.idn_bt_ref      := r_recibo.idn_bt_ref;
-            -- Cagamos en el registro el valor del tipo de bt obtenido en el tratamiento del dato
-            g_reg_a1004810.tip_bt          := g_cod_operacion;
-            --
-            -- Llamamos al procedimiento que inserta en la tabla
-            dc_k_fpsl_a1004810.p_inserta(g_reg_a1004810);
-            -- 
+            --    
         END LOOP;
         --
         EXCEPTION 
@@ -393,7 +447,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
                             p_num_spto_apli      => 0,
                             p_num_riesgo         => NULL,
                             p_cod_cob            => NULL,
-                            p_txt_campo          => 'p_d1010_d_prima_emitida',
+                            p_txt_campo          => 'p_s1010_c_prima_cobrada',
                             p_cod_error          => SQLCODE,
                             p_txt_error          => SQLERRM
                 );
@@ -407,35 +461,40 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
         lv_nom_fichero  VARCHAR2(20);
         --
         CURSOR c_siniestros_pagados IS
-            SELECT 'BT'||a.cod_sociedad||to_char(c.fec_efec_spto,'yyyymm')||'_' IDN_BT,
+            SELECT 
+                   'BT'||a.cod_sociedad||to_char(c.fec_efec_spto,'yyyymm')||'_' IDN_BT,
                    a.idn_int_proc     IDN_INT_PROC,
                    a.cod_sis_origen   COD_SIS_ORIGEN,
                    c.fec_efec_spto    FEC_REGISTRO,
                    NULL               TXT_MCA_BT_REV,
                    null               IDN_BT_REV,
-                   c.fec_efec_spto FEC_CTABLE,
+                   c.fec_efec_spto    FEC_CTABLE,
                    c.fec_actu         FEC_VALOR,
                    NULL               IDN_FICHERO,
                    a.txt_num_externo  TXT_NUM_EXTERNO,
-                   ( b.estimacion + b.mas + b.menos ) IMP_TRANSACCION,
+                   imp_pag             IMP_TRANSACCION,
                    b.cod_mon          COD_MON_ISO,
                    NULL               TIP_IMP,
                    NULL               IDN_COBERTURA,
                    NULL               IDN_BT_REF,
                    NULL               TIP_BT,
-                   NULL               IMP_IMPUESTO,
+                   0                  IMP_IMPUESTO,
                    a.num_poliza, 
                    a.num_spto
-              FROM a1004808 a, 
-                   ( SELECT distinct h.num_sini, h.cod_cob ,
-                            mre.num_riesgo , mre.estimacion,   mre.mas  , mre.menos   ,
-                            mre.num_poliza, mre.num_spto, mre.num_apli, mre.num_spto_apli,
-                            h.fec_mvto, mre.cod_cia, mre.cod_mon, mre.pagos
-                       FROM h7001200 h, 
-                            mreserva mre
-                      WHERE h.num_sini    = mre.num_sini
-                        AND h.num_exp     = mre.num_exp
-                        AND h.cod_cto_rva = mre.cod_cto_rva
+              FROM ( SELECT DISTINCT cod_cia, num_poliza, num_spto, num_apli, num_spto_apli, 
+                            txt_num_externo, fec_registro, idn_int_proc, cod_sis_origen,
+                            cod_sociedad
+                       FROM a1004808
+                      WHERE idn_int_proc = g_idn_int_proc  
+                   ) a, 
+                   ( SELECT b.cod_cia, b.num_sini, b.num_poliza, b.num_spto, b.num_apli, b.num_spto_apli, a.imp_pag, b.fec_sini,
+                            a.cod_mon
+                       FROM a7001000 a,
+                            a7000900 b
+                     WHERE a.cod_cia  = b.cod_cia
+                       AND a.num_sini = b.num_sini
+                       AND a.cod_cia    = g_cod_cia
+                     ORDER BY a.num_exp 
                    ) b, 
                    a2000030 c
              WHERE a.idn_int_proc  = g_idn_int_proc
@@ -450,9 +509,8 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
                AND a.num_spto      = c.num_spto
                AND a.num_apli      = c.num_apli
                AND a.num_spto_apli = c.num_spto_apli
-               AND c.tip_spto      IN ( 'XX', 'RF' )
-               AND b.fec_mvto >= a.fec_registro
-               AND b.pagos != 0;
+               AND b.fec_sini >= a.fec_registro
+               AND b.imp_pag != 0;
         --       
     BEGIN
         --
@@ -462,51 +520,55 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
         --
         FOR r_siniestros IN c_siniestros_pagados LOOP
             --
-            lv_correlativo              := lv_correlativo + 1;
-            g_num_poliza                := r_siniestros.num_poliza; 
-            g_num_spto                  := r_siniestros.num_spto;
-            -- 
-            -- se construye el codigo unico
-            g_reg_a1004810.idn_bt         := r_siniestros.idn_bt || lpad( lv_correlativo, 35 - length(r_siniestros.idn_bt), '0' );
-            --
-            g_reg_a1004810.idn_int_proc    := r_siniestros.idn_int_proc;
-            g_reg_a1004810.cod_sis_origen  := r_siniestros.cod_sis_origen;
-            g_reg_a1004810.fec_registro    := r_siniestros.fec_registro;
-            g_reg_a1004810.txt_mca_bt_rev  := r_siniestros.txt_mca_bt_rev;
-            g_reg_a1004810.idn_bt_rev      := r_siniestros.idn_bt_rev;
-            g_reg_a1004810.fec_ctable      := r_siniestros.fec_ctable;
-            g_reg_a1004810.fec_valor       := r_siniestros.fec_valor;
-            g_reg_a1004810.idn_fichero     := lv_nom_fichero;
-            g_reg_a1004810.txt_num_externo := r_siniestros.txt_num_externo;
-            g_reg_a1004810.imp_transaccion := r_siniestros.imp_transaccion;
-            g_reg_a1004810.cod_mon_iso     := r_siniestros.cod_mon_iso;
-            --
-            g_reg_a1004810.cod_mon_iso := f_desc_moneda( 
-                    p_cod_moneda => r_siniestros.cod_mon_iso
-            );
-            --
-            IF g_reg_a1004810.imp_transaccion > 0 THEN
+            IF r_siniestros.imp_transaccion <> 0 THEN
                 --
-                g_reg_a1004810.tip_imp         := 'D';
+                lv_correlativo              := lv_correlativo + 1;
+                g_num_poliza                := r_siniestros.num_poliza; 
+                g_num_spto                  := r_siniestros.num_spto;
+                -- 
+                -- se construye el codigo unico
+                g_reg_a1004810.idn_bt         := r_siniestros.idn_bt || lpad( lv_correlativo, 35 - length(r_siniestros.idn_bt), '0' );
+                --
+                g_reg_a1004810.idn_int_proc    := r_siniestros.idn_int_proc;
+                g_reg_a1004810.cod_sis_origen  := r_siniestros.cod_sis_origen;
+                g_reg_a1004810.fec_registro    := r_siniestros.fec_registro;
+                g_reg_a1004810.txt_mca_bt_rev  := r_siniestros.txt_mca_bt_rev;
+                g_reg_a1004810.idn_bt_rev      := r_siniestros.idn_bt_rev;
+                g_reg_a1004810.fec_ctable      := r_siniestros.fec_ctable;
+                g_reg_a1004810.fec_valor       := r_siniestros.fec_valor;
+                g_reg_a1004810.idn_fichero     := lv_nom_fichero;
+                g_reg_a1004810.txt_num_externo := r_siniestros.txt_num_externo;
                 g_reg_a1004810.imp_transaccion := r_siniestros.imp_transaccion;
-                g_reg_a1004810.imp_impuesto    := r_siniestros.imp_impuesto;
+                g_reg_a1004810.cod_mon_iso     := r_siniestros.cod_mon_iso;
                 --
-            ELSE
+                g_reg_a1004810.cod_mon_iso := f_desc_moneda( 
+                        p_cod_moneda => r_siniestros.cod_mon_iso
+                );
                 --
-                g_reg_a1004810.tip_imp         := 'C'; -- Se cambia antes H
-                g_reg_a1004810.imp_transaccion := abs(r_siniestros.imp_transaccion) ;
-                g_reg_a1004810.imp_impuesto    := abs(r_siniestros.imp_impuesto);
+                IF g_reg_a1004810.imp_transaccion > 0 THEN
+                    --
+                    g_reg_a1004810.tip_imp         := 'D';
+                    g_reg_a1004810.imp_transaccion := r_siniestros.imp_transaccion;
+                    g_reg_a1004810.imp_impuesto    := r_siniestros.imp_impuesto;
+                    --
+                ELSE
+                    --
+                    g_reg_a1004810.tip_imp         := 'C'; -- Se cambia antes H
+                    g_reg_a1004810.imp_transaccion := abs(r_siniestros.imp_transaccion) ;
+                    g_reg_a1004810.imp_impuesto    := abs(r_siniestros.imp_impuesto);
+                    --
+                END IF;
+                --
+                g_reg_a1004810.idn_cobertura   := r_siniestros.idn_cobertura  ;
+                g_reg_a1004810.idn_bt_ref      := r_siniestros.idn_bt_ref     ;
+                -- Cagamos en el registro el valor del tipo de bt obtenido en el tratamiento del dato
+                g_reg_a1004810.tip_bt          := g_cod_operacion      ;
+                --
+                -- Llamamos al procedimiento que inserta en la tabla
+                dc_k_fpsl_a1004810.p_inserta( g_reg_a1004810 );
                 --
             END IF;
-            --
-            g_reg_a1004810.idn_cobertura   := r_siniestros.idn_cobertura  ;
-            g_reg_a1004810.idn_bt_ref      := r_siniestros.idn_bt_ref     ;
-            -- Cagamos en el registro el valor del tipo de bt obtenido en el tratamiento del dato
-            g_reg_a1004810.tip_bt          := g_cod_operacion      ;
-            --
-            -- Llamamos al procedimiento que inserta en la tabla
-            dc_k_fpsl_a1004810.p_inserta( g_reg_a1004810 );
-            --
+            --    
         END LOOP;
         --
         EXCEPTION
@@ -555,7 +617,12 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
                     ,NULL               IMP_IMPUESTO,
                     a.num_poliza, 
                     a.num_spto
-               FROM a1004808 a, 
+               FROM ( SELECT DISTINCT cod_cia, num_poliza, num_spto, num_apli, num_spto_apli, 
+                            txt_num_externo, fec_registro, idn_int_proc, cod_sis_origen,
+                            cod_sociedad
+                       FROM a1004808
+                      WHERE idn_int_proc = g_idn_int_proc  
+                    ) a, 
                     a2990700 b, 
                     a2000030 c
               WHERE a.idn_int_proc  = g_idn_int_proc
@@ -569,7 +636,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
                 AND a.num_spto      = c.num_spto
                 AND a.num_apli      = c.num_apli
                 AND a.num_spto_apli = c.num_spto_apli
-                AND c.tip_spto      IN ( 'XX', 'RF' )
+                --AND c.tip_spto      IN ( 'XX', 'RF' )
                 AND b.fec_efec_recibo >= a.fec_registro;
         --        
     BEGIN 
@@ -604,7 +671,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
                     p_cod_moneda => r_comisiones.cod_mon_iso
             );
             --
-            IF g_reg_a1004810.imp_transaccion > 0  THEN
+            IF g_reg_a1004810.imp_transaccion >= 0  THEN
                 --
                 g_reg_a1004810.tip_imp         := 'C';
                 -- roblet1
@@ -656,7 +723,12 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
                     ,NULL               IMP_IMPUESTO,
                     a.num_poliza, 
                     a.num_spto
-               FROM a1004808 a, 
+               FROM ( SELECT DISTINCT cod_cia, num_poliza, num_spto, num_apli, num_spto_apli, 
+                            txt_num_externo, fec_registro, idn_int_proc, cod_sis_origen,
+                            cod_sociedad
+                       FROM a1004808
+                      WHERE idn_int_proc = g_idn_int_proc  
+                    ) a, 
                     a2990700 b, 
                     a2000030 c
               WHERE a.idn_int_proc  = g_idn_int_proc
@@ -670,7 +742,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
                 AND a.num_spto      = c.num_spto
                 AND a.num_apli      = c.num_apli
                 AND a.num_spto_apli = c.num_spto_apli
-                AND c.tip_spto      IN ( 'XX', 'RF' )
+                --AND c.tip_spto      IN ( 'XX', 'RF' )
                 AND b.tip_situacion = 'CT'
                 AND b.fec_efec_recibo >= a.fec_registro;
         --
@@ -682,51 +754,54 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
         --
         FOR r_comisiones IN c_comisiones_pagadas LOOP
             --
-            lv_correlativo              := lv_correlativo + 1;
-            g_num_poliza                := r_comisiones.num_poliza; 
-            g_num_spto                  := r_comisiones.num_spto;
-            -- 
-            -- se construye el codigo unico
-            g_reg_a1004810.idn_bt         := r_comisiones.idn_bt || lpad( lv_correlativo, 35 - length(r_comisiones.idn_bt), '0' );
-            --
-            g_reg_a1004810.idn_int_proc    := r_comisiones.idn_int_proc;
-            g_reg_a1004810.cod_sis_origen  := r_comisiones.cod_sis_origen;
-            g_reg_a1004810.fec_registro    := r_comisiones.fec_registro;
-            g_reg_a1004810.txt_mca_bt_rev  := r_comisiones.txt_mca_bt_rev;
-            g_reg_a1004810.idn_bt_rev      := r_comisiones.idn_bt_rev;
-            g_reg_a1004810.fec_ctable      := r_comisiones.fec_ctable;
-            g_reg_a1004810.fec_valor       := r_comisiones.fec_valor;
-            g_reg_a1004810.idn_fichero     := lv_nom_fichero;
-            g_reg_a1004810.txt_num_externo := r_comisiones.txt_num_externo;
-            g_reg_a1004810.imp_transaccion := r_comisiones.imp_transaccion;
-            g_reg_a1004810.cod_mon_iso     := r_comisiones.cod_mon_iso;
-            --
-            g_reg_a1004810.cod_mon_iso := f_desc_moneda( 
-                    p_cod_moneda => r_comisiones.cod_mon_iso
-            );
-            --
-            IF g_reg_a1004810.imp_transaccion > 0  THEN
+            IF r_comisiones.imp_transaccion <> 0 THEN   
                 --
-                g_reg_a1004810.tip_imp         := 'D';
-                -- roblet1
+                lv_correlativo              := lv_correlativo + 1;
+                g_num_poliza                := r_comisiones.num_poliza; 
+                g_num_spto                  := r_comisiones.num_spto;
+                -- 
+                -- se construye el codigo unico
+                g_reg_a1004810.idn_bt         := r_comisiones.idn_bt || lpad( lv_correlativo, 35 - length(r_comisiones.idn_bt), '0' );
+                --
+                g_reg_a1004810.idn_int_proc    := r_comisiones.idn_int_proc;
+                g_reg_a1004810.cod_sis_origen  := r_comisiones.cod_sis_origen;
+                g_reg_a1004810.fec_registro    := r_comisiones.fec_registro;
+                g_reg_a1004810.txt_mca_bt_rev  := r_comisiones.txt_mca_bt_rev;
+                g_reg_a1004810.idn_bt_rev      := r_comisiones.idn_bt_rev;
+                g_reg_a1004810.fec_ctable      := r_comisiones.fec_ctable;
+                g_reg_a1004810.fec_valor       := r_comisiones.fec_valor;
+                g_reg_a1004810.idn_fichero     := lv_nom_fichero;
+                g_reg_a1004810.txt_num_externo := r_comisiones.txt_num_externo;
                 g_reg_a1004810.imp_transaccion := r_comisiones.imp_transaccion;
-                g_reg_a1004810.imp_impuesto    := r_comisiones.imp_impuesto   ;
-            ELSE
+                g_reg_a1004810.cod_mon_iso     := r_comisiones.cod_mon_iso;
                 --
-                g_reg_a1004810.tip_imp         := 'C'; -- Se cambia antes H
-                -- roblet1
-                g_reg_a1004810.imp_transaccion := abs(r_comisiones.imp_transaccion) ;
-                g_reg_a1004810.imp_impuesto    := abs(r_comisiones.imp_impuesto)   ;
-            END IF;
-            --
-            g_reg_a1004810.idn_cobertura   := r_comisiones.idn_cobertura  ;
-            g_reg_a1004810.idn_bt_ref      := r_comisiones.idn_bt_ref     ;
-            -- Cagamos en el registro el valor del tipo de bt obtenido en el tratamiento del dato
-            g_reg_a1004810.tip_bt          := g_cod_operacion;
-            --
-            -- Llamamos al procedimiento que inserta en la tabla
-            dc_k_fpsl_a1004810.p_inserta( g_reg_a1004810 );
-            --
+                g_reg_a1004810.cod_mon_iso := f_desc_moneda( 
+                        p_cod_moneda => r_comisiones.cod_mon_iso
+                );
+                --
+                IF g_reg_a1004810.imp_transaccion >= 0  THEN
+                    --
+                    g_reg_a1004810.tip_imp         := 'D';
+                    -- roblet1
+                    g_reg_a1004810.imp_transaccion := r_comisiones.imp_transaccion;
+                    g_reg_a1004810.imp_impuesto    := r_comisiones.imp_impuesto   ;
+                ELSE
+                    --
+                    g_reg_a1004810.tip_imp         := 'C'; -- Se cambia antes H
+                    -- roblet1
+                    g_reg_a1004810.imp_transaccion := abs(r_comisiones.imp_transaccion) ;
+                    g_reg_a1004810.imp_impuesto    := abs(r_comisiones.imp_impuesto)   ;
+                END IF;
+                --
+                g_reg_a1004810.idn_cobertura   := r_comisiones.idn_cobertura  ;
+                g_reg_a1004810.idn_bt_ref      := r_comisiones.idn_bt_ref     ;
+                -- Cagamos en el registro el valor del tipo de bt obtenido en el tratamiento del dato
+                g_reg_a1004810.tip_bt          := g_cod_operacion;
+                --
+                -- Llamamos al procedimiento que inserta en la tabla
+                dc_k_fpsl_a1004810.p_inserta( g_reg_a1004810 );
+                --
+            END IF;    
             --
         END LOOP;
         --
@@ -789,12 +864,17 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
                    ,0                  IMP_IMPUESTO,
                    a.num_poliza, 
                    a.num_spto
-              FROM a1004808 a, 
+              FROM ( SELECT DISTINCT cod_cia, num_poliza, num_spto, num_apli, num_spto_apli, 
+                            txt_num_externo, fec_registro, idn_int_proc, cod_sis_origen,
+                            cod_sociedad
+                       FROM a1004808
+                      WHERE idn_int_proc = g_idn_int_proc  
+                   ) a, 
                    a2990700 b, 
                    a2000030 c
              WHERE a.idn_int_proc  = g_idn_int_proc
                AND c.cod_cia       = g_cod_cia
-               AND c.tip_spto     IN ( 'XX', 'RF' )
+               --AND c.tip_spto     IN ( 'XX', 'RF' )
                AND a.cod_cia       = b.cod_cia
                AND a.num_poliza    = b.num_poliza
                AND a.num_spto      = b.num_spto
@@ -816,47 +896,50 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
         --
         FOR r_recibo IN c_finan_fracc LOOP
             --
-            lv_correlativo              := lv_correlativo + 1;
-            g_num_poliza                := r_recibo.num_poliza; 
-            g_num_spto                  := r_recibo.num_spto;
-            -- 
-            -- se construye el codigo unico
-            g_reg_a1004810.idn_bt         := r_recibo.idn_bt || lpad( lv_correlativo, 35 - length(r_recibo.idn_bt), '0' );
-            --
-            g_reg_a1004810.idn_int_proc     := r_recibo.idn_int_proc;
-            g_reg_a1004810.cod_sis_origen   := r_recibo.cod_sis_origen;
-            g_reg_a1004810.fec_registro     := r_recibo.fec_registro;
-            g_reg_a1004810.txt_mca_bt_rev   := r_recibo.txt_mca_bt_rev;    
-            g_reg_a1004810.idn_bt_rev       := r_recibo.idn_bt_rev;
-            g_reg_a1004810.fec_ctable       := r_recibo.fec_ctable;
-            g_reg_a1004810.fec_valor        := r_recibo.fec_valor;
-            g_reg_a1004810.idn_fichero      := lv_nom_fichero;
-            g_reg_a1004810.txt_num_externo  := r_recibo.txt_num_externo;
-            --
-            g_reg_a1004810.cod_mon_iso := f_desc_moneda( 
-                    p_cod_moneda => r_recibo.cod_mon_iso
-            );
-            --
-            IF r_recibo.imp_transaccion > 0 THEN
-                -- 
-                g_reg_a1004810.tip_imp          := 'D';
-                g_reg_a1004810.imp_transaccion  := r_recibo.imp_transaccion;
-                g_reg_a1004810.imp_impuesto     := r_recibo.imp_impuesto;
+            IF r_recibo.imp_transaccion <> 0 THEN 
                 --
-            ELSE
+                lv_correlativo              := lv_correlativo + 1;
+                g_num_poliza                := r_recibo.num_poliza; 
+                g_num_spto                  := r_recibo.num_spto;
                 -- 
-                g_reg_a1004810.tip_imp          := 'C';
-                g_reg_a1004810.imp_transaccion  := abs(r_recibo.imp_transaccion);
-                g_reg_a1004810.imp_impuesto     := abs(r_recibo.imp_impuesto);
+                -- se construye el codigo unico
+                g_reg_a1004810.idn_bt         := r_recibo.idn_bt || lpad( lv_correlativo, 35 - length(r_recibo.idn_bt), '0' );
                 --
-            END IF;
-            --
-            g_reg_a1004810.idn_cobertura   := r_recibo.idn_cobertura;
-            g_reg_a1004810.idn_bt_ref      := r_recibo.idn_bt_ref;
-            g_reg_a1004810.tip_bt          := g_cod_operacion;
-            --
-            -- Llamamos al procedimiento que inserta en la tabla
-            dc_k_fpsl_a1004810.p_inserta(g_reg_a1004810);
+                g_reg_a1004810.idn_int_proc     := r_recibo.idn_int_proc;
+                g_reg_a1004810.cod_sis_origen   := r_recibo.cod_sis_origen;
+                g_reg_a1004810.fec_registro     := r_recibo.fec_registro;
+                g_reg_a1004810.txt_mca_bt_rev   := r_recibo.txt_mca_bt_rev;    
+                g_reg_a1004810.idn_bt_rev       := r_recibo.idn_bt_rev;
+                g_reg_a1004810.fec_ctable       := r_recibo.fec_ctable;
+                g_reg_a1004810.fec_valor        := r_recibo.fec_valor;
+                g_reg_a1004810.idn_fichero      := lv_nom_fichero;
+                g_reg_a1004810.txt_num_externo  := r_recibo.txt_num_externo;
+                --
+                g_reg_a1004810.cod_mon_iso := f_desc_moneda( 
+                        p_cod_moneda => r_recibo.cod_mon_iso
+                );
+                --
+                IF r_recibo.imp_transaccion >= 0 THEN
+                    -- 
+                    g_reg_a1004810.tip_imp          := 'D';
+                    g_reg_a1004810.imp_transaccion  := r_recibo.imp_transaccion;
+                    g_reg_a1004810.imp_impuesto     := r_recibo.imp_impuesto;
+                    --
+                ELSE
+                    -- 
+                    g_reg_a1004810.tip_imp          := 'C';
+                    g_reg_a1004810.imp_transaccion  := abs(r_recibo.imp_transaccion);
+                    g_reg_a1004810.imp_impuesto     := abs(r_recibo.imp_impuesto);
+                    --
+                END IF;
+                --
+                g_reg_a1004810.idn_cobertura   := r_recibo.idn_cobertura;
+                g_reg_a1004810.idn_bt_ref      := r_recibo.idn_bt_ref;
+                g_reg_a1004810.tip_bt          := g_cod_operacion;
+                --
+                -- Llamamos al procedimiento que inserta en la tabla
+                dc_k_fpsl_a1004810.p_inserta(g_reg_a1004810);
+            END IF;    
             -- 
         END LOOP;
         --
@@ -879,6 +962,146 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_util_bt IS
                 );
         -- 
     END p_zd1015_financiacion_fracc;
+    --
+    -- procesamiento de Financiamiento por Fraccionamiento de pago cobrados
+    PROCEDURE p_zs1015_financiacion_fracc IS 
+        --
+        lv_correlativo  NUMBER := f_correlativo;
+        lv_nom_fichero  VARCHAR2(20);
+        --
+        -- seleccionamos los recibos emitidos
+        CURSOR c_finan_fracc IS 
+            SELECT 'BT'||g_cod_sociedad||to_char(b.fec_efec_recibo,'yyyymm')||'_' IDN_BT
+                   ,g_idn_int_proc     IDN_INT_PROC
+                   ,g_cod_sis_origen   COD_SIS_ORIGEN
+                   ,b.fec_efec_recibo FEC_REGISTRO
+                   ,NULL               TXT_MCA_BT_REV
+                   ,NULL               IDN_BT_REV
+                   ,b.fec_efec_recibo  FEC_CTABLE
+                   ,b.fec_valor        FEC_VALOR
+                   ,NULL               IDN_FICHERO
+                   ,a.txt_num_externo  TXT_NUM_EXTERNO
+                   ,( SELECT sum( d.imp_eco ) imp_eco
+                       FROM a2000161 d,
+                            g2000161 e
+                      WHERE d.cod_cia       = e.cod_cia
+                        AND d.cod_eco       = e.cod_eco
+                        AND d.cod_cia       = b.cod_cia
+                        AND d.num_poliza    = b.num_poliza
+                        AND d.num_spto      = b.num_spto
+                        AND d.num_apli      = b.num_apli
+                        AND d.num_spto_apli = b.num_spto_apli
+                        AND d.num_cuota     = b.num_cuota
+                        AND d.cod_eco       = g_keco_ff
+                    ) IMP_TRANSACCION
+                   ,b.cod_mon          COD_MON_ISO
+                   ,NULL               TIP_IMP
+                   ,NULL               IDN_COBERTURA
+                   ,NULL               IDN_BT_REF
+                   ,NULL               TIP_BT
+                   ,0                  IMP_IMPUESTO,
+                   a.num_poliza, 
+                   a.num_spto
+              FROM ( SELECT DISTINCT cod_cia, num_poliza, num_spto, num_apli, num_spto_apli, 
+                            txt_num_externo, fec_registro, idn_int_proc, cod_sis_origen,
+                            cod_sociedad
+                       FROM a1004808
+                      WHERE idn_int_proc = g_idn_int_proc  
+                   ) a,
+                   a2990700 b, 
+                   a2000030 c
+             WHERE a.idn_int_proc  = g_idn_int_proc
+               AND c.cod_cia       = g_cod_cia
+               --AND c.tip_spto     IN ( 'XX', 'RF' )
+               AND b.tip_situacion = 'CT'
+               AND a.cod_cia       = b.cod_cia
+               AND a.num_poliza    = b.num_poliza
+               AND a.num_spto      = b.num_spto
+               AND a.num_apli      = b.num_apli
+               AND a.num_spto_apli = b.num_spto_apli
+               AND a.cod_cia       = c.cod_cia
+               AND a.num_poliza    = c.num_poliza
+               AND a.num_spto      = c.num_spto
+               AND a.num_apli      = c.num_apli
+               AND a.num_spto_apli = c.num_spto_apli
+               AND b.fec_efec_recibo >= a.fec_registro 
+             ORDER BY b.num_poliza, b.num_spto, b.num_cuota, b.num_recibo;
+        -- 
+    BEGIN 
+        --
+        p_inicia_proceso;
+        --
+        lv_nom_fichero:= g_cod_sociedad||TO_CHAR(g_reg_a1004800.fec_hasta_proc,'YYYYMMDD')||'TBTRA';
+        --
+        FOR r_recibo IN c_finan_fracc LOOP
+            --
+            IF r_recibo.imp_transaccion <> 0 THEN 
+                --
+                lv_correlativo              := lv_correlativo + 1;
+                g_num_poliza                := r_recibo.num_poliza; 
+                g_num_spto                  := r_recibo.num_spto;
+                -- 
+                -- se construye el codigo unico
+                g_reg_a1004810.idn_bt         := r_recibo.idn_bt || lpad( lv_correlativo, 35 - length(r_recibo.idn_bt), '0' );
+                --
+                g_reg_a1004810.idn_int_proc     := r_recibo.idn_int_proc;
+                g_reg_a1004810.cod_sis_origen   := r_recibo.cod_sis_origen;
+                g_reg_a1004810.fec_registro     := r_recibo.fec_registro;
+                g_reg_a1004810.txt_mca_bt_rev   := r_recibo.txt_mca_bt_rev;    
+                g_reg_a1004810.idn_bt_rev       := r_recibo.idn_bt_rev;
+                g_reg_a1004810.fec_ctable       := r_recibo.fec_ctable;
+                g_reg_a1004810.fec_valor        := r_recibo.fec_valor;
+                g_reg_a1004810.idn_fichero      := lv_nom_fichero;
+                g_reg_a1004810.txt_num_externo  := r_recibo.txt_num_externo;
+                --
+                g_reg_a1004810.cod_mon_iso := f_desc_moneda( 
+                        p_cod_moneda => r_recibo.cod_mon_iso
+                );
+                --
+                IF r_recibo.imp_transaccion > 0 THEN
+                    -- 
+                    g_reg_a1004810.tip_imp          := 'C';
+                    g_reg_a1004810.imp_transaccion  := r_recibo.imp_transaccion;
+                    g_reg_a1004810.imp_impuesto     := r_recibo.imp_impuesto;
+                    --
+                ELSE
+                    -- 
+                    g_reg_a1004810.tip_imp          := 'D';
+                    g_reg_a1004810.imp_transaccion  := abs(r_recibo.imp_transaccion);
+                    g_reg_a1004810.imp_impuesto     := abs(r_recibo.imp_impuesto);
+                    --
+                END IF;
+                --
+                g_reg_a1004810.idn_cobertura   := r_recibo.idn_cobertura;
+                g_reg_a1004810.idn_bt_ref      := r_recibo.idn_bt_ref;
+                g_reg_a1004810.tip_bt          := g_cod_operacion;
+                --
+                -- Llamamos al procedimiento que inserta en la tabla
+                dc_k_fpsl_a1004810.p_inserta(g_reg_a1004810);
+                -- 
+            END IF;
+            --    
+        END LOOP;
+        --
+        EXCEPTION 
+            WHEN OTHERS THEN 
+                dc_k_fpsl_trn.p_graba_error( 
+                            p_idn_int_proc       => g_idn_int_proc,
+                            p_cod_sis_origen     => g_reg_a1004807.cod_sis_origen,
+                            p_cod_sociedad       => g_reg_a1004807.cod_sociedad,
+                            p_cod_cia            => g_cod_cia,
+                            p_num_poliza         => g_num_poliza,
+                            p_num_spto           => g_num_spto,
+                            p_num_apli           => 0,
+                            p_num_spto_apli      => 0,
+                            p_num_riesgo         => NULL,
+                            p_cod_cob            => NULL,
+                            p_txt_campo          => 'p_zs1015_financiacion_fracc',
+                            p_cod_error          => SQLCODE,
+                            p_txt_error          => SQLERRM
+                );
+        -- 
+    END p_zs1015_financiacion_fracc;
     --
     -- procedimiento duumy para relleno
     PROCEDURE p_dummy IS 

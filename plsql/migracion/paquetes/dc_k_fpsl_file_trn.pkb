@@ -806,6 +806,7 @@ AS
                 SUM(a.imp_impuesto)
            FROM a1004810 a
           WHERE a.idn_int_proc = g_idn_int_proc
+          HAVING SUM(a.imp_transaccion) > 0
         GROUP BY a.txt_num_externo  ,
                 a.idn_cobertura    ,
                 a.idn_bt           ,
@@ -834,6 +835,7 @@ AS
                 SUM(a.imp_impuesto) s_imp_impuesto
            FROM a1004810 a
           WHERE a.idn_int_proc = g_idn_int_proc
+          HAVING SUM(a.imp_transaccion) > 0
         GROUP BY a.txt_mca_bt_rev, idn_bt_rev, a.txt_num_externo, 
                  a.cod_mon_iso, a.tip_imp, a.idn_cobertura, 
                  a.idn_bt_ref, 
@@ -886,6 +888,8 @@ AS
                     a.tip_bt                          ,
                     SUM(a.imp_impuesto)                        
                 FROM a1004810 a
+                WHERE idn_int_proc = g_idn_int_proc
+                HAVING SUM(a.imp_transaccion) > 0
                 GROUP BY a.txt_num_externo  ,
                         a.idn_cobertura    ,
                         a.idn_bt           ,

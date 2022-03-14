@@ -81,6 +81,9 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_trn AS
     TYPE t_a1004806 IS TABLE OF record_A1004806 INDEX BY VARCHAR2(100); --clave;
     g_tb_a1004806 t_a1004806;
     --
+    TYPE t_reaseguradoras IS TABLE OF number(06) INDEX BY PLS_INTEGER;
+    g_tb_reaseguradoras t_reaseguradoras;
+    --
     /* ---------------------------------------------------
     || Aqui comienza la declaracion de constantes GLOBALES
     */ ---------------------------------------------------
@@ -1740,6 +1743,71 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_trn AS
 		lv_cod_cia_rea    	a2500150.cod_cia_rea%TYPE  := NULL;
         lreg_cobe_dup       a1004809%ROWTYPE;
         --
+      	-- carga los codigos de reaseguradoras
+      	PROCEDURE pp_carga_reasegurador IS
+			--
+			-- facultativo 
+			CURSOR c_facultativo IS
+				SELECT DISTINCT a.cod_cia_facul cod_cia_rea 
+				  FROM a2501500 a
+				 WHERE a.cod_cia        = g_cod_cia
+				   AND a.num_poliza     = greg_cobe.num_poliza
+				   AND a.num_spto       = greg_cobe.num_spto
+				   AND a.num_apli       = greg_cobe.num_apli
+				   AND a.num_spto_apli  = greg_cobe.num_spto_apli
+				   AND a.num_riesgo     = greg_cobe.num_riesgo
+				   AND a.num_periodo    = greg_cobe.num_periodo
+				   AND a.cod_cob        = greg_cobe.cod_cob; 
+			--
+            -- distribucion
+            CURSOR c_distribucion IS
+                SELECT DISTINCT a.cod_cia_rea
+                  FROM 
+                        ( SELECT DISTINCT rcob.cod_cia, rcob.cod_ramo, rcob.num_poliza, rcob.num_spto, rcob.num_apli, rcob.num_spto_apli, 
+                                          rcob.cod_contrato, 
+                                          ciar.cod_cia_rea 
+                            FROM a2501000 rcob,
+                                 a2500150 ciar
+                          WHERE rcob.cod_cia                    = ciar.cod_cia
+                            AND substr(rcob.cod_contrato, 1, 4) = ciar.num_contrato
+                            AND substr(rcob.cod_contrato, 5, 4) = ciar.anio_contrato
+                            AND substr(rcob.cod_contrato, 9, 4) = ciar.serie_contrato
+                            AND ciar.cod_cia_rea <> 999999
+                            AND rcob.num_riesgo   = greg_cobe.num_riesgo
+                            AND rcob.num_periodo  = greg_cobe.num_periodo
+                            AND rcob.cod_cob      = greg_cobe.cod_cob
+                        ) a
+                  WHERE a.cod_cia          = g_cod_cia
+                    AND a.cod_ramo       = greg_cobe.cod_ramo
+                    AND a.num_poliza     = greg_cobe.num_poliza
+                    AND a.num_spto       = greg_cobe.num_spto
+                    AND a.num_apli       = greg_cobe.num_apli
+                    AND a.num_spto_apli  = greg_cobe.num_spto_apli;  	
+            --   
+		BEGIN 
+			--
+            g_tb_reaseguradoras.delete;
+            --
+            FOR r_facult IN c_facultativo LOOP
+                --
+                g_tb_reaseguradoras(r_facult.cod_cia_rea) := r_facult.cod_cia_rea;
+                --
+            END LOOP;
+            --
+            FOR r_distrib IN c_distribucion LOOP
+                --
+                g_tb_reaseguradoras(r_distrib.cod_cia_rea) := r_distrib.cod_cia_rea;
+                --
+            END LOOP;
+            --   
+         	--
+			EXCEPTION 
+				WHEN OTHERS THEN 
+					NULL;
+				-- 
+			--
+		END pp_carga_reasegurador;        
+        --
       	-- buscar codigo de reasegurador
       	PROCEDURE pp_buscar_reasegurador IS
             --
@@ -1891,7 +1959,44 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_trn AS
                     );
                 --      
         END pp_determina_UOA;
-      --
+        --
+        -- verifica si el registro esta declarado
+        FUNCTION f_existe_a1004809 RETURN BOOLEAN IS 
+            --
+            lv_char CHAR(01);
+            lv_ok   BOOLEAN := FALSE;
+            --
+            CURSOR c_existe IS 
+                SELECT 'x'
+                  FROM a1004809 
+                 WHERE cod_cia          = greg_cobe.cod_cia
+                   AND num_poliza       = greg_cobe.num_poliza
+                   AND cod_ramo         = greg_cobe.cod_ramo
+                   AND num_spto         = greg_cobe.num_spto
+                   AND num_apli         = greg_cobe.num_apli
+                   AND num_spto_apli    = greg_cobe.num_spto_apli
+                   AND num_riesgo       = greg_cobe.num_riesgo
+                   AND num_periodo      = greg_cobe.num_periodo
+                   AND cod_cob          = greg_cobe.cod_cob
+                   AND mca_reaseguro    = greg_cobe.mca_reaseguro
+                   AND cod_reasegurador = greg_cobe.cod_reasegurador
+                ; 
+            --
+        BEGIN  
+            --
+            OPEN c_existe;
+            FETCH c_existe INTO lv_char;
+            lv_ok := c_existe%FOUND;
+            CLOSE c_existe;
+            --
+            RETURN lv_ok;
+            --
+            EXCEPTION 
+                WHEN OTHERS THEN
+                    RETURN FALSE;
+            --        
+        END f_existe_a1004809;  
+        --
     BEGIN
         --
         --@mx('I','p_trata_datos_cobertura');
@@ -2004,6 +2109,7 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_trn AS
                AND num_periodo       = regb.num_periodo
                AND cod_cob           = regb.cod_cob
                AND mca_reaseguro     = regb.mca_reaseguro;
+            --
             -- copia
             IF greg_cobe.mca_reaseguro = 'S' THEN
                 --
@@ -2035,6 +2141,49 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_trn AS
             --
         END LOOP;
         --
+        -- insertamos las OTRAS reaseguradoras
+        FOR regb IN ( SELECT *
+                        FROM a1004809
+                       WHERE idn_int_proc = g_idn_int_proc 
+                         AND mca_reaseguro = 'S'
+                      ORDER BY num_poliza, cod_ramo,
+                               num_spto, num_apli, num_spto_apli,
+                               num_riesgo, num_periodo, 
+                               cod_cob, mca_reaseguro
+                    )
+        LOOP 
+            --
+            greg_cobe := regb;
+            --
+            pp_carga_reasegurador;
+            --
+            IF g_tb_reaseguradoras.COUNT > 1 THEN
+                --
+                FOR i IN g_tb_reaseguradoras.FIRST .. g_tb_reaseguradoras.LAST LOOP 
+                    --
+                    IF g_tb_reaseguradoras.EXISTS(i) THEN
+                        --
+                        greg_cobe.mca_reaseguro     := 'S';
+                        greg_cobe.cod_reasegurador  := f_v_cod_reasegurador( g_tb_reaseguradoras(i) );
+                        greg_cobe.txt_num_externo := dc_k_fpsl_inst.f_txt_num_externo( p_greg_cobe       => greg_cobe, 
+                                                                                       p_txt_num_externo => greg_cobe.txt_num_externo
+																		             );
+                        greg_cobe.txt_num_externo := greg_cobe.txt_num_externo||greg_cobe.cod_reasegurador;   
+                        --
+                        IF NOT f_existe_a1004809 THEN
+                            --
+                            dc_k_fpsl_a1004809.p_inserta(greg_cobe);
+                            --
+                        END IF;
+                        --
+                    END IF;
+                    --
+                END LOOP;
+                --
+            END IF;
+            --
+        END LOOP;
+        --
         -- actualizamos la ramo contable
         greg_cobe       := NULL;
         lreg_cobe_dup   := NULL;
@@ -2053,9 +2202,9 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_trn AS
                 -- 
             ELSE
                 --
-                IF lv_clave <> greg_cobe.num_poliza || greg_cobe.cod_ramo_ctable THEN
+                IF lv_clave <> regb.num_poliza || regb.cod_ramo_ctable THEN
                     --
-                    lv_clave        := greg_cobe.num_poliza || greg_cobe.cod_ramo_ctable;
+                    lv_clave        := regb.num_poliza || regb.cod_ramo_ctable;
                     lv_num_orden    := lv_num_orden + 1;
                     --
                 END IF;    
@@ -2827,12 +2976,12 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_trn AS
 			--
 			DELETE FROM a1004808 a
 	         WHERE a.idn_int_proc = g_idn_int_proc
-	           AND  NOT EXISTS( SELECT 'x' 
+	           AND NOT EXISTS( SELECT 'x' 
 					              FROM A1004809 b 
 				                 WHERE b.cod_cia      = a.cod_cia
 					               AND b.num_poliza   = a.num_poliza 
-					               AND b.num_spto     = a.num_spto
 					               AND b.num_apli     = a.num_apli
+                                   AND b.num_spto_apli = a.num_spto_apli
                                    AND b.idn_int_proc = g_idn_int_proc
 				               ); 
 			--
@@ -2850,7 +2999,6 @@ CREATE OR REPLACE PACKAGE BODY dc_k_fpsl_trn AS
                          WHERE cod_cia       = g_cod_cia
                            AND num_poliza    = greg_cont.num_poliza
                            AND cod_ramo      = greg_cont.cod_ramo
-                           AND num_spto      = greg_cont.num_spto
                            AND num_apli      = greg_cont.num_apli
                            AND num_spto_apli = greg_cont.num_spto_apli 
                            AND idn_int_proc  = g_idn_int_proc

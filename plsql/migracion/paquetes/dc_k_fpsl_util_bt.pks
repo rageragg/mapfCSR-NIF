@@ -26,6 +26,8 @@ CREATE OR REPLACE PACKAGE dc_k_fpsl_util_bt IS
    -- procesamiento de Financiamiento por Fraccionamiento de pago emitidos
    PROCEDURE p_zd1015_financiacion_fracc;
    --
+   -- procesamiento de Financiamiento por Fraccionamiento de pago cobrados
+   PROCEDURE p_zs1015_financiacion_fracc;
    -- procedimiento duumy para relleno
    PROCEDURE p_dummy;
    -- 

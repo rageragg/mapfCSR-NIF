@@ -655,18 +655,39 @@ AS
     IS
     BEGIN
         --
-        UPDATE a1004809
-           SET row = p_reg
-        WHERE cod_cia           = p_reg.cod_cia
-          AND num_poliza        = p_reg.num_poliza
-          AND cod_ramo          = p_reg.cod_ramo
-          AND num_spto          = p_reg.num_spto
-          AND num_apli          = p_reg.num_apli
-          AND num_spto_apli     = p_reg.num_spto_apli
-          AND num_riesgo        = p_reg.num_riesgo
-          AND num_periodo       = p_reg.num_periodo
-          AND cod_cob           = p_reg.cod_cob
-          AND nvl(mca_reaseguro,'N') = NVL(p_reg.mca_reaseguro, 'N' );
+        IF p_reg.cod_reasegurador IS NULL THEN  
+            --
+            UPDATE a1004809
+               SET row = p_reg
+             WHERE cod_cia           = p_reg.cod_cia
+               AND num_poliza        = p_reg.num_poliza
+               AND cod_ramo          = p_reg.cod_ramo
+               AND num_spto          = p_reg.num_spto
+               AND num_apli          = p_reg.num_apli
+               AND num_spto_apli     = p_reg.num_spto_apli
+               AND num_riesgo        = p_reg.num_riesgo
+               AND num_periodo       = p_reg.num_periodo
+               AND cod_cob           = p_reg.cod_cob
+               AND nvl(mca_reaseguro,'N') = NVL(p_reg.mca_reaseguro, 'N' )
+               AND cod_reasegurador  IS NULL;
+            --
+        ELSE
+            --
+            UPDATE a1004809
+               SET row = p_reg
+             WHERE cod_cia           = p_reg.cod_cia
+               AND num_poliza        = p_reg.num_poliza
+               AND cod_ramo          = p_reg.cod_ramo
+               AND num_spto          = p_reg.num_spto
+               AND num_apli          = p_reg.num_apli
+               AND num_spto_apli     = p_reg.num_spto_apli
+               AND num_riesgo        = p_reg.num_riesgo
+               AND num_periodo       = p_reg.num_periodo
+               AND cod_cob           = p_reg.cod_cob
+               AND nvl(mca_reaseguro,'N') = NVL(p_reg.mca_reaseguro, 'N' )
+               AND cod_reasegurador  = p_reg.cod_reasegurador;
+            --
+        END IF;    
         --
     END p_actualiza;
    --
